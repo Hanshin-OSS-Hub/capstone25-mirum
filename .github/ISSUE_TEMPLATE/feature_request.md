@@ -2,7 +2,7 @@
 name: Feature Request
 about: Suggest an idea for this project
 title: 'feat: [기능 요약]'
-labels: feature
+labels: ''
 assignees: ''
 
 ---

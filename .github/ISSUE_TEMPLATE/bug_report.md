@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve
 title: 'fix: [버그 요약]'
-labels: bug
+labels: ''
 assignees: ''
 
 ---
