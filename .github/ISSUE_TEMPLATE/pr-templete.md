@@ -1,6 +1,6 @@
 ---
 name: PR Templete
-about: pull request
+about: 내가 만든 거 봐줄 사람
 title: "[Tag]: #[이슈번호] [이슈제목]"
 labels: ''
 assignees: ''
