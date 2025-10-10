@@ -1,7 +1,7 @@
 ---
-name: 'PR: Feature Templete'
+name: Feature Request
 about: Suggest an idea for this project
-title: "[FEAT] #[이슈번호] [제목]"
+title: 'feat: [기능 요약]'
 labels: feature
 assignees: ''
 

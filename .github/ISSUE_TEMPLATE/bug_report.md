@@ -1,0 +1,45 @@
+---
+name: Bug report
+about: Create a report to help us improve
+title: 'fix: [버그 요약]'
+labels: bug
+assignees: ''
+
+---
+
+--- 이 부분은 지우고 업로드 해주세요 ---
+
+- [X] title을 형식에 맞춰 작성하였나요?          
+- [X] assignees을 적절히 할당하였나요?   
+
+--- 이 부분은 지우고 업로드 해주세요 ---
+# 🐛 버그 리포트 (Bug Report)
+<hr>
+
+## 💣 어떤 버그인가요?
+> 버그 상황을 명확하게 설명해주세요.
+
+<br>
+
+## 버그 재현 방법 (Steps to Reproduce)
+--- 이 부분은 지우고 업로드 해주세요 ---
+1.  '...' 페이지로 이동합니다.
+2.  '...' 버튼을 클릭합니다.
+3.  스크롤을 내리면 '...' 오류가 발생합니다.
+
+--- 이 부분은 지우고 업로드 해주세요 ---
+<br>
+
+## 🧐 기대했던 결과 (Expected Behavior)
+> 원래 어떻게 동작해야 하나요?
+
+<br>
+
+## 📸 스크린샷 (Screenshots)
+> 가능하다면 버그 상황을 보여주는 스크린샷을 첨부해주세요.
+
+<br>
+
+## 💻 환경 (Environment)
+- **OS:**
+- **Browser:**
