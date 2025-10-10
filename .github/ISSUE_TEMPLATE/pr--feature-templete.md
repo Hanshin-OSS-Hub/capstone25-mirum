@@ -2,18 +2,19 @@
 name: 'PR: Feature Templete'
 about: Suggest an idea for this project
 title: "[FEAT] #[이슈번호] [제목]"
-labels: ''
+labels: feature
 assignees: ''
 
 ---
 
----
-name: "✨ 기능 개발 (Feature Request)"
-title: "feat: [기능 요약]"
-labels: "feature"
-assignees: ''
+--- 이 부분은 지우고 업로드 해주세요 ---
 
----
+- [X] title을 형식에 맞춰 작성하였나요?          
+- [X] assignees을 적절히 할당하였나요?   
+
+--- 이 부분은 지우고 업로드 해주세요 ---
+# ✨ 기능 개발 (Feature Request)
+<hr>
 
 ## 🤷‍♀️ 어떤 기능인가요?
 > 이 기능이 필요한 이유와 목적을 간결하게 설명해주세요.
