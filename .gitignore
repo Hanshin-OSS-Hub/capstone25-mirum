@@ -1,0 +1,110 @@
+# ===================================================================
+# ## ⚙️ 개발 환경 및 운영체제 (IDE & OS)
+#
+# 팀원들의 개인적인 IDE 설정과 OS 자동 생성 파일을 무시합니다.
+# ===================================================================
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history
+
+# macOS / Windows / Linux
+.DS_Store
+Thumbs.db
+*~
+.Trash-*
+
+
+# ===================================================================
+# ## ☕️ 백엔드 (Java / Spring / Gradle)
+#
+# Java 컴파일 결과물과 Gradle 빌드 파일 및 캐시를 무시합니다.
+# ===================================================================
+
+# Compiled class file
+*.class
+
+# Package files
+*.jar
+*.war
+
+# Build output
+build/
+.gradle
+
+# Gradle GUI config
+gradle-app.setting
+
+# Gradle task cache
+.gradletasknamecache
+
+# Java crash logs
+hs_err_pid*
+replay_pid*
+
+# Gradle Wrapper는 팀의 빌드 환경 통일을 위해 반드시 포함해야 합니다.
+!gradle/wrapper/gradle-wrapper.jar
+!gradlew
+!gradlew.bat
+
+
+# ===================================================================
+# ## ⚛️ 프론트엔드 (Node / React / React Native)
+#
+# node_modules와 각종 번들러의 빌드 결과물 및 캐시를 무시합니다.
+# ===================================================================
+
+# Dependency directories
+node_modules/
+
+# Build output
+build/
+dist/
+.next/
+
+# Test coverage
+coverage/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+# (아래 '민감 정보' 섹션에서 더 구체적으로 관리합니다.)
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
+
+# Cache
+.cache
+.parcel-cache
+
+
+# ===================================================================
+# ## 🔒 민감 정보 및 기타 (Secrets & Etc.)
+#
+# API 키, DB 접속 정보 등 민감한 정보와 로그 파일을 무시합니다.
+# ===================================================================
+
+# Log files
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Backend secret files
+/backend/src/main/resources/application-secrets.yml
+/backend/src/main/resources/application-private.properties
