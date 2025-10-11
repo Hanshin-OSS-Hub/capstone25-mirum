@@ -51,6 +51,9 @@ gradle-app.setting
 hs_err_pid*
 replay_pid*
 
+# API 키, DB 비밀번호 등 민감 정보만 gradle.properties와 따로 저장
+local.properties
+
 # Gradle Wrapper는 팀의 빌드 환경 통일을 위해 반드시 포함해야 합니다.
 !gradle/wrapper/gradle-wrapper.jar
 !gradlew
