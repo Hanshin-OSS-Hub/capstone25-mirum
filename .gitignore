@@ -112,3 +112,4 @@ local.properties
 # Backend secret files
 /backend/src/main/resources/application-secrets.yml
 /backend/src/main/resources/application-private.properties
+/backend/src/main/resources/application.properties
