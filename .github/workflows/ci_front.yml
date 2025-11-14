@@ -1,0 +1,93 @@
+name: CI_Front
+
+on:
+  pull_request:
+    branches:
+      - 'frontend'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with: # checkout PR's head ref
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache Node.js packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build React application
+        run: npm run build
+
+      - name: Run tests
+        run: npm test -- --ci
+
+      - name: Commit Info
+        id: commit_info
+        if: always()
+        run: |
+          # PR의 헤드 커밋 정보를 가져옴
+          echo "msg=$(git log -1 --pretty='%s')" >> $GITHUB_OUTPUT
+          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
+          echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+          echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
+          echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
+          
+          # PR description을 멀티라인으로 안전하게 저장
+          {
+            echo "pr_description<<EOF"
+            echo "${{ github.event.pull_request.body }}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Send Discord Success Notification
+        uses: sarisia/actions-status-discord@v1
+        if: success()
+        with:
+          webhook: ${{ secrets.DISCORD }}
+          title: "✅ FRONTEND PR #${{ steps.commit_info.outputs.pr_number }} 빌드 성공!"
+          description: |
+            ## [${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
+            
+            **📌 PR 설명:** ${{ steps.commit_info.outputs.pr_description }}
+            **🔗 상세 로그:** [GitHub Actions에서 확인](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            **📝 커밋 메시지:** ${{ steps.commit_info.outputs.msg }}
+            **👤 작성자:** ${{ steps.commit_info.outputs.author }}
+          color: 0x00ff00
+          nodetail: true
+
+      - name: Send Discord Failure Notification
+        uses: sarisia/actions-status-discord@v1
+        if: failure()
+        with:
+          webhook: ${{ secrets.DISCORD }}
+          title: "❌ FRONTEND PR #${{ steps.commit_info.outputs.pr_number }} 빌드 실패!"
+          description: |
+            ## [${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
+            
+            **📌 PR 설명:** ${{ steps.commit_info.outputs.pr_description }}
+            **🔗 상세 로그:** [GitHub Actions에서 확인](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            **📝 커밋 메시지:** ${{ steps.commit_info.outputs.msg }}
+            **👤 작성자:** ${{ steps.commit_info.outputs.author }}
+          color: 0xff0000
+          nodetail: true
