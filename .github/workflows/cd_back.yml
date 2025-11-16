@@ -1,0 +1,73 @@
+# .github/workflows/deploy-to-ecr.yml
+
+name: CD - Build and Push to ECR
+
+# main 브랜치로 push 이벤트가 발생했을 때만 실행됩니다.
+on:
+  push:
+    branches:
+      - main
+
+env:
+  # ECR 리포지토리 이름을 변수로 설정합니다. (GitHub Secrets에서 가져옴)
+  ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
+  # ECR 리전 (GitHub Secrets에서 가져옴)
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  build-and-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+    
+    # OIDC 토큰을 발급받기 위한 권한 설정
+    permissions:
+      id-token: write  # AWS OIDC 인증에 필요
+      contents: read   # 리포지토리 코드를 checkout 하는데 필요
+
+    steps:
+      # 1. 리포지토리 코드 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. AWS 자격 증명 설정 (OIDC 사용)
+      # GitHub Actions가 AWS 역할을 Assume 하도록 설정
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # GitHub Secrets에 저장된 OIDC 역할 ARN
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3. Amazon ECR 로그인
+      # AWS 자격 증명을 사용해 ECR 레지스트리에 로그인
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 4. Docker 메타데이터 설정 (태그 생성 등)
+      # 이미지 태그를 유연하게 생성 (예: commit SHA, 'latest')
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_NAME }}
+          tags: |
+            type=sha,prefix=,format=short # Commit SHA (짧은 버전)
+            type=raw,value=latest        # 'latest' 태그
+
+      # 5. Docker 이미지 빌드 및 ECR 푸시
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Dockerfile이 있는 위치 (루트 디렉토리)
+          file: ./Dockerfile # Dockerfile 경로
+          push: true # 빌드 후 푸시 실행
+          tags: ${{ steps.meta.outputs.tags }} # 4단계에서 생성한 태그 사용
+          labels: ${{ steps.meta.outputs.labels }} # 4단계에서 생성한 라벨 사용
+          cache-from: type=gha # GitHub Actions 캐시 사용 (빌드 속도 향상)
+          cache-to: type=gha,mode=max
+
+      # 6. ECR 로그아웃 (선택 사항, 보안상 권장)
+      - name: Logout from Amazon ECR
+        if: always() # 이전 단계 실패 여부와 관계없이 실행
+        run: docker logout ${{ steps.login-ecr.outputs.registry }}

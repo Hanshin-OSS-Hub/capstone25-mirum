@@ -27,7 +27,7 @@ resource "aws_security_group" "for_nginx" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    security_groups = [aws_security_group.for_lb.id]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
