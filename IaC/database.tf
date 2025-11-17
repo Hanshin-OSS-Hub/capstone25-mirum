@@ -33,7 +33,7 @@ resource "aws_secretsmanager_secret" "db_password" {
 resource "random_password" "name"{
   length = 16
   special = true
-  override_special = "!#$%&'()*+,-./:;<=>?@[]^_`{|}~"
+  override_special = "!#$%&*()+-=[]{}|?"
 }
 
 resource "aws_secretsmanager_secret_version" "name" {

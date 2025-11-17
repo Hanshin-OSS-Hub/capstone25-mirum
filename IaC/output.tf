@@ -38,3 +38,8 @@ output "s3_bucket_name" {
   value       = aws_s3_bucket.user_data.bucket
 }
 
+output "ssh_private_key" {
+  description = "SSH private key to connect to EC2 instances"
+  value       = tls_private_key.ssh_key.private_key_pem
+  sensitive   = true
+}

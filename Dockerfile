@@ -1,19 +1,19 @@
-FROM openjdk:[version]-jdk-slim AS build
+FROM openjdk:17-jdk-slim AS build
 
 WORKDIR /workspace/app
 
-COPY build.gradle settings.gradle gradlew ./
-COPY gradle gradle
+COPY backend/build.gradle backend/settings.gradle backend/gradlew ./
+COPY backend/gradle gradle
 
 RUN chmod +x ./gradlew
 
 RUN ./gradlew dependencies
 
-COPY src src
+COPY backend/src src
 
 RUN ./gradlew bootjar -x test
 
-FROM openjdk:[version]-jre-slim
+FROM openjdk:17-jre-slim
 
 WORKDIR /app
 

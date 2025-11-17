@@ -14,6 +14,10 @@ resource "aws_instance" "nginx_1" {
   root_block_device {
     volume_size = 10
   }
+
+  lifecycle {
+    ignore_changes = [associate_public_ip_address]
+  }
 }
 
 # nginx를 위한 EIP

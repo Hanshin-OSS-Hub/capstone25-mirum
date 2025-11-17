@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - 'frontend'
+    paths:
+      - 'frontend/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -33,12 +35,15 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./frontend
 
       - name: Build React application
         run: npm run build
+        working-directory: ./frontend
 
       - name: Run tests
         run: npm test -- --ci
+        working-directory: ./frontend
 
       - name: Commit Info
         id: commit_info

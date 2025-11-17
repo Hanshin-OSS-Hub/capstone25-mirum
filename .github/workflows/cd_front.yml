@@ -1,0 +1,33 @@
+name: CD Frontend
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'frontend/**'
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+
+            - name: Build Frontend
+              run: |
+                npm install
+                npm run build
+              working-directory: ./frontend
+
+            - name: Deploy ro Server With SCP
+              uses: appleboy/scp-action@v0.1.7
+              with:
+                host: ${{ secrets.SERVER_HOST }}
+                username: ubuntu
+                key: ${{ secrets.SERVER_SSH_KEY }}
+                port: 22
+                source: "frontend/build/*"
+                target: "/var/www/html/"
+                strip_components: 2

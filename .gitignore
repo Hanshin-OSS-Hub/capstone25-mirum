@@ -114,6 +114,8 @@ local.properties
 /backend/src/main/resources/application-private.properties
 /backend/src/main/resources/application.properties
 
+*.pem
+
 # Terraform 상태 파일
 *.tfstate
 *.tfstate.*
@@ -139,3 +141,6 @@ override.tf.json
 # CLI 설정 파일
 .terraformrc
 terraform.rc
+
+# Lambda 함수 zip 파일
+# *.zip

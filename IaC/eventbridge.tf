@@ -10,7 +10,9 @@ resource "aws_cloudwatch_event_rule" "ecr_image_push" {
       action-type = ["PUSH"]
       result      = ["SUCCESS"]
       repository-name = [aws_ecr_repository.docker.name]
-      image-tag      = ["latest"]
+      image-tag = [
+        { "anything-but": "latest" }
+      ]
     }
   })
 }

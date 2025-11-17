@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - 'backend'
+    paths:
+      - 'backend/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -39,9 +41,11 @@ jobs:
 
       - name: Build Spring Boot application
         run: ./gradlew build
+        working-directory: ./backend
 
       - name: Run tests
         run: ./gradlew test
+        working-directory: ./backend
 
       # - name: Upload test results
       #   uses: actions/upload-artifact@v4
