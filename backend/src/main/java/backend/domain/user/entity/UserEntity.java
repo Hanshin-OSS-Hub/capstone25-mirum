@@ -1,4 +1,5 @@
 package backend.domain.user.entity;
+import backend.domain.user.dto.UserRequestDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,9 +30,9 @@ public class UserEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
-//    @Column(name = "is_lock", nullable = false)
-//    계정밴 여부
-//    private Boolean isLock;
+    @Column(name = "is_lock", nullable = false)
+    //계정밴 여부
+    private Boolean isLock;
 
     @Column(name = "is_social", nullable = false)
     //소셜로그인 or 자체로그인 설정
@@ -62,5 +63,11 @@ public class UserEntity {
     @Column(name = "updated_date")
     //최종 수정일
     private LocalDateTime updatedDate;
+
+    public void updateUser(UserRequestDTO dto) {
+        //Setter는 최대한 지양
+        this.email = dto.getEmail();
+        this.nickname = dto.getNickname();
+    }
 
 }
