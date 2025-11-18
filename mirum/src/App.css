@@ -11,13 +11,22 @@
 /*    font-family: Roboto, system-ui;*/
 /*}*/
 
+body {
+    margin: 0;
+    background-color: white; /* 초록 배경을 body로 이동 */
+}
+
 .dashboard-container {
     display: flex;
     flex-direction: column;
     min-height: 100vh; /* 화면 꽉 채우기 */
     font-family: 'Pretendard', sans-serif; /* 폰트가 없다면 기본 폰트 적용됨 */
+    max-width: 1200px;
     color: #333;
-}
+    margin: 0 auto;
+    padding: 0 24px;
+    /* background-color: #fafbf9; */
+}   
 
 .header {
     background-color: white;
@@ -25,8 +34,7 @@
     display: flex;
     justify-content: space-between; /* 양끝 정렬 */
     align-items: center;
-    padding: 0 24px;
-    border-bottom: 1px solid #e5e7eb; /* 연한 회색 줄 */
+    border-radius : 20px;
 }
 
 .header-left {
@@ -49,7 +57,7 @@
 
 .logo-text {
     font-weight: bold;
-    font-size: 18px;
+    font-size: 25px;
 }
 
 .header-right {
@@ -70,9 +78,18 @@
 }
 
 .main-content {
-    background-color: #f9fafb; /* 아주 연한 회색 배경 (핵심!) */
-    flex: 1; /* 남은 공간 다 차지하기 */
-    padding: 40px; /* 넉넉한 여백 */
+    background-color: transparent;
+    flex: 1;
+    display: flex;
+    justify-content: center;  /* 가운데로 몰기 */
+    padding: 40px 0;          /* 위아래 여백만 */
+}
+
+.content-inner {
+    width: 1200px;     /* 고정 폭 */
+    min-width: 1200px; /* 창을 줄여도 이 폭 이하로 안 줄어듦 → 모바일처럼 안 됨 */
+    margin: 0 auto;
+    padding: 0 40px;
 }
 
 .card {
@@ -137,22 +154,32 @@
     cursor: pointer;
 }
 
-.project-grid {
+.project-header {
     display: flex;
-    gap: 24px;
+    justify-content: space-between;
+    align-items: baseline; /* ← 핵심 */
+}
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(3 , 1fr); 
+    gap : 35px;
 }
 
 .project-card {
     flex: 1; /* 공간 채우기 */
-    max-width: 400px; /* 너무 커지지 않게 */
+    max-width: 450px; /* 너무 커지지 않게 */
 }
 
 .project-icon {
     background-color: #dbeafe;
-    width: 40px; height: 40px;
+    width: 40px;
+    height: 40px;
     border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
 }
 
 .project-desc {
@@ -173,6 +200,17 @@
 .fill {
     height: 100%;
     background-color: #2563eb;
+}
+
+.full {
+    height: 100%;
+    background-color: #03f7c2ed;
+
+}
+
+.fell {
+    height: 100%;
+    background-color: #c900fbed;
 }
 
 .card-footer {

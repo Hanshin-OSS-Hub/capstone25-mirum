@@ -26,7 +26,7 @@ function Home() {
             <header className="header">
                 <div className="header-left">
                     <div className="logo-box">M</div>
-                    <span className="logo-text">미룸</span>
+                    <span className="logo-text">Mirum</span>
                 </div>
                 <div className="header-right">
                     <button className="profile-btn" style={ { backgroundColor: "transparent" }}>
@@ -38,6 +38,7 @@ function Home() {
 
             {/* 2. 메인 콘텐츠 영역 (회색 배경) */}
             <main className="main-content">
+                <div className="content-inner">
 
                 {/* 인사말 섹션 */}
                 <section className="greeting-section">
@@ -81,23 +82,175 @@ function Home() {
 
                     <div className="project-grid">
                         {/* 프로젝트 카드 1 */}
+                        
                         <div className="card project-card">
-                            <div className="project-icon">📂</div>
-                            <h3>웹사이트 디자인 프로젝트</h3>
-                            <p className="project-desc">팀 협업 웹사이트 개발</p>
-                            <div className="progress-bar">
-                                <div className="fill" style={{width: '65%'}}></div>
+                            <div className="project-header">
+                                <div className="project-text">
+                                    <h3>웹사이트 디자인 프로젝트</h3>
+                                    <p className="project-desc">팀 협업 웹사이트 개발</p>
+                                </div>
+
+                                <div className="project-icon">📂</div>
                             </div>
+
+                            <div className="progress-bar">
+                                <div className="full" style={{ width: '65%' }}></div>
+                            </div>
+
                             <div className="card-footer">
                                 <span>👤 3명</span>
                                 <span>📅 2시간 전</span>
                             </div>
                         </div>
 
-                        {/* 프로젝트 카드 2 */}
+
                         <div className="card project-card">
-                            <div className="project-icon">📂</div>
-                            <h3>마케팅 과제</h3>
+                            <div className="project-header">
+                                <div className="project-text">
+                                    <h3>마케팅 전략</h3>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                </div>
+
+                                <div className="project-icon">📂</div>
+                            </div>
+
+                            <div className="progress-bar">
+                                <div className="fell" style={{ width: '35%' }}></div>
+                            </div>
+
+                            <div className="card-footer">
+                                <span>👤 3명</span>
+                                <span>📅 2시간 전</span>
+                            </div>
+                        </div>
+
+                        <div className="card project-card">
+                            <div className="project-header">
+                                <div className="project-text">
+                                    <h3>마케팅 전략</h3>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                </div>
+
+                                <div className="project-icon">📂</div>
+                            </div>
+
+                            <div className="progress-bar">
+                                <div className="fill" style={{ width: '65%' }}></div>
+                            </div>
+
+                            <div className="card-footer">
+                                <span>👤 3명</span>
+                                <span>📅 2시간 전</span>
+                            </div>
+                        </div>
+
+                        <div className="card project-card">
+                            <div className="project-header">
+                                <div className="project-text">
+                                    <h3>마케팅 전략</h3>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                </div>
+
+                                <div className="project-icon">📂</div>
+                            </div>
+
+                            <div className="progress-bar">
+                                <div className="fill" style={{ width: '65%' }}></div>
+                            </div>
+
+                            <div className="card-footer">
+                                <span>👤 3명</span>
+                                <span>📅 2시간 전</span>
+                            </div>
+                        </div>
+
+                        <div className="card project-card">
+                            <div className="project-header">
+                                <div className="project-text">
+                                    <h3>마케팅 전략</h3>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                </div>
+
+                                <div className="project-icon">📂</div>
+                            </div>
+
+                            <div className="progress-bar">
+                                <div className="fill" style={{ width: '65%' }}></div>
+                            </div>
+
+                            <div className="card-footer">
+                                <span>👤 3명</span>
+                                <span>📅 2시간 전</span>
+                            </div>
+                        </div>
+
+                        <div className="card project-card">
+                            <div className="project-header">
+                                <div className="project-text">
+                                    <h3>마케팅 전략</h3>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                </div>
+
+                                <div className="project-icon">📂</div>
+                            </div>
+
+                            <div className="progress-bar">
+                                <div className="fill" style={{ width: '65%' }}></div>
+                            </div>
+
+                            <div className="card-footer">
+                                <span>👤 3명</span>
+                                <span>📅 2시간 전</span>
+                            </div>
+                        </div>
+
+                        <div className="card project-card">
+                            <div className="project-header">
+                                <div className="project-text">
+                                    <h3>마케팅 전략</h3>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                </div>
+
+                                <div className="project-icon">📂</div>
+                            </div>
+
+                            <div className="progress-bar">
+                                <div className="fill" style={{ width: '65%' }}></div>
+                            </div>
+
+                            <div className="card-footer">
+                                <span>👤 3명</span>
+                                <span>📅 2시간 전</span>
+                            </div>
+                        </div>
+
+                        <div className="card project-card">
+                            <div className="project-header">
+                                <div className="project-text">
+                                    <h3>마케팅 전략</h3>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                </div>
+
+                                <div className="project-icon">📂</div>
+                            </div>
+
+                            <div className="progress-bar">
+                                <div className="fill" style={{ width: '65%' }}></div>
+                            </div>
+
+                            <div className="card-footer">
+                                <span>👤 3명</span>
+                                <span>📅 2시간 전</span>
+                            </div>
+                        </div>
+
+
+                        {/* 프로젝트 카드 2
+                        <div className="card project-card">
+                            <div style = { { "display" : "flex", "gap": "24px"} }>
+                                <h3>마케팅 과제</h3>
+                                <div className="project-icon">📂</div>
+                            </div>
                             <p className="project-desc">브랜드 전략 수립 및 분석</p>
                             <div className="progress-bar">
                                 <div className="fill" style={{width: '30%'}}></div>
@@ -106,9 +259,10 @@ function Home() {
                                 <span>👤 2명</span>
                                 <span>📅 1일 전</span>
                             </div>
-                        </div>
+                        </div>        */}
                     </div>
                 </section>
+                </div>
             </main>
             <nav className="mobile-tab-bar">
                 <button className="tab-item active">
