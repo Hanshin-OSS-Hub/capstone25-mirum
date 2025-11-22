@@ -35,6 +35,8 @@ body {
     justify-content: space-between; /* 양끝 정렬 */
     align-items: center;
     border-radius : 20px;
+    padding: 0 40px;
+    min-width: 1200px; /* 창을 줄여도 이 폭 이하로 안 줄어듦 → 모바일처럼 안 됨 */
 }
 
 .header-left {
@@ -81,12 +83,12 @@ body {
     background-color: transparent;
     flex: 1;
     display: flex;
-    justify-content: center;  /* 가운데로 몰기 */
+    justify-content: left;  /* 가운데로 몰기 */
     padding: 40px 0;          /* 위아래 여백만 */
 }
 
 .content-inner {
-    width: 1200px;     /* 고정 폭 */
+    /*width: 1200px;     !* 고정 폭 *!*/
     min-width: 1200px; /* 창을 줄여도 이 폭 이하로 안 줄어듦 → 모바일처럼 안 됨 */
     margin: 0 auto;
     padding: 0 40px;
@@ -227,25 +229,62 @@ body {
 }
 
 @media (max-width: 768px) {
+    .phone-mockup-wrapper {
+        /* 👇 디바이스 프레임 크기 및 가운데 정렬 */
+        max-width: 400px; /* 스마트폰 너비 (조절 가능) */
+        margin: 50px auto; /* 중앙 정렬 및 위아래 여백 */
 
-    /* 1. 전체 레이아웃 여백 줄이기 */
-    .main-content {
-        padding: 20px; /* 40px -> 20px */
+        /* 👇 프레임 스타일 */
+        border: 10px solid #222; /* 검은색 테두리 */
+        border-radius: 40px; /* 둥근 모서리 */
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.4); /* 그림자 */
+        /*overflow: auto; !* 내부 내용물이 프레임을 벗어나지 않도록 숨김 *!*/
+
+        /* 👇 [핵심 1] 가로 스크롤 끄고, 세로 스크롤만 켜기 */
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        /* 👇 [핵심 2] 파이어폭스(Firefox)에서 스크롤바 숨기기 */
+        scrollbar-width: none;
+
+        /* 👇 내부 대시보드 스크롤 허용 */
+        height: 700px; /* 스마트폰 높이 (조절 가능) */
+    }
+
+    .dashboard-container {
+        min-height: 100%;
     }
 
     .header {
         padding: 0 16px; /* 좌우 여백 축소 */
     }
 
+    /* 1. 전체 레이아웃 여백 줄이기 */
+    /* 2. 콘텐츠가 탭 바에 가려지지 않게 아랫쪽 추가 여백 */
+    .main-content {
+        justify-content: center;  /* 가운데로 몰기 */
+        padding: 20px 20px 80px 20px;
+    }
+
+    .content-inner {
+        min-width: 100%;
+    }
+
     /* 2. 요약 카드: 가로 배치 -> 세로 배치 */
     .summary-cards {
+        max-width: 100%;
         flex-direction: column; /* 옆으로 서던 애들을 줄세우기 */
         gap: 16px; /* 간격 조금 줄이기 */
+    }
+
+    .summary-card {
+        flex-wrap: wrap;
     }
 
     /* 3. 프로젝트 그리드: 가로 배치 -> 세로 배치 */
     .project-grid {
         flex-direction: column;
+        /*flex-wrap: wrap;*/
     }
 
     .project-card {
@@ -259,7 +298,7 @@ body {
 
     .mobile-tab-bar {
         display: flex;          /* 이제 보임! */
-        position: fixed;        /* 화면 아래에 고정 */
+        position: sticky;        /* 화면 아래에 고정 */
         bottom: 0;
         left: 0;
         width: 100%;
@@ -285,11 +324,6 @@ body {
 
     .tab-item.active {
         color: #2563eb; /* 활성 색상 (파란색) */
-    }
-
-    /* 2. 콘텐츠가 탭 바에 가려지지 않게 여백 추가 */
-    .main-content {
-        padding-bottom: 80px; /* 탭 바 높이만큼 더 띄워줌 */
     }
 }
 

@@ -1,3 +1,5 @@
+import Header from './components/common/Header.jsx'
+import ProjectCard from './components/common/ProjectCard2.jsx'
 import './App.css'
 import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiOutlineUsers, HiPlus,
@@ -5,24 +7,47 @@ import {
 } from "react-icons/hi2";
 
 function App() {
-  // const [count, setCount] = useState(0)
-  //   const projects = [
-  //       { title: "웹사이트 디자인 프로젝트", team: "팀 협업 사이트 개발", progress: 65, members: 3 },
-  //       { title: "마케팅 과제", team: "브랜드 전략 수립 및 분석", progress: 30, members: 2 }
-  //   ];
+    const projects = [
+        {
+            title: "데이터 분석 프로젝트",
+            desc: "고객 행동 패턴 분석 및 인사이트 도출",
+            progress: 80,
+            members: ["한", "오", "윤"], // 배열로 전달
+            day: "3월 20일",
+            color: "purple" // 보라색
+        },
+        {
+            title: "웹 개발 프로젝트",
+            desc: "대학생을 위한 프로젝트 관리 도구 개발",
+            progress: 65,
+            members: ["김", "이", "박"],
+            day: "3월 15일",
+            color: "blue" // 파란색
+        },
+        {
+            title: "마케팅 전략 수립",
+            desc: "신제품 출시를 위한 마케팅 전략 기획",
+            progress: 40,
+            members: ["최", "정"],
+            day: "4월 1일",
+            color: "green" // 초록색
+        }
+    ];
 
   return (
     <>
-      <Home />
+      <Home projects={projects} />
     </>
   )
 }
 
 
-function Home() {
+function Home(props) {
     return (
+        <div className="phone-mockup-wrapper">
         <div className="dashboard-container">
             {/* 1. 헤더 영역 */}
+            {/*<Header />*/}
             <header className="header">
                 <div className="header-left">
                     <div className="logo-box">M</div>
@@ -81,8 +106,21 @@ function Home() {
                     </div>
 
                     <div className="project-grid">
+                        {/*{*/}
+                        {/*    props.projects.map((p, i) => (*/}
+                        {/*    <ProjectCard*/}
+                        {/*        key={i}*/}
+                        {/*        title={p.title}*/}
+                        {/*        desc={p.desc}*/}
+                        {/*        progress={p.progress}*/}
+                        {/*        members={p.members}*/}
+                        {/*        day={p.day}*/}
+                        {/*        color={p.color} // 색상 전달*/}
+                        {/*    />*/}
+                        {/*    ))*/}
+                        {/*}*/}
+
                         {/* 프로젝트 카드 1 */}
-                        
                         <div className="card project-card">
                             <div className="project-header">
                                 <div className="project-text">
@@ -244,7 +282,6 @@ function Home() {
                             </div>
                         </div>
 
-
                         {/* 프로젝트 카드 2
                         <div className="card project-card">
                             <div style = { { "display" : "flex", "gap": "24px"} }>
@@ -282,6 +319,7 @@ function Home() {
                     <span>내 정보</span>
                 </button>
             </nav>
+        </div>
         </div>
         // <>
         // {/* Header */}
