@@ -12,7 +12,7 @@ function App() {
             title: "데이터 분석 프로젝트",
             desc: "고객 행동 패턴 분석 및 인사이트 도출",
             progress: 80,
-            members: ["식", "오", "윤"], // 배열로 전달
+            members: ["전", "오", "윤"], // 배열로 전달
             day: "3월 20일",
             color: "purple" // 보라색
         },
