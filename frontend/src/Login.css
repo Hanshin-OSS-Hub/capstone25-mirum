@@ -1,0 +1,122 @@
+/* 전체 배경 */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top left, #f5f3ff, #f9fafb);
+  font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+}
+
+/* 흰색 로그인 카드 */
+.login-card {
+  width: 440px;
+  background-color: #ffffff;
+  border-radius: 32px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+  padding: 48px 56px 40px;
+}
+
+/* 제목 */
+.login-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 40px;
+}
+
+/* 폼 전체 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 필드 한 덩어리 */
+.login-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 라벨 */
+.login-label {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+/* 인풋 */
+.login-input {
+  border-radius: 16px;
+  border: 1.5px solid #e5e7eb;
+  padding: 14px 16px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+  background-color: #fbfbff;
+}
+
+.login-input::placeholder {
+  color: #9ca3af;
+}
+
+.login-input:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+  background-color: #ffffff;
+}
+
+/* 에러 메시지 */
+.login-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #dc2626;
+}
+
+/* 로그인 버튼 (그라데이션) */
+.login-button {
+  margin-top: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 20px;
+  padding: 14px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  background-image: linear-gradient(90deg, #6366f1, #a855f7);
+  box-shadow: 0 14px 30px rgba(79, 70, 229, 0.45);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+}
+
+.login-button:hover {
+  filter: brightness(1.02);
+  box-shadow: 0 18px 40px rgba(79, 70, 229, 0.55);
+}
+
+.login-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.45);
+}
+
+/* "계정이 없어요" 버튼 */
+.login-secondary-button {
+  margin-top: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 20px;
+  padding: 14px 0;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.login-secondary-button:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+}
