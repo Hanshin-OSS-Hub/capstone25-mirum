@@ -3,8 +3,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import Page from './pages/Page.jsx'
-import Login from './Login.jsx'
+// import Page from './pages/Page.jsx'
+// import Login from './Login.jsx'
 import './App.css'
 import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiOutlineUsers, HiPlus,
@@ -385,8 +385,8 @@ function App() {
       <BrowserRouter>
         <NavigationSetter />
         <Routes>
-            <Route path="/" element={ <Page /> } />
-            <Route path="login" element={<Login />} />
+            {/* <Route path="/" element={ <Page /> } /> */}
+            {/* <Route path="login" element={<Login />} /> */}
             <Route path="dashboard" element={ <Home projects={projects} /> } />
         </Routes>
       </BrowserRouter>
