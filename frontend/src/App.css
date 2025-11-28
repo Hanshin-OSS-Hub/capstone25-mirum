@@ -24,7 +24,7 @@ body {
     max-width: 1200px;
     color: #333;
     margin: 0 auto;
-    padding: 0 24px;
+    
     /* background-color: #fafbf9; */
 }   
 
@@ -252,18 +252,24 @@ body {
     }
 
     .dashboard-container {
-        min-height: 100%;
+    min-height: 100%;
+    padding: 0 24px 40px; 
+    box-sizing: border-box;
     }
 
     .header {
-        padding: 0 16px; /* 좌우 여백 축소 */
+    padding: 16px 0;        /* 위/아래만, 좌우는 0 */
+    min-width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     }
 
     /* 1. 전체 레이아웃 여백 줄이기 */
     /* 2. 콘텐츠가 탭 바에 가려지지 않게 아랫쪽 추가 여백 */
     .main-content {
-        justify-content: center;  /* 가운데로 몰기 */
-        padding: 20px 20px 80px 20px;
+    padding: 24px 0 80px;   /* 위/아래만, 좌우는 0 */
+    justify-content: center;
     }
 
     .content-inner {
@@ -283,12 +289,13 @@ body {
 
     /* 3. 프로젝트 그리드: 가로 배치 -> 세로 배치 */
     .project-grid {
-        flex-direction: column;
+        display: none;
+        /* flex-direction: column; */
         /*flex-wrap: wrap;*/
     }
 
     .project-card {
-        max-width: 100%; /* 너비 제한 해제하고 꽉 채우기 */
+        max-width:100%; /* 너비 제한 해제하고 꽉 채우기 */
     }
 
     /* 4. 글자 크기 조절 (선택사항) */
