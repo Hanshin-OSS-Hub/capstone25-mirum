@@ -113,3 +113,34 @@ local.properties
 /backend/src/main/resources/application-secrets.yml
 /backend/src/main/resources/application-private.properties
 /backend/src/main/resources/application.properties
+
+*.pem
+
+# Terraform 상태 파일
+*.tfstate
+*.tfstate.*
+
+# .terraform 디렉토리
+.terraform/
+!.terraform.lock.hcl
+
+# 크래시 로그 파일
+crash.log
+crash.*.log
+
+# 로컬 변수 파일
+*.tfvars
+*.tfvars.json
+
+# Override 파일
+override.tf
+override.tf.json
+*.override.tf
+*.override.tf.json
+
+# CLI 설정 파일
+.terraformrc
+terraform.rc
+
+# Lambda 함수 zip 파일
+# *.zip

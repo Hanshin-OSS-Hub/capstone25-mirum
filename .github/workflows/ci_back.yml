@@ -1,9 +1,12 @@
-name: CI
+name: CI_Backend
 
 on:
   pull_request:
     branches:
-      - '**'
+      - 'main'
+      - 'dev'
+    paths:
+      - 'backend/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -35,21 +38,23 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+        run: chmod +x ./backend/gradlew
 
       - name: Build Spring Boot application
         run: ./gradlew build
+        working-directory: ./backend
 
       - name: Run tests
         run: ./gradlew test
+        working-directory: ./backend
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: build/test-results/test/*.xml
-          retention-days: 30
+      # - name: Upload test results
+      #   uses: actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: test-results
+      #     path: build/test-results/test/*.xml
+      #     retention-days: 30
 
       - name: Commit Info
         id: commit_info
@@ -60,8 +65,14 @@ jobs:
           echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
           echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
           echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
-          echo "pr_description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
           echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
+          
+          # PR description을 멀티라인으로 안전하게 저장
+          {
+            echo "pr_description<<EOF"
+            echo "${{ github.event.pull_request.body }}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
 
 
@@ -70,7 +81,7 @@ jobs:
         if: success()
         with:
           webhook: ${{ secrets.DISCORD }}
-          title: "✅ PR #${{ steps.commit_info.outputs.pr_number }} 빌드 성공!"
+          title: "✅ BACKEND PR #${{ steps.commit_info.outputs.pr_number }} 빌드 성공!"
           description: |
             ## [${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
             
@@ -87,7 +98,7 @@ jobs:
         if: failure()
         with:
           webhook: ${{ secrets.DISCORD }}
-          title: "❌ PR #${{ steps.commit_info.outputs.pr_number }} 빌드 실패!"
+          title: "❌ BACKEND PR #${{ steps.commit_info.outputs.pr_number }} 빌드 실패!"
           description: |
             ## [${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
             
