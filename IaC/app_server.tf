@@ -12,6 +12,13 @@ resource "aws_instance" "app_server_1" {
               #!/bin/bash
               apt-get update
               apt-get install -y docker.io
+              VERSION=0.7.1
+              curl -o /usr/local/bin/docker-credential-ecr-login "https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/$${VERSION}/linux-amd64/docker-credential-ecr-login"
+              chmod +x /usr/local/bin/docker-credential-ecr-login
+              mkdir -p /root/.docker
+              echo '{
+                  "credsStore": "ecr-login"
+              }' > /root/.docker/config.json
               systemctl start docker
               systemctl enable docker
               EOF

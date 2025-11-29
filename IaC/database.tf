@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "db_subnet" {
   name       = "db-subnet-group"
-  subnet_ids = [aws_subnet.database_subnet.id]
+  subnet_ids = [aws_subnet.database_subnet.id, aws_subnet.database_subnet_2.id]
 
   tags = {
     Name = "db-subnet-group"
@@ -33,7 +33,7 @@ resource "aws_secretsmanager_secret" "db_password" {
 resource "random_password" "name"{
   length = 16
   special = true
-  override_special = "!#$%&'()*+,-./:;<=>?@[]^_`{|}~"
+  override_special = "!#$%&*()+-=[]{}|?"
 }
 
 resource "aws_secretsmanager_secret_version" "name" {
@@ -41,7 +41,9 @@ resource "aws_secretsmanager_secret_version" "name" {
   secret_string = random_password.name.result
 }
 
+
 resource "aws_db_instance" "my_db" {
+  multi_az = false
   identifier = "my-db"
   allocated_storage = 20
   engine = "mysql"
