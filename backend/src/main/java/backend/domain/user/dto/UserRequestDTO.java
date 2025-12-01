@@ -27,4 +27,5 @@ public class UserRequestDTO {
 
     @Email(groups = {addGroup.class, updateGroup.class})
     private String email;
+
 }
