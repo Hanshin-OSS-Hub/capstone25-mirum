@@ -1,5 +1,6 @@
 package backend.filter;
 
+import backend.util.JWTUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -72,6 +73,33 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     protected void setDetails(HttpServletRequest request, UsernamePasswordAuthenticationToken authRequest) {
         authRequest.setDetails(this.authenticationDetailsSource.buildDetails(request));
+    }
+
+    //access, refresh 토큰 주는 매서드
+    @Override
+    protected void successfulAuthentication(HttpServletRequest request,
+                                            HttpServletResponse response,
+                                            FilterChain chain,
+                                            Authentication authResult) throws IOException, ServletException {
+
+        String username = authResult.getName();
+        String role = authResult.getAuthorities().iterator().next().getAuthority();
+
+        // 1. JWT 생성 (JwtService 주입 필요 없음)
+        String accessToken = JWTUtil.createJWT(username, role, true);
+        String refreshToken = JWTUtil.createJWT(username, role, false);
+
+        // 2. 헤더에 accessToken 넣기 (선택)
+        response.setHeader("Authorization", "Bearer " + accessToken);
+
+        // 3. body로 내려주기
+        Map<String, String> tokenResponse = Map.of(
+                "accessToken", accessToken,
+                "refreshToken", refreshToken
+        );
+
+        response.setContentType("application/json;charset=UTF-8");
+        new ObjectMapper().writeValue(response.getOutputStream(), tokenResponse);
     }
 
 }
