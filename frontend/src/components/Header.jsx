@@ -1,8 +1,7 @@
-// src/components/Header.jsx
-import React, { useState } from "react";
-import { Button } from "./Button";
-import LoginModal from "../pages/Loginmodal";
-import SignupModal from "../pages/Signupmodal";
+import { useState } from "react";
+// import { Button } from "./Button";
+import LoginModal from "../pages/Login";
+import SignupModal from "../pages/SignUp";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -150,22 +149,26 @@ export const Header = () => {
       <LoginModal
           isOpen={isLoginOpen}
           onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={(data) => {
-            setIsLoginOpen(false);
-            if (window.REACT_APP_NAVIGATE) {
-              window.REACT_APP_NAVIGATE("/dashboard");
-            }
+          onLoginSuccess={() => {
+              setIsLoginOpen(false);
+              if (window.REACT_APP_NAVIGATE) {
+                  window.REACT_APP_NAVIGATE("/dashboard");
+              }
           }}
-          />
+          onClickSignUp={() => {
+              setIsLoginOpen(false);
+              setIsSignupOpen(true);
+          }}
+      />
 
       <SignupModal
           isOpen={isSignupOpen}
           onClose={() => setIsSignupOpen(false)}
-          onLoginSuccess={(data) => {
-            setIsSignupOpen(false);
-            alert("회원가입 완료!");
+          onLoginSuccess={() => {
+              setIsSignupOpen(false);
+                alert("회원가입 완료!");
           }}
-          />
+      />
     </>
   );
 };
