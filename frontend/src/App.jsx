@@ -2,15 +2,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 
+import PrivateRoute from "./components/PrivateRoute."
 import Home from './pages/Home.jsx'
 import Page from './pages/Page.jsx'
-import Login from './Login.jsx'
+// import Login from './Login.jsx'
 import './App.css'
 import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiOutlineUsers, HiPlus,
     HiHome, HiUser // 👈 아이콘 추가 임포트
 } from "react-icons/hi2";
-
 
 
 function NavigationSetter() {
@@ -58,9 +58,14 @@ function App() {
       <BrowserRouter>
         <NavigationSetter />
         <Routes>
-             <Route path="/" element={ <Page /> } />
-             <Route path="login" element={<Login />} />
-            <Route path="dashboard" element={ <Home /> } />
+            <Route path="/" element={ <Page /> } />
+             {/* <Route path="login" element={<Login />} /> */}
+            <Route path="dashboard" element={ 
+              <PrivateRoute>
+                <Home />
+              </PrivateRoute> 
+              } 
+            />
         </Routes>
       </BrowserRouter>
     </>
