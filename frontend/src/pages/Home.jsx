@@ -1,12 +1,19 @@
+import { useState } from 'react';
 import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiOutlineUsers, HiPlus,
     HiHome, HiUser // 👈 아이콘 추가 임포트
 } from "react-icons/hi2";
-
+import CreateProjectModal from './CreateProject';
 import '../App.css'
+import { useNavigate } from "react-router-dom";
 
 
-function Home() {
+function Home(props) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [projects, setProjects] = useState(props.projects || []);
+
+    const navigate = useNavigate();   // ✅ 이 줄 추가
+
     return (
         <div className="phone-mockup-wrapper">
             <div className="dashboard-container">
@@ -40,7 +47,7 @@ function Home() {
                             <div className="card summary-card">
                                 <div className="card-info">
                                     <span>진행 중인 프로젝트</span>
-                                    <strong>2</strong>
+                                    <strong>{projects.length}</strong>
                                 </div>
                                 <div className="icon-box blue">📂</div>
                             </div>
@@ -66,26 +73,51 @@ function Home() {
                         <section className="project-section">
                             <div className="section-header">
                                 <h2>내 프로젝트</h2>
-                                <button className="primary-btn">+ 새 프로젝트</button>
+                                <button className="primary-btn" onClick={() => setIsModalOpen(true)}>+ 새 프로젝트</button>
                             </div>
 
                             <div className="project-grid">
-                                {/*{*/}
-                                {/*    props.projects.map((p, i) => (*/}
-                                {/*    <ProjectCard*/}
-                                {/*        key={i}*/}
-                                {/*        title={p.title}*/}
-                                {/*        desc={p.desc}*/}
-                                {/*        progress={p.progress}*/}
-                                {/*        members={p.members}*/}
-                                {/*        day={p.day}*/}
-                                {/*        color={p.color} // 색상 전달*/}
-                                {/*    />*/}
-                                {/*    ))*/}
-                                {/*}*/}
+                            {
+                                projects.map((project) => {
+                                    return(
+                                        // 1. 최상위 요소에 고유한 'key'를 추가합니다. (project.id가 가장 이상적입니다.)
+                                        <div
+                                            key={project.id}
+                                            className="card project-card"
+                                            onClick={() =>
+                                                navigate(`/project/${project.id}`, {
+                                                state: { project },   // ✅ 프로젝트 전체 정보를 함께 넘김
+                                                })
+                                            }
+                                        >
+                                            <div className="project-header">
+                                                <div className="project-text">
+                                                    {/* 2. 하드코딩된 텍스트를 props로 받은 데이터로 교체합니다. */}
+                                                    <h3>{project.title}</h3>
+                                                    <p className="project-desc">{project.description}</p>
+                                                </div>
 
-                                {/* 프로젝트 카드 1 */}
-                                <div className="card project-card">
+                                                <div className="project-icon">📂</div>
+                                            </div>
+
+                                            <div className="progress-bar">
+                                                {/* 3. 진행률(progress)과 같은 동적인 데이터도 style에 적용할 수 있습니다. */}
+                                                <div className="full" style={{ width: `${project.progress}%` }}></div>
+                                            </div>
+
+                                            <div className="card-footer">
+                                                {/* 4. 나머지 데이터도 모두 동적으로 렌더링합니다. */}
+                                                
+                                            <span>👤 {project.members.length || 0}명</span>
+                                            <span>📅 {project.day ? project.day.slice(0, 10) : "날짜 미정"}</span>
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            }
+
+                                 {/* 프로젝트 카드 1 */}
+                                {/* <div className="card project-card">
                                     <div className="project-header">
                                         <div className="project-text">
                                             <h3>웹사이트 디자인 프로젝트</h3>
@@ -103,10 +135,10 @@ function Home() {
                                         <span>👤 3명</span>
                                         <span>📅 2시간 전</span>
                                     </div>
-                                </div>
+                                </div> */}
 
 
-                                <div className="card project-card">
+                                {/*<div className="card project-card">
                                     <div className="project-header">
                                         <div className="project-text">
                                             <h3>마케팅 전략</h3>
@@ -244,7 +276,7 @@ function Home() {
                                         <span>👤 3명</span>
                                         <span>📅 2시간 전</span>
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* 프로젝트 카드 2
                         <div className="card project-card">
@@ -261,30 +293,41 @@ function Home() {
                                 <span>📅 1일 전</span>
                             </div>
                         </div>        */}
-                            </div>
-                        </section>
-                    </div>
-                </main>
-                <nav className="mobile-tab-bar">
-                    <button className="tab-item active">
-                        <HiHome size={24} />
-                        <span>홈</span>
-                    </button>
-                    <button className="tab-item">
-                        <HiOutlineFolder size={24} />
-                        <span>프로젝트</span>
-                    </button>
-                    <button className="tab-item">
-                        <HiCheck size={24} />
-                        <span>작업</span>
-                    </button>
-                    <button className="tab-item">
-                        <HiUser size={24} />
-                        <span>내 정보</span>
-                    </button>
-                </nav>
+                            
+                                <CreateProjectModal
+                                    isOpen={isModalOpen}
+                                    onClose={() => setIsModalOpen(false)}
+                                    onCreateProjectSuccess={(data) => {
+                                        setIsModalOpen(false);
+                                        alert("프로젝트 생성 완료!");
+                                        setProjects((prev) => [...prev, data]);
+                                    }}
+                                />
+
+                                </div>
+                            </section>
+                        </div>
+                    </main>
+                    <nav className="mobile-tab-bar">
+                        <button className="tab-item active">
+                            <HiHome size={24} />
+                            <span>홈</span>
+                        </button>
+                        <button className="tab-item">
+                            <HiOutlineFolder size={24} />
+                            <span>프로젝트</span>
+                        </button>
+                        <button className="tab-item">
+                            <HiCheck size={24} />
+                            <span>작업</span>
+                        </button>
+                        <button className="tab-item">
+                            <HiUser size={24} />
+                            <span>내 정보</span>
+                        </button>
+                    </nav>
+                </div>
             </div>
-        </div>
         // <>
         // {/* Header */}
         //   <header className="header">{/*"bg-white border-b border-gray-200">*/}
@@ -362,4 +405,4 @@ function Home() {
 //       )
 // }
 
-export default Home
+export default Home;

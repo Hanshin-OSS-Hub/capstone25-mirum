@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 
-import PrivateRoute from "./components/PrivateRoute"
+import Project from "./pages/Project.jsx";  // ✅ 상세 페이지 컴포넌트
+// import PrivateRoute from "./components/PrivateRoute"
 import Home from './pages/Home.jsx'
 import Page from './pages/Page.jsx'
 // import Login from './Login.jsx'
@@ -27,28 +28,28 @@ function NavigationSetter() {
 
 function App() {
     const projects = [
-        {
-            title: "데이터 분석 프로젝트",
-            desc: "고객 행동 패턴 분석 및 인사이트 도출",
-            progress: 80,
-            members: ["전", "오", "윤"], // 배열로 전달
-            day: "3월 20일",
-            color: "purple" // 보라색
-        },
-        {
-            title: "웹 개발 프로젝트",
-            desc: "대학생을 위한 프로젝트 관리 도구 개발",
-            progress: 65,
-            members: ["김", "이", "박"],
-            day: "3월 15일",
-            color: "blue" // 파란색
-        },
+        // {
+        //     title: "데이터 분석 프로젝트",
+        //     desc: "고객 행동 패턴 분석 및 인사이트 도출",
+        //     progress: 80,
+        //     members: ["전", "오", "윤"], // 배열로 전달
+        //     day: "3월 20일",
+        //     color: "purple" // 보라색
+        // },
+        // {
+        //     title: "웹 개발 프로젝트",
+        //     desc: "대학생을 위한 프로젝트 관리 도구 개발",
+        //     progress: 65,
+        //     members: ["김", "이", "박"],
+        //     day: "3월 15일",
+        //     color: "blue" // 파란색
+        // },
         {
             title: "마케팅 전략 수립",
-            desc: "신제품 출시를 위한 마케팅 전략 기획",
+            description: "신제품 출시를 위한 마케팅 전략 기획",
             progress: 40,
             members: ["최", "정"],
-            day: "4월 1일",
+            day: "2025-04-01",
             color: "green" // 초록색
         }
     ];
@@ -61,11 +62,12 @@ function App() {
             <Route path="/" element={ <Page /> } />
              {/* <Route path="login" element={<Login />} /> */}
             <Route path="dashboard" element={ 
-              <PrivateRoute>
-                <Home />
-              </PrivateRoute> 
-              } 
+              // <PrivateRoute>
+                <Home projects={projects}/>
+              /* </PrivateRoute>  */
+              }
             />
+            <Route path="/project/:projectId" element={<Project />}/>
         </Routes>
       </BrowserRouter>
     </>

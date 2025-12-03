@@ -1,0 +1,137 @@
+/* src/createproject.css */
+
+.cp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+.cp-modal {
+  width: 540px;
+  max-width: 92vw;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px 28px 20px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+}
+
+.cp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.cp-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.cp-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.cp-steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.cp-step {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  color: #9ca3af;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cp-step-active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.cp-step-line {
+  flex: 1;
+  height: 2px;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.cp-form {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cp-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #4b5563;
+  gap: 6px;
+}
+
+.cp-required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.cp-optional {
+  color: #9ca3af;
+  margin-left: 4px;
+}
+
+.cp-input,
+.cp-textarea {
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 9px 11px;
+  font-size: 13px;
+  outline: none;
+  resize: none;
+}
+
+.cp-input:focus,
+.cp-textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+.cp-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cp-button {
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+}
+
+.cp-button-ghost {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.cp-button-primary {
+  background: #2563eb;
+  color: white;
+}
