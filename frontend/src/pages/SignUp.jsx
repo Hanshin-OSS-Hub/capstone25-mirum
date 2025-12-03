@@ -1,5 +1,6 @@
 import { useState } from "react";
 import './modal.css';
+import { api } from './client';
 
 function SignUp(props) {
     const [userName, setUserName] = useState("");
@@ -39,19 +40,12 @@ function SignUp(props) {
         }
 
         try {
-            const response = await fetch("http://localhost:8080/user", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({userName: userName, password: password}),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || '회원가입에 실패했습니다.');
-            }
-
-            if (props.onSignUpSuccess)
+            // api 클라이언트를 사용하여 회원가입 요청
+            await api.post("user", { username: userName, password: password, nickname: "나 미룸", email: "mirum@hs.ac.kr" });
+            
+            if (props.onSignUpSuccess) {
                 props.onSignUpSuccess();
+            }
 
         } catch (error) {
             setError(error.message || "알 수 없는 오류가 발생했습니다.");

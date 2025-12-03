@@ -1,5 +1,6 @@
 import { useState } from "react";
 import './modal.css';
+import { api } from './client';
 
 function Login(props) {
     const [userName, setUserName] = useState("");
@@ -41,19 +42,9 @@ function Login(props) {
         }
 
         try {
-            const response = await fetch("http://localhost:8080/login", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({userName: userName, password: password}),
-            });
-
-            if (!response.ok) {
-                // 서버에서 에러 메시지를 포함한 응답을 보낼 경우를 대비합니다.
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || '아이디 또는 비밀번호가 일치하지 않습니다.');
-            }
-
-            const data = await response.json();
+            // API 클라이언트를 사용하여 로그인 요청
+            const data = await api.post("login", { username: userName, password: password });
+            
             // ✅ 여기서 토큰을 localStorage에 저장합니다.
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);

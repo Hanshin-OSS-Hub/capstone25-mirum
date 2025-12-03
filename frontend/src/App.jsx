@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 
-import PrivateRoute from "./components/PrivateRoute."
+import PrivateRoute from "./components/PrivateRoute"
 import Home from './pages/Home.jsx'
 import Page from './pages/Page.jsx'
 // import Login from './Login.jsx'

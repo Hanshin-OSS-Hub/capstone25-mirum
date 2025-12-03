@@ -1,13 +1,25 @@
-import { useState } from "react";
-// import { Button } from "./Button";
+import { useState, useEffect } from "react";
+// import { logout } from '../utils/auth';
 import LoginModal from "../pages/Login";
 import SignupModal from "../pages/SignUp";
 
-export const Header = () => {
+/**
+ * 애플리케이션의 헤더 컴포넌트.
+ * 로그인 상태에 따라 '로그인' 또는 '로그아웃' 버튼을 표시합니다.
+ * @param {object} props
+ * @param {() => void} props.onLoginClick - 로그인 버튼 클릭 시 호출될 함수
+ */
+export const Header = ({ onLoginClick }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
-  
+
+  // useEffect(() => {
+  //   // 컴포넌트가 마운트될 때 localStorage를 확인하여 로그인 상태를 설정합니다.
+  //   const token = localStorage.getItem('accessToken');
+  //   setIsLoggedIn(!!token);
+  // }, []);
 
 
   const scrollToSection = (sectionId) => {
@@ -164,7 +176,7 @@ export const Header = () => {
       <SignupModal
           isOpen={isSignupOpen}
           onClose={() => setIsSignupOpen(false)}
-          onLoginSuccess={() => {
+          onSignUpSuccess={() => {
               setIsSignupOpen(false);
                 alert("회원가입 완료!");
           }}

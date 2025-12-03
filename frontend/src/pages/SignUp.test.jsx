@@ -2,6 +2,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SignUp from './SignUp';
 
+// api 클라이언트를 모의(mock) 처리합니다.
+import { api } from './client';
+jest.mock('./client');
+
 
 describe("SignUp Component", () => {
 
@@ -11,6 +15,8 @@ describe("SignUp Component", () => {
     beforeEach(() => {
         mockOnClose = jest.fn();
         mockOnSignUpSuccess = jest.fn();
+        // 각 테스트 전에 모의 함수 기록을 초기화합니다.
+        jest.clearAllMocks();
     });
 
 
@@ -49,14 +55,8 @@ describe("SignUp Component", () => {
 
 
     test("성공적으로 회원가입하면 onSignUpSuccess를 호출한다", async () => {
-        // 1. 실제 fetch 대신 사용할 가짜 fetch 함수를 설정합니다.
-        global.fetch = jest.fn(() =>
-            Promise.resolve({
-                ok: true, // 성공적인 응답을 시뮬레이션
-                json: () => Promise.resolve({ message: '회원가입 성공' }),
-            })
-        );
-
+        // 1. api.post가 성공적으로 응답하도록 설정합니다. (반환값이 없어도 성공)
+        api.post.mockResolvedValue({});
         render(
             <SignUp
                 isOpen={true}
@@ -76,6 +76,8 @@ describe("SignUp Component", () => {
         fireEvent.click(signUpButton);
 
         await waitFor(() => {
+            // api.post가 올바른 인자와 함께 호출되었는지 확인
+            expect(api.post).toHaveBeenCalledWith('user', { username: 'newuser', password: 'password123', nickname: "나 미룸", email: "mirum@hs.ac.kr" });
             expect(mockOnSignUpSuccess).toHaveBeenCalled();
         });
     });
@@ -85,14 +87,7 @@ describe("SignUp Component", () => {
     test("회원가입 실패 시 에러 메시지를 표시한다", async () => {
         // 1. 회원가입 실패(409 Conflict)를 시뮬레이션하는 가짜 fetch 함수를 설정합니다.
         const errorMessageFromServer = '이미 존재하는 아이디입니다.';
-        global.fetch = jest.fn(() =>
-            Promise.resolve({
-                ok: false,
-                status: 409,
-                json: () => Promise.resolve({ message: errorMessageFromServer }),
-            })
-        );
-
+        api.post.mockRejectedValue(new Error(errorMessageFromServer));
         render(
             <SignUp
                 isOpen={true}
