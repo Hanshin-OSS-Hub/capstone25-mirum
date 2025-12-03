@@ -39,29 +39,28 @@ function SignUp(props) {
         }
 
         try {
-            // const response = await fetch("http://localhost:8080/user", {
-            //     method: "POST",
-            //     headers: {"Content-Type": "application/json"},
-            //     body: JSON.stringify({userName: userName, password: password}),
-            // });
-            //
-            // // 'throw' of exception caught locally 경고: try 내부에서 강제로 예외 터뜨리지 말라고 하네요. 왜지?
-            // // https://kyounghwan01.github.io/blog/JS/JSbasic/thorw-locally/
-            // if (!response.ok)
-            //     return Promise.reject( { message: response.statusText, status: response.status } );
-            //     // throw new Error("Failed to Sign-up");
+            const response = await fetch("http://localhost:8080/user", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({userName: userName, password: password}),
+            });
 
-            if (props.onLoginSuccess)
-                props.onLoginSuccess();
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || '회원가입에 실패했습니다.');
+            }
+
+            if (props.onSignUpSuccess)
+                props.onSignUpSuccess();
 
         } catch (error) {
-            setError(error.message || "Failed to fetch");
+            setError(error.message || "알 수 없는 오류가 발생했습니다.");
         }
     }
 
     return (
         <>
-          <div className="login-overlay" onClick={handleOverlayClick}>
+          <div className="login-overlay" onMouseDown={handleOverlayClick} data-testid="overlay">
             <div className="login-card">
                 {/* 닫기 버튼 */}
                 <button
@@ -101,15 +100,6 @@ function SignUp(props) {
                         회원가입
                     </button>
 
-                    {/*<button*/}
-                    {/*    type="button"*/}
-                    {/*    className="login-secondary-button"*/}
-                    {/*    onClick={() => {*/}
-                    {/*        console.log("계정이 없어요 클릭");*/}
-                    {/*    }}*/}
-                    {/*>*/}
-                    {/*    계정이 없어요*/}
-                    {/*</button>*/}
                 </form>
             </div>
           </div>

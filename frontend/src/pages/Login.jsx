@@ -77,13 +77,13 @@ function Login(props) {
             //     props.onLoginSuccess();
 
         } catch (error) {
-            setError(error.message || "Failed to fetch");
+            setError(error.message || "알 수 없는 오류가 발생했습니다.");
         }
     }
 
     return (
         <>
-          <div className="login-overlay" onClick={handleOverlayClick}>
+          <div className="login-overlay" onMouseDown={handleOverlayClick} data-testid="overlay">
             <div className="login-card">
                 {/* 닫기 버튼 */}
                 <button

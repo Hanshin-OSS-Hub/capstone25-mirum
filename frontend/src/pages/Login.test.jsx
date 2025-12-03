@@ -20,7 +20,7 @@ describe('Login Component', () => {
     mockOnClickSignUp = jest.fn();
   });
 
-  
+
 
   test('컴포넌트가 올바르게 렌더링된다', () => {
     render(
@@ -161,4 +161,21 @@ describe('Login Component', () => {
 
     expect(mockOnClickSignUp).toHaveBeenCalled();
   });
+
+
+
+  test("오버레이 클릭 시 onClose가 호출된다", () => {
+        render(
+            <Login
+                isOpen={true}
+                onClose={mockOnClose}
+                onLoginSuccess={mockOnLoginSuccess}
+                onClickSignUp={mockOnClickSignUp}
+            />
+        );
+        // data-testid를 사용하여 오버레이 요소를 정확하게 선택합니다.
+        const overlay = screen.getByTestId("overlay");
+        fireEvent.mouseDown(overlay);
+        expect(mockOnClose).toHaveBeenCalled();
+    }); 
 });
