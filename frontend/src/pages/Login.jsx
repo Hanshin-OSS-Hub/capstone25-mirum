@@ -41,40 +41,40 @@ function Login(props) {
         }
 
         try {
-            // const response = await fetch("http://localhost:8080/login", {
-            //     method: "POST",
-            //     headers: {"Content-Type": "application/json"},
-            //     body: JSON.stringify({userName: userName, password: password}),
-            // });
-            //
-            // // 'throw' of exception caught locally 경고: try 내부에서 강제로 예외 터뜨리지 말라고 하네요. 왜지?
-            // // https://kyounghwan01.github.io/blog/JS/JSbasic/thorw-locally/
-            // if (!response.ok)
-            //     return Promise.reject( { message: response.statusText, status: response.status } );
-            //     // throw new Error("Failed to login");
-            //
-            // const data = await response.json();
-            // // ✅ 여기서 토큰을 localStorage에 저장합니다.
-            // localStorage.setItem("accessToken", data.accessToken);
-            // localStorage.setItem("refreshToken", data.refreshToken);
-            //
-            // if (props.onLoginSuccess)
-            //     props.onLoginSuccess();
+            const response = await fetch("http://localhost:8080/login", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({userName: userName, password: password}),
+            });
 
-            // --- 데모용 코드 ---
-            const fakeUserData = {
-                userName,
-                name: "미룸 데모 유저",
-                accessToken: "demo-access-token-123",
-                refreshToken: "demo-refresh-token-456",
-            };
+            if (!response.ok) {
+                // 서버에서 에러 메시지를 포함한 응답을 보낼 경우를 대비합니다.
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || '아이디 또는 비밀번호가 일치하지 않습니다.');
+            }
 
+            const data = await response.json();
             // ✅ 여기서 토큰을 localStorage에 저장합니다.
-            localStorage.setItem("accessToken", fakeUserData.accessToken);
-            localStorage.setItem("refreshToken", fakeUserData.refreshToken);
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
 
             if (props.onLoginSuccess)
                 props.onLoginSuccess();
+
+            // // --- 데모용 코드 ---
+            // const fakeUserData = {
+            //     userName,
+            //     name: "미룸 데모 유저",
+            //     accessToken: "demo-access-token-123",
+            //     refreshToken: "demo-refresh-token-456",
+            // };
+            //
+            // // ✅ 여기서 토큰을 localStorage에 저장합니다.
+            // localStorage.setItem("accessToken", fakeUserData.accessToken);
+            // localStorage.setItem("refreshToken", fakeUserData.refreshToken);
+            //
+            // if (props.onLoginSuccess)
+            //     props.onLoginSuccess();
 
         } catch (error) {
             setError(error.message || "Failed to fetch");
