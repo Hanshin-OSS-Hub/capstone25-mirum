@@ -33,6 +33,8 @@ describe("SignUp Component", () => {
     expect(screen.getByRole("heading", { name: "회원가입" })).toBeInTheDocument();
     expect(screen.getByPlaceholderText("아이디를 입력하세요")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("비밀번호를 입력하세요")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("이메일을 입력하세요")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("닉네임을 입력하세요")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "회원가입" })).toBeInTheDocument();
   });
 

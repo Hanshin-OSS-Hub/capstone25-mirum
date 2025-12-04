@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 // import { logout } from '../utils/auth';
 import LoginModal from "../pages/Login";
-import SignupModal from "../pages/SignUp";
+import SignupModal from "../pages/Signupmodal";
 
 /**
  * 애플리케이션의 헤더 컴포넌트.
