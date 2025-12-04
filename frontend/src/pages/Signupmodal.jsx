@@ -139,15 +139,6 @@ export default function Signup({ isOpen, onClose, onSignupSuccess }) {
             회원가입
           </button>
 
-          <button
-            type="button"
-            className="login-secondary-button"
-            onClick={() => {
-              console.log("계정이 없어요 클릭");
-            }}
-          >
-            계정이 없어요
-          </button>
         </form>
       </div>
     </div>
