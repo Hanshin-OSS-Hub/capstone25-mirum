@@ -40,7 +40,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler) {
         super(DEFAULT_ANT_PATH_REQUEST_MATCHER, authenticationManager);
-        //25.12.4 refresh entity 연결 오류 수정
+        //25.12.4 refresh entity 연결 오류 수정.
         this.setAuthenticationSuccessHandler(getSuccessHandler());
     }
 
