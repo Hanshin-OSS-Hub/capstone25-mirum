@@ -1,6 +1,6 @@
 // src/pages/Project.jsx
 import React from "react";
-import "./project.css";
+import "./Project.css";
 import "../App.css";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 
