@@ -1,0 +1,285 @@
+/* 전체 배경 + 기본 레이아웃 */
+
+
+
+.pj-root {
+  min-height: 100vh;
+  background-color: #f5f6fb;         /* 대시보드와 비슷한 연한 회색 배경 */
+  font-family: "Pretendard", sans-serif;
+}
+
+.top-bar {
+  max-width: 1200px;
+  margin: 24px auto 0;
+  padding: 0 40px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  /* 흰색 알약 배경/그림자 제거 */
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* 로고 영역 – 대시보드 header-left 비슷하게 */
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+}
+
+.icon-button {
+  border: none;
+  background: transparent;
+  color: #4b5563;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* 본문 컨테이너 – 대시보드 .content-inner와 동일한 폭/패딩 */
+.pj-main {
+  max-width: 1200px;                 /* ✅ 동일 */
+  margin: 32px auto 80px;            /* 가운데 정렬 + 아래 여백 */
+  padding: 0 40px;                   /* ✅ 좌우 40px */
+}
+
+/* 상단 제목/서브텍스트 영역 */
+.pj-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.pj-title {
+  font-size: 28px;
+  margin: 0 0 8px;
+}
+
+.pj-sub {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* 요약 카드 4개 – 대시보드 summary-cards 느낌 */
+.pj-summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.pj-summary-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+}
+
+.pj-summary-label {
+  display: block;
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.pj-summary-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* 새 작업 버튼 */
+.pj-new-task-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 멤버 카드 리스트 */
+.pj-members {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pj-member-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+}
+
+.pj-member-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.pj-member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background-color: #4f46e5;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin-right: 12px;
+}
+
+.pj-member-name {
+  font-weight: 600;
+}
+
+.pj-member-role {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.pj-member-stats {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.pj-divider {
+  margin: 0 6px;
+}
+
+/* 작업 카드 */
+.pj-task-card {
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.pj-task-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pj-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-right: 8px;
+}
+
+.pj-badge-red {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.pj-task-title {
+  font-weight: 600;
+}
+
+.pj-task-date {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.pj-task-desc {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.pj-task-tags {
+  display: flex;
+  gap: 8px;
+}
+
+.pj-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* 작업 없음 카드 */
+.pj-empty-tasks {
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: #6b7280;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pj-link-button {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pj-member-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 왼쪽(아바타 + 이름/직무)은 서로 붙게 */
+.pj-member-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pj-top-bar {
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* 안쪽 컨텐츠 (1200px 정렬) */
+.pj-top-inner {
+  max-width: 1200px;
+  height: 64px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
