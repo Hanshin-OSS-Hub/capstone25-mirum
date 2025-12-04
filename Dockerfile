@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim AS build
+FROM amazoncorretto:17-alpine-jdk AS build
 
 WORKDIR /workspace/app
 
