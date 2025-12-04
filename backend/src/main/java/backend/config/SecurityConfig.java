@@ -148,7 +148,9 @@ public class SecurityConfig {
                 .addFilterBefore(new JWTFilter(), LogoutFilter.class);
 
         http
-                .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler),
+                        UsernamePasswordAuthenticationFilter.class);
 
         // 세션 필터 설정 (STATELESS)
         http

@@ -18,7 +18,7 @@ public class JWTUtil {
 
     static  {
         //이거 바꿔야함
-        String secretKeyString = "마포대교는무너졌냐";
+        String secretKeyString = "letitgoletitgocantholditbackanymoreletitgoletitgoturnawayandslamthedooridontcarewhattheyregoingtosay";
 
         secretKey = new SecretKeySpec(secretKeyString.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
 

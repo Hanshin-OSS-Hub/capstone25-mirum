@@ -1,5 +1,6 @@
 package backend.filter;
 
+import backend.domain.user.jwt.dto.JWTResponseDTO;
 import backend.util.JWTUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -36,8 +38,10 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private String passwordParameter = SPRING_SECURITY_FORM_PASSWORD_KEY;
 
-    public LoginFilter(AuthenticationManager authenticationManager) {
+    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler) {
         super(DEFAULT_ANT_PATH_REQUEST_MATCHER, authenticationManager);
+        //25.12.4 refresh entity 연결 오류 수정.
+        this.setAuthenticationSuccessHandler(authenticationSuccessHandler);
     }
 
     @Override
@@ -73,33 +77,6 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     protected void setDetails(HttpServletRequest request, UsernamePasswordAuthenticationToken authRequest) {
         authRequest.setDetails(this.authenticationDetailsSource.buildDetails(request));
-    }
-
-    //access, refresh 토큰 주는 매서드
-    @Override
-    protected void successfulAuthentication(HttpServletRequest request,
-                                            HttpServletResponse response,
-                                            FilterChain chain,
-                                            Authentication authResult) throws IOException, ServletException {
-
-        String username = authResult.getName();
-        String role = authResult.getAuthorities().iterator().next().getAuthority();
-
-        // 1. JWT 생성 (JwtService 주입 필요 없음)
-        String accessToken = JWTUtil.createJWT(username, role, true);
-        String refreshToken = JWTUtil.createJWT(username, role, false);
-
-        // 2. 헤더에 accessToken 넣기 (선택)
-        response.setHeader("Authorization", "Bearer " + accessToken);
-
-        // 3. body로 내려주기
-        Map<String, String> tokenResponse = Map.of(
-                "accessToken", accessToken,
-                "refreshToken", refreshToken
-        );
-
-        response.setContentType("application/json;charset=UTF-8");
-        new ObjectMapper().writeValue(response.getOutputStream(), tokenResponse);
     }
 
 }

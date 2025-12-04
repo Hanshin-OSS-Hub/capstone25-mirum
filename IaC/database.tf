@@ -28,6 +28,8 @@ resource "aws_db_parameter_group" "db_pg" {
 
 resource "aws_secretsmanager_secret" "db_password" {
   name = "db_password"
+
+  recovery_window_in_days = 0
 }
 
 resource "random_password" "name"{

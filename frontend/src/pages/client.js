@@ -15,7 +15,7 @@ async function apiClient(endpoint, options = {}) {
       headers["Authorization"] = `Bearer ${accessToken}`;
     }
 
-    const response = await fetch(`http://localhost:8080/${endpoint}`, {
+    const response = await fetch(`/api/${endpoint}`, {
       ...options,
       headers,
     });
@@ -27,7 +27,7 @@ async function apiClient(endpoint, options = {}) {
         if (!refreshToken) throw new Error("No refresh token");
 
         // 2. 토큰 재발급 API 호출
-        const refreshResponse = await fetch(`http://localhost:8080/jwt/refresh`, {
+        const refreshResponse = await fetch(`/api/jwt/refresh`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
