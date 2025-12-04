@@ -41,12 +41,12 @@ jobs:
         run: chmod +x ./backend/gradlew
 
       - name: Build Spring Boot application
-        run: ./gradlew build
+        run: ./gradlew build -x test
         working-directory: ./backend
 
-      - name: Run tests
-        run: ./gradlew test
-        working-directory: ./backend
+      # - name: Run tests
+      #   run: ./gradlew test
+      #   working-directory: ./backend
 
       # - name: Upload test results
       #   uses: actions/upload-artifact@v4

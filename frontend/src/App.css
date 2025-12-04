@@ -1,0 +1,473 @@
+/*#root {*/
+/*    !*max-width: 1280px;*!*/
+/*    !*margin: 0 auto;*!*/
+/*    !*padding: 2rem;*!*/
+/*    !*text-align: center;*!*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    !*align-items: flex-start;*!*/
+/*    !*flex-shrink: 0;*!*/
+/*    min-height: 100vh;*/
+/*    font-family: Roboto, system-ui;*/
+/*}*/
+
+body {
+    margin: 0;
+    background-color: white; /* 초록 배경을 body로 이동 */
+}
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 화면 꽉 채우기 */
+    font-family: 'Pretendard', sans-serif; /* 폰트가 없다면 기본 폰트 적용됨 */
+    max-width: 1200px;
+    color: #333;
+    margin: 0 auto;
+    
+    /* background-color: #fafbf9; */
+}   
+
+.header {
+    background-color: white;
+    height: 64px;
+    display: flex;
+    justify-content: space-between; /* 양끝 정렬 */
+    align-items: center;
+    border-radius : 20px;
+    padding: 0 40px;
+    min-width: 1200px; /* 창을 줄여도 이 폭 이하로 안 줄어듦 → 모바일처럼 안 됨 */
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-box {
+    background-color: #2563eb; /* 파란색 */
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.logo-text {
+    font-weight: bold;
+    font-size: 25px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-btn {
+    background-color: #dbeafe;
+    color: #1e40af;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    font-weight: bold;
+    text-align: center;
+}
+
+.main-content {
+    background-color: transparent;
+    flex: 1;
+    display: flex;
+    justify-content: left;  /* 가운데로 몰기 */
+    padding: 40px 0;          /* 위아래 여백만 */
+}
+
+.content-inner {
+    /*width: 1200px;     !* 고정 폭 *!*/
+    min-width: 1200px; /* 창을 줄여도 이 폭 이하로 안 줄어듦 → 모바일처럼 안 됨 */
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+.card {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* 살짝 뜨는 효과 */
+}
+
+.greeting-section {
+    margin-bottom: 32px;
+}
+.greeting-section h1 {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+.greeting-section p {
+    color: #6b7280;
+}
+
+.summary-cards {
+    display: flex;
+    gap: 24px; /* 카드 사이 간격 */
+    margin-bottom: 40px;
+}
+
+.summary-card {
+    flex: 1; /* 3등분 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-info span { display: block; color: #6b7280; font-size: 14px; margin-bottom: 4px; }
+.card-info strong { font-size: 24px; }
+
+.icon-box {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+}
+.icon-box.blue { background-color: #eff6ff; }
+.icon-box.green { background-color: #f0fdf4; }
+.icon-box.purple { background-color: #f3e8ff; }
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.primary-btn {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline; /* ← 핵심 */
+}
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(3 , 1fr); 
+    gap : 35px;
+}
+
+.project-card {
+    flex: 1; /* 공간 채우기 */
+    max-width: 450px; /* 너무 커지지 않게 */
+}
+
+.project-icon {
+    background-color: #dbeafe;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.project-desc {
+    color: #6b7280;
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    background-color: #2563eb;
+}
+
+.full {
+    height: 100%;
+    background-color: #03f7c2ed;
+
+}
+
+.fell {
+    height: 100%;
+    background-color: #c900fbed;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #9ca3af;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 16px;
+}
+
+.mobile-tab-bar {
+    display: none; /* 데스크탑에서는 안 보임 */
+}
+
+@media (max-width: 768px) {
+    .phone-mockup-wrapper {
+        /* 👇 디바이스 프레임 크기 및 가운데 정렬 */
+        max-width: 400px; /* 스마트폰 너비 (조절 가능) */
+        margin: 50px auto; /* 중앙 정렬 및 위아래 여백 */
+
+        /* 👇 프레임 스타일 */
+        border: 10px solid #222; /* 검은색 테두리 */
+        border-radius: 40px; /* 둥근 모서리 */
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.4); /* 그림자 */
+        /*overflow: auto; !* 내부 내용물이 프레임을 벗어나지 않도록 숨김 *!*/
+
+        /* 👇 [핵심 1] 가로 스크롤 끄고, 세로 스크롤만 켜기 */
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        /* 👇 [핵심 2] 파이어폭스(Firefox)에서 스크롤바 숨기기 */
+        scrollbar-width: none;
+
+        /* 👇 내부 대시보드 스크롤 허용 */
+        height: 700px; /* 스마트폰 높이 (조절 가능) */
+    }
+
+    .dashboard-container {
+    min-height: 100%;
+    padding: 0 24px 40px; 
+    box-sizing: border-box;
+    }
+
+    .header {
+    padding: 16px 0;        /* 위/아래만, 좌우는 0 */
+    min-width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
+
+    /* 1. 전체 레이아웃 여백 줄이기 */
+    /* 2. 콘텐츠가 탭 바에 가려지지 않게 아랫쪽 추가 여백 */
+    .main-content {
+    padding: 24px 0 80px;   /* 위/아래만, 좌우는 0 */
+    justify-content: center;
+    }
+
+    .content-inner {
+        min-width: 100%;
+    }
+
+    /* 2. 요약 카드: 가로 배치 -> 세로 배치 */
+    .summary-cards {
+        max-width: 100%;
+        flex-direction: column; /* 옆으로 서던 애들을 줄세우기 */
+        gap: 16px; /* 간격 조금 줄이기 */
+    }
+
+    .summary-card {
+        flex-wrap: wrap;
+    }
+
+    /* 3. 프로젝트 그리드: 가로 배치 -> 세로 배치 */
+    .project-grid {
+        display: none;
+        /* flex-direction: column; */
+        /*flex-wrap: wrap;*/
+    }
+
+    .project-card {
+        max-width:100%; /* 너비 제한 해제하고 꽉 채우기 */
+    }
+
+    /* 4. 글자 크기 조절 (선택사항) */
+    .greeting-section h1 {
+        font-size: 20px; /* 제목 조금 작게 */
+    }
+
+    .mobile-tab-bar {
+        display: flex;          /* 이제 보임! */
+        position: sticky;        /* 화면 아래에 고정 */
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: white;
+        border-top: 1px solid #e5e7eb;
+        justify-content: space-around; /* 간격 균등 배치 */
+        align-items: center;
+        z-index: 1000; /* 다른 요소 위에 뜨도록 */
+        padding-bottom: env(safe-area-inset-bottom); /* 아이폰 하단 바 대응 */
+    }
+
+    .tab-item {
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        color: #9ca3af; /* 비활성 색상 */
+        font-size: 10px;
+    }
+
+    .tab-item.active {
+        color: #2563eb; /* 활성 색상 (파란색) */
+    }
+}
+
+/* 5. (옵션) 헤더에서 덜 중요한 정보 숨기기 */
+/* 모바일은 좁으니까 '프로필 버튼'만 남기고 텍스트는 숨길 수도 있습니다 */
+/* .logo-text {
+  display: none;
+}
+*/
+
+
+
+/*.header {*/
+/*    background-color: aqua;*/
+/*    display: flex;*/
+/*    width: 100%;*/
+/*    height: 65px;*/
+/*    !*padding: 16px 24px 17px 24px;*!*/
+/*    justify-content: center;*/
+/*    flex-direction: row;*/
+/*    align-items: center;*/
+/*}*/
+
+
+/*.container {*/
+/*    background-color: brown;*/
+/*    display: flex;*/
+/*    width: 95%; !*1392px;*!*/
+/*    height: 32px;*/
+/*    justify-content: space-between;*/
+/*    align-items: center;*/
+/*}*/
+
+
+/*.header button {*/
+/*    display: inline-flex;*/
+/*    width: 77.813px;*/
+/*    height: 100%; !*32px;*!*/
+/*    align-items: center;*/
+/*    flex-shrink: 0;*/
+/*}*/
+
+/*.logo{*/
+/*    display: inline-flex;*/
+/*    width: 50px;*/
+/*    height: 32px;*/
+/*    align-items: center;*/
+/*    text-align: center;*/
+/*}*/
+
+
+/*.header img {*/
+
+/*}*/
+
+
+/*.title-font {*/
+/*    color: #111827;*/
+/*    text-align: center;*/
+/*    font-size: 20px;*/
+/*    font-style: normal;*/
+/*    font-weight: 700;*/
+/*    line-height: 28px; !* 140% *!*/
+/*    padding-left: 8px;*/
+/*    align-items: flex-start;*/
+/*}*/
+
+/*section {*/
+/*    width: 100%;*/
+/*    height: 700px;*/
+/*    display: flex;*/
+/*    !*flex-direction: column;*!*/
+/*    justify-content: center;*/
+/*    background-color: azure;*/
+/*    padding-top : 24px;*/
+/*    padding-bottom: 24px;*/
+/*}*/
+
+/*section p {*/
+/*    width: 90%;*/
+/*    height: 90%;*/
+/*    background-color: bisque;*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    !*justify-content: center;*!*/
+/*    !*text-align: center;*!*/
+/*    line-height: 28px;*/
+/*    !*padding-left: 8px;*!*/
+/*    padding: 2rem;*/
+/*    margin-top: 5%;*/
+/*    margin-left: 10%;*/
+/*    margin-right: 10%;*/
+/*}*/
+
+/*footer {*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*    align-items: center;*/
+/*    justify-content: center;*/
+/*    width: 100%;*/
+/*    height: 65px;*/
+/*    background-color: #111827;*/
+/*    margin-top : 10%;*/
+/*}*/
+
+/*.logo {*/
+/*  height: 6em;*/
+/*  padding: 1.5em;*/
+/*  will-change: filter;*/
+/*  transition: filter 300ms;*/
+/*}*/
+/*.logo:hover {*/
+/*  filter: drop-shadow(0 0 2em #646cffaa);*/
+/*}*/
+/*.logo.react:hover {*/
+/*  filter: drop-shadow(0 0 2em #61dafbaa);*/
+/*}*/
+
+/*@keyframes logo-spin {*/
+/*  from {*/
+/*    transform: rotate(0deg);*/
+/*  }*/
+/*  to {*/
+/*    transform: rotate(360deg);*/
+/*  }*/
+/*}*/
+
+/*@media (prefers-reduced-motion: no-preference) {*/
+/*  a:nth-of-type(2) .logo {*/
+/*    animation: logo-spin infinite 20s linear;*/
+/*  }*/
+/*}*/
+
+/*.card {*/
+/*  padding: 2em;*/
+/*}*/
+
+/*.read-the-docs {*/
+/*  color: #888;*/
+/*}*/

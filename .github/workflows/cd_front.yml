@@ -33,6 +33,6 @@ jobs:
                 username: ubuntu
                 key: ${{ secrets.SERVER_SSH_KEY }}
                 port: 22
-                source: "frontend/build/*"
+                source: "frontend/dist/*"
                 target: "/var/www/html/"
                 strip_components: 2
