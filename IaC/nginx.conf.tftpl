@@ -2,6 +2,8 @@
 
 apt-get update
 apt-get install -y nginx
+mkdir -p /var/www/html
+chown -R ubuntu:ubuntu /var/www/html
 
 cat << EOT > /etc/nginx/sites-available/default
 server {
