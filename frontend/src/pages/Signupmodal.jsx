@@ -2,7 +2,7 @@
 import { useState } from "react";
 import "./modal.css";
 
-export default function Signup({ isOpen, onClose, onLoginSuccess }) {
+export default function Signup({ isOpen, onClose, onSignupSuccess }) {
   const [userId, setUserId] = useState("");      // 아이디 (username)
   const [password, setPassword] = useState("");  // 비밀번호
   const [email, setEmail] = useState("");        // 이메일
@@ -57,8 +57,8 @@ export default function Signup({ isOpen, onClose, onLoginSuccess }) {
       console.log("회원가입 성공", data);
 
       // 필요하면 회원가입 후 자동 로그인처럼 사용
-      if (onLoginSuccess) {
-        onLoginSuccess(data); // Header/App 쪽으로 유저 정보 전달
+      if (onSignupSuccess) {
+        onSignupSuccess(data); // Header/App 쪽으로 유저 정보 전달
       }
 
       if (onClose) {
@@ -71,7 +71,7 @@ export default function Signup({ isOpen, onClose, onLoginSuccess }) {
   };
 
   return (
-    <div className="login-overlay" onClick={handleOverlayClick}>
+    <div className="login-overlay" onMouseDown={handleOverlayClick} data-testid="overlay">
       <div className="login-card">
         {/* 닫기 버튼 */}
         <button
