@@ -1,5 +1,7 @@
 package backend.filter;
 
+import backend.domain.user.jwt.dto.JWTResponseDTO;
+import backend.util.JWTUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -14,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -35,8 +38,10 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private String passwordParameter = SPRING_SECURITY_FORM_PASSWORD_KEY;
 
-    public LoginFilter(AuthenticationManager authenticationManager) {
+    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler) {
         super(DEFAULT_ANT_PATH_REQUEST_MATCHER, authenticationManager);
+        //25.12.4 refresh entity 연결 오류 수정
+        this.setAuthenticationSuccessHandler(getSuccessHandler());
     }
 
     @Override

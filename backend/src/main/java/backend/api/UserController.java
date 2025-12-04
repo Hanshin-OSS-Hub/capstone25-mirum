@@ -40,7 +40,7 @@ public class UserController {
     }
 
     // 유저 정보
-    @GetMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/user") //, consumes = MediaType.APPLICATION_JSON_VALUE
     public UserResponseDTO userMeApi() {
         return userService.readUser();
     }
