@@ -28,11 +28,11 @@ resource "aws_cloudwatch_event_target" "lambda_target" {
     input_paths = {
       repository = "$.detail.repository-name"
       tag        = "$.detail.image-tag"
-      registryId = "$.detail.registry-id"
+      account    = "$.account"
     }
     input_template = <<EOF
 {
-  "image_uri": "<registryId>.dkr.ecr.ap-northeast-2.amazonaws.com/<repository>:<tag>"
+  "image_uri": "<account>.dkr.ecr.ap-northeast-2.amazonaws.com/<repository>:<tag>"
 }
 EOF
   }
