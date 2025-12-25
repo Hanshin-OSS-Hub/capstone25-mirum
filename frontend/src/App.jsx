@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 
 // import PrivateRoute from "./components/PrivateRoute"
-// import { DesktopRoute, MobileRoute } from "./components/ResponsiveRoute";
+import { DesktopRoute, MobileRoute } from "./components/ResponsiveRoute";
+
+// 데스크톱 페이지
 import Home from './pages/Home.jsx'
-// 모바일용 페이지 예시 (실제 파일 생성 필요)
+// 모바일 전용 페이지
+import MobileHome from "./pages/MobileHome.jsx";
 // import DashboardSummary from './pages/DashboardSummary.jsx';
 import './App.css'
 
@@ -59,24 +62,24 @@ function App() {
             {/* --- 대시보드 반응형 라우팅 --- */}
             {/* 1. 데스크톱용 대시보드: /dashboard */}
             <Route path="/dashboard" element={
-              <Home projects={projects} />
+              //<Home projects={projects} />
               // <PrivateRoute>
-              //   <DesktopRoute redirectTo="/dashboard/summary">
-              //     <Home projects={projects} />
-              //   </DesktopRoute>
+                 <DesktopRoute redirectTo="/dashboard/summary">
+                   <Home projects={projects} />
+                </DesktopRoute>
               // </PrivateRoute>
             } />
 
             {/* 2. 모바일용 대시보드 (예: 요약 페이지) */}
-            {/* <Route path="/dashboard/summary" element={
-              <PrivateRoute>
-                <MobileRoute redirectTo="/dashboard"> */}
+            <Route path="/dashboard/summary" element={
+              //<PrivateRoute>
+                <MobileRoute redirectTo="/dashboard">
                   {/* 모바일용으로 분리된 첫 번째 페이지 컴포넌트 */}
                   {/* <DashboardSummary /> */}
-                  {/* <div>모바일 대시보드 요약 페이지</div>
+                  <MobileHome />
                 </MobileRoute>
-              </PrivateRoute>
-            } /> */}
+              //</PrivateRoute>
+            } />
             {/* 여기에 모바일용 두 번째 페이지 라우트 추가 가능 */}
         </Routes>
       </BrowserRouter>
