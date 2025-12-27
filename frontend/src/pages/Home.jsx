@@ -1,6 +1,5 @@
 import { useViewport } from '../useViewport';
 import ProjectCard from '../components/ProjectCard';
-import MobileProjectCard from '../components/MobileProjectCard';
 import '../App.css';
 import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiOutlineUsers, HiPlus,
@@ -12,8 +11,7 @@ function Home({ projects = [] }) {
 
     return (
         <>
-        <div className="phone-mockup-wrapper"> {/* 프레임 */}
-            <div className="dashboard-container">
+          <div className="dashboard-container">
             {/* /!* 1. 헤더 영역 *!/*/}
             {/* <Header /> */}
             <header className="header">
@@ -35,7 +33,7 @@ function Home({ projects = [] }) {
 
                     {/* 인사말 섹션 */}
                     <section className="greeting-section">
-                        <h1>안녕하세요, 김학생님! 👋</h1>
+                        <h1>안녕하세요, 김미룸님! 👋</h1>
                         <p>오늘도 팀 프로젝트를 효율적으로 관리해보세요.</p>
                     </section>
 
@@ -59,7 +57,7 @@ function Home({ projects = [] }) {
 
                         <div className="card summary-card">
                             <div className="card-info">
-                                <span>팀원 수</span>
+                                <span>함께 한 사람</span>
                                 <strong>5</strong>
                             </div>
                             <div className="icon-box purple">👨‍👩‍👧‍👦</div>
@@ -74,18 +72,9 @@ function Home({ projects = [] }) {
                         </div>
 
                         {/* 화면 크기에 따라 다른 레이아웃과 컴포넌트를 렌더링 */}
-                        <div className={isMobile ? "project-list" : "project-grid"}>
-                            {projects.map((p, i) =>
-                                isMobile ? (
-                                    <MobileProjectCard
-                                        key={i}
-                                        title={p.title}
-                                        desc={p.desc}
-                                        progress={p.progress}
-                                        members={p.members}
-                                        day={p.day}
-                                    />
-                                ) : (
+                        <div className="project-grid">
+                            {
+                            projects.map((p, i) =>
                                     <ProjectCard
                                         key={i}
                                         title={p.title}
@@ -94,14 +83,12 @@ function Home({ projects = [] }) {
                                         members={p.members}
                                         day={p.day}
                                     />
-                                )
                             )}
                         </div>
                     </section>
                 </div>
             </main>
-            </div> {/* 프레임 닫기 */}
-        </div> {/* 대시보드 컨테이너 닫기 */}
+          </div> {/* 대시보드 컨테이너 닫기 */}
         </>
     )}
 
