@@ -10,6 +10,7 @@ import Home from './pages/Home.jsx'
 // 모바일 전용 페이지
 import MobileHome from "./pages/MobileHome.jsx";
 import MobileProjects from "./pages/MobileProjects.jsx";
+import MobileHistory from "./pages/MobileHistory.jsx";
 import './App.css'
 
 
@@ -33,7 +34,6 @@ function App() {
             progress: 65,
             members: ["김", "이", "박"],
             day: "3월 15일",
-            color: "blue" // 파란색
         },
         {
             title: "마케팅 전략 수립",
@@ -41,7 +41,6 @@ function App() {
             progress: 40,
             members: ["최", "정"],
             day: "4월 1일",
-            color: "green" // 초록색
         },
         {
             title: "모바일 앱 개발",
@@ -49,7 +48,6 @@ function App() {
             progress: 90,
             members: ["강", "조", "한", "서"],
             day: "3월 30일",
-            color: "purple" // 보라색
         },
         {
             title: "콘텐츠 제작 프로젝트",
@@ -57,7 +55,6 @@ function App() {
             progress: 55,
             members: ["윤", "임"],
             day: "4월 5일",
-            color: "blue" // 파란색
         },
         {
             title: "고객 지원 시스템 개선",
@@ -65,15 +62,13 @@ function App() {
             progress: 30,
             members: ["신", "서", "권"],
             day: "4월 10일",
-            color: "green" // 초록색
         },
         {
             title: "데이터 분석 프로젝트",
             desc: "고객 행동 패턴 분석 및 인사이트 도출",
             progress: 80,
-            members: ["전", "오", "윤"], // 배열로 전달
+            members: ["전", "오", "윤"],
             day: "3월 20일",
-            color: "purple" // 보라색
         },
     ];
 
@@ -114,6 +109,16 @@ function App() {
                   </MobileRoute>
                 //</PrivateRoute>
               } />
+
+              <Route path="/mobile/history" element={
+                //<PrivateRoute>
+                  <MobileRoute redirectTo="/dashboard">
+                    <MobileHistory activeTab={activeTab} setActiveTab={setActiveTab} />
+                  </MobileRoute>
+                //</PrivateRoute>
+              } />
+
+              <Route path="*" element={ <div>404 Not Found</div> } />
           </Routes>
         </BrowserRouter>
       </>

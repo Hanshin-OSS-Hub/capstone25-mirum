@@ -3,43 +3,10 @@ import { useNavigate } from "react-router-dom";
 import '../App.css';
 import { HiOutlineBell, HiBars3 } from "react-icons/hi2";
 import { HiHome, HiOutlineRocketLaunch, HiOutlineFolder, HiCheck } from "react-icons/hi2";
+import { mockHistory, HistoryIcon } from "../data/activityHistory.js";
+import { mockTasks } from "../data/Tasks.js";
 
 function History() {
-
-    const mockHistory = [
-        {
-            id: 1,
-            activity: "create task",
-            projectName: "웹 개발 프로젝트",
-            taskName: "기획서 작성",
-            user: "김철수",
-            date: "2025-12-20 10:00 AM"
-        },
-        {
-            id: 2,
-            activity: "request review",
-            projectName: "모바일 앱 개발",
-            taskName: "UI 디자인",
-            user: "이영희",
-            date: "2025-12-19 02:30 PM"
-        },
-        {
-            id: 3,
-            activity: "complete task",
-            projectName: "백엔드 개발 프로젝트",
-            taskName: "API 설계",
-            user: "박민수",
-            date: "2025-12-18 09:45 AM"
-        }
-    ];
-
-    const HistoryIcon = [
-        { type: "create task", icon: "📝", backgroundColor: "#fbbf24", desc: "작업을 생성했습니다" },
-        { type: "request review", icon: "👥", backgroundColor: "#3b82f6", desc: "리뷰를 요청했습니다" },
-        { type: "complete task", icon: "✅", backgroundColor: "#22c55e", desc: "작업을 완료했습니다" },
-    ]
-
-    const [history, setHistory] = useState(mockHistory);
 
         // useEffect(() => {
         //     fetch(`/users/${userId}/activity-history`)
@@ -52,7 +19,7 @@ function History() {
           <div style={ { border: "1px solid #000", display: "flex", flexDirection: "column"} }>
             <div className="summary-cards" style={ { maxHeight: "500px", overflowY: "auto", marginBottom: "0" } }>
                 {
-                    mockHistory.length > 0 ? mockHistory.map((item, index) => (
+                    mockHistory.length > 0 ? mockHistory.slice(0, 3).map((item, index) => (
                         <div key={index} className="card summary-card" style={ { padding: "5%" } }>
                           <div style={ { width: "100%", display: "flex", flexDirection: "column"} }>
                             <div style={ { margin: "0",  display: "flex", flexDirection: "column", justifyContent: "center"} }>
@@ -70,7 +37,7 @@ function History() {
                           </div>
                         </div>
                     )) : (
-                        <p style={ { textAlign: "center" } }>최근 활동이 없습니다.</p>
+                        <p style={ { textAlign: "center", color: "#888"} }>최근 활동이 없습니다.</p>
                     )
                 }
             </div>
@@ -80,43 +47,6 @@ function History() {
 }
 
 function UrgentTasksDashboard() {
-
-    const mockTasks = [
-        {
-            id: 1,
-            title: "기획서 최종본 작성",
-            assignees: ["김철수", "이영희"],
-            status: "진행중",
-            startDate: "2025-12-20",
-            dueDate: "2025-12-28"
-        },
-        {
-            id: 2,
-            title: "API 명세서 검토",
-            assignees: ["박민수"],
-            status: "대기중",
-            startDate: "2025-12-21",
-            dueDate: "2025-12-27"
-        },
-        {
-            id: 3,
-            title: "UI 디자인 시안 제출",
-            assignees: ["최지은", "홍길동", "박민수"],
-            status: "완료",
-            startDate: "2025-12-18",
-            dueDate: "2025-12-24"
-        },
-        {
-            id: 4,
-            title: "DB 스키마 설계",
-            assignees: ["이영희"],
-            status: "진행중",
-            startDate: "2025-12-22",
-            dueDate: "2025-12-29"
-        }
-    ];
-
-    const [tasks, setTasks] = useState(mockTasks);
 
     // useEffect(() => {
     //     fetch(`/users/${userId}/urgent-tasks`)
@@ -129,10 +59,10 @@ function UrgentTasksDashboard() {
           {/* <div className="mb-4 flex gap-2"> */}
           <div className="summary-cards" style={ { maxHeight: "500px", overflowY: "auto", marginBottom: "0" } }>
             {
-                tasks.length === 0 ? (
-                <p style={ { textAlign: "center" } }>할당된 작업이 없습니다.</p>
+                mockTasks.length === 0 ? (
+                <p style={ { textAlign: "center", color: "#888" } }>할당된 작업이 없습니다.</p>
                 ) : (
-                    tasks.slice(0, 3).map((task, index) => (
+                    mockTasks.slice(0, 3).map((task, index) => (
                     // <div key={index} className="bg-white rounded-lg p-4 shadow flex flex-1 items-center justify-between">
                     <div className="card summary-card" key={index} style={ { padding: "5%" } }>
                         <div style={ { width: "100%", display: "flex", flexDirection: "column"} }>
@@ -284,7 +214,8 @@ function MobileHome(props) {
                   <section>
                     <div style={ { marginBottom: "5%", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end"} }>
                         <h2 style={ { border: "1px solid #000" } }>최근 활동</h2>
-                        <span style={ { border: "1px solid #000", fontSize: "12px" } }>전체보기</span>
+                        <span style={ { border: "1px solid #000", fontSize: "12px", cursor: "pointer" } }
+                            onClick={() => navigate("/mobile/history")}>전체보기</span>
                     </div>
                     <History />
                   </section>

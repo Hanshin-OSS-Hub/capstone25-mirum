@@ -30,7 +30,7 @@ function MobileProjects(props) {
                             <h2 style={ { border: "1px solid #000" } }>최근 프로젝트</h2>
                             <span style={ { border: "1px solid #000", fontSize: "12px" } }><HiOutlinePlus size={20} /></span>
                         </div>
-                        <div className="project-list" key={props.projects.length}>
+                        <div className="project-list">
                             {props.projects.slice(0, 3).map((p, i) =>
                                 <MobileProjectCard
                                     key={i}
