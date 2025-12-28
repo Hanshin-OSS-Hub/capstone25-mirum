@@ -1,12 +1,10 @@
 import { useViewport } from '../useViewport';
 import ProjectCard from '../components/ProjectCard';
+import { projects } from '../data/projects';
 import '../App.css';
-import {
-    HiOutlineBell, HiOutlineFolder, HiCheck, HiOutlineUsers, HiPlus,
-    HiHome, HiUser // 👈 아이콘 추가 임포트
-} from "react-icons/hi2";
+import { HiOutlineBell } from "react-icons/hi2";
 
-function Home({ projects = [] }) {
+function Home() {
     const { isMobile } = useViewport();
 
     return (

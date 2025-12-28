@@ -1,7 +1,10 @@
 import MobileProjectCard from '../components/MobileProjectCard';
 import { useNavigate } from 'react-router-dom';
-import { HiOutlineBell, HiBars3, HiCheck, HiHome, HiOutlineFolder, HiOutlineRocketLaunch, HiOutlinePlus, HiEllipsisHorizontal } from "react-icons/hi2";
+import { HiOutlineBell, HiBars3 } from "react-icons/hi2";
+import { HiHome, HiOutlineRocketLaunch, HiCheck, HiOutlineFolder } from "react-icons/hi2";
+import { HiOutlinePlus, HiEllipsisHorizontal } from "react-icons/hi2";
 import "../App.css";
+import { projects } from '../data/projects';
 
 function MobileProjects(props) {
     const navigate = useNavigate();
@@ -31,7 +34,7 @@ function MobileProjects(props) {
                             <span style={ { border: "1px solid #000", fontSize: "12px" } }><HiOutlinePlus size={20} /></span>
                         </div>
                         <div className="project-list">
-                            {props.projects.slice(0, 3).map((p, i) =>
+                            {projects.slice(0, 3).map((p, i) =>
                                 <MobileProjectCard
                                     key={i}
                                     title={p.title}
@@ -49,15 +52,16 @@ function MobileProjects(props) {
                             <h2 style={ { border: "1px solid #000" } }>전체</h2>
                             <span style={ { border: "1px solid #000", fontSize: "12px" } }><HiEllipsisHorizontal size={20} /></span>
                         </div>
-                        <div className="project-list" key={props.projects.length}>
-                            {props.projects.map((p, i) =>
-                                <MobileProjectCard
-                                    key={i}
-                                    title={p.title}
-                                    desc={p.desc}
-                                    progress={p.progress}
-                                    members={p.members}
-                                    day={p.day}
+                        <div className="project-list">
+                            {
+                                projects.map((p, i) =>
+                                    <MobileProjectCard
+                                        key={i}
+                                        title={p.title}
+                                        desc={p.desc}
+                                        progress={p.progress}
+                                        members={p.members}
+                                        day={p.day}
                                 />
                             )}
                         </div>

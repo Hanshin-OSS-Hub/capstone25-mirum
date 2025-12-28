@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import '../App.css';
 import { HiOutlineBell, HiBars3 } from "react-icons/hi2";
-import { HiHome, HiOutlineRocketLaunch, HiOutlineFolder, HiCheck } from "react-icons/hi2";
 import { mockHistory, HistoryIcon } from "../data/activityHistory.js";
-import { mockTasks } from "../data/Tasks.js";
+import { mockTasks } from "../data/tasks.js";
+import MobileTabBar from "../components/MobileTabBar.jsx";
 
 function History() {
 
@@ -195,7 +194,8 @@ function MobileHome(props) {
                   <section style={ { marginBottom: "40px"} }>
                     <div style={ { marginBottom: "5%", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end"} }>
                         <h2 style={ { border: "1px solid #000" } }>주간 일정</h2>
-                        <span style={ { border: "1px solid #000", fontSize: "12px" } }>전체보기</span>
+                        <span style={ { border: "1px solid #000", fontSize: "12px", cursor: "pointer"} }
+                            onClick={() => navigate("/mobile/calendar")}>전체보기</span>
                     </div>
                     <SwipeableWeeklyCalendar 
                         weekDates={weekDates}
@@ -207,7 +207,8 @@ function MobileHome(props) {
                   <section style={ { marginBottom: "40px"} }>
                     <div style={ { marginBottom: "5%", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end"} }>
                         <h2 style={ { border: "1px solid #000" } }>내 작업</h2>
-                        <span style={ { border: "1px solid #000", fontSize: "12px" } }>전체보기</span>
+                        <span style={ { border: "1px solid #000", fontSize: "12px", cursor: "pointer"} }
+                            onClick={() => navigate("/mobile/calendar")}>전체보기</span>
                     </div>
                     <UrgentTasksDashboard />
                   </section>
@@ -221,38 +222,7 @@ function MobileHome(props) {
                   </section>
                 </div>
             </div>
-                <nav className="mobile-tab-bar">
-                    <button className={`tab-item ${props.activeTab === "home" ? "active" : ""}`} 
-                    onClick={() => { props.setActiveTab("home"); 
-                                    navigate("/mobile/dashboard"); }}>
-                        <HiHome size={24} />
-                        <span>홈</span>
-                    </button>
-
-                    <button className={`tab-item ${props.activeTab === "projects" ? "active" : ""}`} 
-                    onClick={() => { props.setActiveTab("projects");
-                                    navigate("/mobile/projects"); }}>
-                        <HiOutlineRocketLaunch size={24} />
-                        <span>프로젝트</span>
-                    </button>
-
-                    <button className="tab-item">
-                        <HiCheck size={24} />
-                        <span>작업</span>
-                    </button>
-
-                    <button className={`tab-item ${props.activeTab === "files" ? "active" : ""}`} 
-                    onClick={() => { props.setActiveTab("files");
-                                    navigate("/mobile/files"); }}>
-                        <HiOutlineFolder size={24} />
-                        <span>파일</span>
-                    </button>
-
-                    <button className="tab-item">
-                        <div className="profile-btn">김</div>
-                        <span>내 정보</span>
-                    </button>
-                </nav>
+                <MobileTabBar activeTab={props.activeTab} setActiveTab={props.setActiveTab} />
           </div>
         </>
     )

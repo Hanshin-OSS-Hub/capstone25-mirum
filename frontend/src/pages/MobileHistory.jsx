@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import "../App.css";
 import { HiOutlineBell, HiBars3 } from "react-icons/hi2";
 import { HiHome, HiOutlineRocketLaunch, HiCheck, HiOutlineFolder } from "react-icons/hi2";
+import { HiOutlineFunnel } from "react-icons/hi2";
 import { mockHistory, HistoryIcon } from "../data/activityHistory.js";
 
 function MobileHistory(props) {
@@ -30,6 +30,7 @@ function MobileHistory(props) {
                 <section>
                     <div style={ {  display: "flex", flexDirection: "column"} }>
                         <h2 style={ { marginBottom: "5%", padding: "5%" } }>최근 활동 내역</h2>
+                        <span style={ { border: "1px solid #000", paddingRight: "10%", display: "flex", justifyContent: "flex-end", cursor: "pointer"} }><HiOutlineFunnel size={20} /></span>
                     <div className="summary-cards" style={ { maxHeight: "500px", overflowY: "auto", marginBottom: "0" } }>
                         {
                             mockHistory.length > 0 ? mockHistory.map((item, index) => (
