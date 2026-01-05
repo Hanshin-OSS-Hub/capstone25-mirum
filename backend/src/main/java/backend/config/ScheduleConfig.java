@@ -1,6 +1,6 @@
 package backend.config;
 
-import backend.domain.user.jwt.repository.RefreshRepository;
+import backend.repository.RefreshRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
