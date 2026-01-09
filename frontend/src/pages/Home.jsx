@@ -1,24 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import {
-    HiOutlineBell, HiOutlineFolder, HiCheck, HiOutlineUsers, HiPlus,
-    HiHome, HiUser // 👈 아이콘 추가 임포트
+    HiOutlineBell, HiOutlineFolder, HiCheck, HiHome, HiUser // 👈 아이콘 추가 임포트
 } from "react-icons/hi2";
 import CreateProjectModal from './CreateProject';
-import '../App.css'
-import { useNavigate } from "react-router-dom";
+import { mockProjects } from '../data/projects'; // 샘플 프로젝트 데이터
 
 
-function Home(props) {
+function Home() {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [projects, setProjects] = useState(props.projects || []);
+    const [projects, setProjects] = useState(mockProjects);
 
     const navigate = useNavigate();   // ✅ 이 줄 추가
+
+    // const handleGetProjectList = async () => {
+    //     fetch('http://localhost:8080/project', {
+    //         headers: { "authorization": `Bearer ${localStorage.getItem("accessToken")}`}
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => setProjects(data))
+    //     .catch(error => console.error('Error fetching projects:', error));
+    // }
+
+    // useEffect(() => {
+    //     handleGetProjectList();
+    // }, []);
 
     return (
         <div className="phone-mockup-wrapper">
             <div className="dashboard-container">
                 {/* 1. 헤더 영역 */}
-                {/*<Header />*/}
                 <header className="header">
                     <div className="header-left">
                         <div className="logo-box">M</div>
@@ -38,7 +49,7 @@ function Home(props) {
 
                         {/* 인사말 섹션 */}
                         <section className="greeting-section">
-                            <h1>안녕하세요, 김학생님! 👋</h1>
+                            <h1>안녕하세요, 김미룸님! 👋</h1>
                             <p>오늘도 팀 프로젝트를 효율적으로 관리해보세요.</p>
                         </section>
 
@@ -46,26 +57,26 @@ function Home(props) {
                         <section className="summary-cards">
                             <div className="card summary-card">
                                 <div className="card-info">
-                                    <span>진행 중인 프로젝트</span>
-                                    <strong>{projects.length}</strong>
+                                    <span>🔥 진행 중인 프로젝트</span>
+                                    <strong>{projects.length}개</strong>
                                 </div>
-                                <div className="icon-box blue">📂</div>
+                                <div className="icon-box blue">🚀</div>
                             </div>
 
                             <div className="card summary-card">
                                 <div className="card-info">
-                                    <span>완료된 작업</span>
-                                    <strong>10</strong>
+                                    <span>⏰ 금일 마감까지 남은 시간</span>
+                                    <strong>3시간 20분</strong> {/* 예시값, 실제 계산 필요 */}
                                 </div>
-                                <div className="icon-box green">✅</div>
+                                <div className="icon-box green">⏳</div>
                             </div>
 
                             <div className="card summary-card">
                                 <div className="card-info">
-                                    <span>팀원 수</span>
-                                    <strong>5</strong>
+                                    <span>🎯 오늘의 목표 달성률</span>
+                                    <strong>60%</strong> {/* 예시값, 실제 계산 필요 */}
                                 </div>
-                                <div className="icon-box purple">👨‍👩‍👧‍👦</div>
+                                <div className="icon-box purple">📈</div>
                             </div>
                         </section>
 
@@ -83,6 +94,7 @@ function Home(props) {
                                         // 1. 최상위 요소에 고유한 'key'를 추가합니다. (project.id가 가장 이상적입니다.)
                                         <div
                                             key={project.id}
+                                            data-testid="project-card"
                                             className="card project-card"
                                             onClick={() =>
                                                 navigate(`/project/${project.id}`, {
@@ -91,176 +103,35 @@ function Home(props) {
                                             }
                                         >
                                             <div className="project-header">
-                                                <div className="project-text">
-                                                    {/* 2. 하드코딩된 텍스트를 props로 받은 데이터로 교체합니다. */}
-                                                    <h3>{project.title}</h3>
-                                                    <p className="project-desc">{project.description}</p>
-                                                </div>
-
-                                                <div className="project-icon">📂</div>
+                                              <div className="project-text">
+                                                  {/* 2. 하드코딩된 텍스트를 props로 받은 데이터로 교체합니다. */}
+                                                  <h2>{project.title}</h2>
+                                                  <p className="project-desc">
+                                                    <br />
+                                                    {
+                                                    project.description.length > 30 ? project.description.slice(0, 20) : project.description
+                                                  }</p>
+                                              </div>
+                                              <div className="project-icon">📂</div>
                                             </div>
 
                                             <div className="progress-bar">
-                                                {/* 3. 진행률(progress)과 같은 동적인 데이터도 style에 적용할 수 있습니다. */}
-                                                <div className="full" style={{ width: `${project.progress}%` }}></div>
+                                              <div className="full" style={{ width: `${project.progress}%`, height: 100, backgroundColor: project.progress > 80 ? '#c900fbed' : (project.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
                                             </div>
 
-                                            <div className="card-footer">
-                                                {/* 4. 나머지 데이터도 모두 동적으로 렌더링합니다. */}
-                                                
-                                            <span>👤 {project.members.length || 0}명</span>
-                                            <span>📅 {project.day ? project.day.slice(0, 10) : "날짜 미정"}</span>
+                                            <div className="card-footer">                                                
+                                              <span>👤 {project.members.length || 0}명</span>
+                                              <span>📅 {project.day ? project.day.slice(0, 10) : "-"}</span>
                                             </div>
                                         </div>
                                     )
                                 })
                             }
 
-                                 {/* 프로젝트 카드 1 */}
+                                {/* 프로젝트 카드 1 */}
                                 {/* <div className="card project-card">
                                     <div className="project-header">
                                         <div className="project-text">
-                                            <h3>웹사이트 디자인 프로젝트</h3>
-                                            <p className="project-desc">팀 협업 웹사이트 개발</p>
-                                        </div>
-
-                                        <div className="project-icon">📂</div>
-                                    </div>
-
-                                    <div className="progress-bar">
-                                        <div className="full" style={{ width: '65%' }}></div>
-                                    </div>
-
-                                    <div className="card-footer">
-                                        <span>👤 3명</span>
-                                        <span>📅 2시간 전</span>
-                                    </div>
-                                </div> */}
-
-
-                                {/*<div className="card project-card">
-                                    <div className="project-header">
-                                        <div className="project-text">
-                                            <h3>마케팅 전략</h3>
-                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                        </div>
-
-                                        <div className="project-icon">📂</div>
-                                    </div>
-
-                                    <div className="progress-bar">
-                                        <div className="fell" style={{ width: '35%' }}></div>
-                                    </div>
-
-                                    <div className="card-footer">
-                                        <span>👤 3명</span>
-                                        <span>📅 2시간 전</span>
-                                    </div>
-                                </div>
-
-                                <div className="card project-card">
-                                    <div className="project-header">
-                                        <div className="project-text">
-                                            <h3>마케팅 전략</h3>
-                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                        </div>
-
-                                        <div className="project-icon">📂</div>
-                                    </div>
-
-                                    <div className="progress-bar">
-                                        <div className="fill" style={{ width: '65%' }}></div>
-                                    </div>
-
-                                    <div className="card-footer">
-                                        <span>👤 3명</span>
-                                        <span>📅 2시간 전</span>
-                                    </div>
-                                </div>
-
-                                <div className="card project-card">
-                                    <div className="project-header">
-                                        <div className="project-text">
-                                            <h3>마케팅 전략</h3>
-                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                        </div>
-
-                                        <div className="project-icon">📂</div>
-                                    </div>
-
-                                    <div className="progress-bar">
-                                        <div className="fill" style={{ width: '65%' }}></div>
-                                    </div>
-
-                                    <div className="card-footer">
-                                        <span>👤 3명</span>
-                                        <span>📅 2시간 전</span>
-                                    </div>
-                                </div>
-
-                                <div className="card project-card">
-                                    <div className="project-header">
-                                        <div className="project-text">
-                                            <h3>마케팅 전략</h3>
-                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                        </div>
-
-                                        <div className="project-icon">📂</div>
-                                    </div>
-
-                                    <div className="progress-bar">
-                                        <div className="fill" style={{ width: '65%' }}></div>
-                                    </div>
-
-                                    <div className="card-footer">
-                                        <span>👤 3명</span>
-                                        <span>📅 2시간 전</span>
-                                    </div>
-                                </div>
-
-                                <div className="card project-card">
-                                    <div className="project-header">
-                                        <div className="project-text">
-                                            <h3>마케팅 전략</h3>
-                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                        </div>
-
-                                        <div className="project-icon">📂</div>
-                                    </div>
-
-                                    <div className="progress-bar">
-                                        <div className="fill" style={{ width: '65%' }}></div>
-                                    </div>
-
-                                    <div className="card-footer">
-                                        <span>👤 3명</span>
-                                        <span>📅 2시간 전</span>
-                                    </div>
-                                </div>
-
-                                <div className="card project-card">
-                                    <div className="project-header">
-                                        <div className="project-text">
-                                            <h3>마케팅 전략</h3>
-                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                        </div>
-
-                                        <div className="project-icon">📂</div>
-                                    </div>
-
-                                    <div className="progress-bar">
-                                        <div className="fill" style={{ width: '65%' }}></div>
-                                    </div>
-
-                                    <div className="card-footer">
-                                        <span>👤 3명</span>
-                                        <span>📅 2시간 전</span>
-                                    </div>
-                                </div>
-
-                                <div className="card project-card">
-                                    <div className="project-header">
-                                        <div className="project-text">
                                             <h3>마케팅 전략</h3>
                                             <p className="project-desc">브랜드 전략 수립 및 분석</p>
                                         </div>
@@ -278,21 +149,21 @@ function Home(props) {
                                     </div>
                                 </div> */}
 
-                                {/* 프로젝트 카드 2
-                        <div className="card project-card">
-                            <div style = { { "display" : "flex", "gap": "24px"} }>
-                                <h3>마케팅 과제</h3>
-                                <div className="project-icon">📂</div>
-                            </div>
-                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                            <div className="progress-bar">
-                                <div className="fill" style={{width: '30%'}}></div>
-                            </div>
-                            <div className="card-footer">
-                                <span>👤 2명</span>
-                                <span>📅 1일 전</span>
-                            </div>
-                        </div>        */}
+                                {/* 프로젝트 카드 2 */}
+                                {/* <div className="card project-card">
+                                    <div style = { { "display" : "flex", "gap": "24px"} }>
+                                        <h3>마케팅 과제</h3>
+                                        <div className="project-icon">📂</div>
+                                    </div>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                    <div className="progress-bar">
+                                        <div className="fill" style={{width: '30%'}}></div>
+                                    </div>
+                                    <div className="card-footer">
+                                        <span>👤 2명</span>
+                                        <span>📅 1일 전</span>
+                                    </div>
+                                </div>        */}
                             
                                 <CreateProjectModal
                                     isOpen={isModalOpen}
