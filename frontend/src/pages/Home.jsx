@@ -5,13 +5,27 @@ import {
 } from "react-icons/hi2";
 import CreateProjectModal from './CreateProject';
 import { mockProjects } from '../data/projects'; // 샘플 프로젝트 데이터
-
+import { useLocation } from 'react-router-dom'; 
 
 function Home() {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [projects, setProjects] = useState(mockProjects);
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const navigate = useNavigate();   // ✅ 이 줄 추가
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    // 초기 렌더링 시점에 필터링을 수행하여 깜빡임(Flash) 현상 방지
+    const [projects, setProjects] = useState(() => {
+        if (location.state?.deletedProjectId) {
+            return mockProjects.filter(p => p.id !== Number(location.state.deletedProjectId));
+        }
+        return mockProjects;
+    });
+
+    useEffect(() => {
+        // state가 남아있으면 새로고침 시 문제가 될 수 있으므로 청소만 담당
+        if (location.state?.deletedProjectId) {
+            navigate(location.pathname, { replace: true, state: null });
+        }
+    }, [location, navigate]);
 
     // const handleGetProjectList = async () => {
     //     fetch('http://localhost:8080/project', {
@@ -98,7 +112,7 @@ function Home() {
                                             className="card project-card"
                                             onClick={() =>
                                                 navigate(`/project/${project.id}`, {
-                                                state: { project },   // ✅ 프로젝트 전체 정보를 함께 넘김
+                                                // state: { project },   // ✅ 프로젝트 전체 정보를 함께 넘김
                                                 })
                                             }
                                         >
