@@ -27,14 +27,15 @@ function Home() {
         }
     }, [location, navigate]);
 
-    // const handleGetProjectList = async () => {
-    //     fetch('http://localhost:8080/project', {
-    //         headers: { "authorization": `Bearer ${localStorage.getItem("accessToken")}`}
-    //     })
-    //     .then(response => response.json())
-    //     .then(data => setProjects(data))
-    //     .catch(error => console.error('Error fetching projects:', error));
-    // }
+    // [READ] 프로젝트 목록 api 요청
+    const handleGetProjectList = async () => {
+        fetch('http://localhost:8080/project', {
+            headers: { "authorization": `Bearer ${localStorage.getItem("accessToken")}`}
+        })
+        .then(response => response.json())
+        .then(data => setProjects(data))
+        .catch(error => console.error('Error fetching projects:', error));
+    }
 
     // useEffect(() => {
     //     handleGetProjectList();
@@ -185,7 +186,8 @@ function Home() {
                                     onCreateProjectSuccess={(data) => {
                                         setIsModalOpen(false);
                                         alert("프로젝트 생성 완료!");
-                                        setProjects((prev) => [...prev, data]);
+                                        handleGetProjectList();
+                                        // setProjects((prev) => [...prev, data]);
                                     }}
                                 />
 

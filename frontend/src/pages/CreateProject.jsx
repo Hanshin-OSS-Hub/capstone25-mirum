@@ -32,27 +32,27 @@ function CreateProject(props) {
         }
     }
 
-        // 데모용 가짜 API 함수 (네트워크 지연 시뮬레이션)
-    const fakeCreateProjectAPI = (projectData) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-            const newProject = {
-                id: Math.floor(Math.random() * 1000) + 1, // 임의의 ID 생성
-                title: projectData.title,
-                description: projectData.description,
-                progress: 0,
-                members: ["나 미룸"], // 배열로 전달
-                day: new Date().toISOString(),
-            };
+    // 데모용 가짜 API 함수 (네트워크 지연 시뮬레이션)
+    // const fakeCreateProjectAPI = (projectData) => {
+    //     return new Promise((resolve) => {
+    //         setTimeout(() => {
+    //         const newProject = {
+    //             id: Math.floor(Math.random() * 1000) + 1, // 임의의 ID 생성
+    //             title: projectData.title,
+    //             description: projectData.description,
+    //             progress: 0,
+    //             members: ["나 미룸"], // 배열로 전달
+    //             day: new Date().toISOString(),
+    //         };
 
-            resolve({
-                success: true,
-                message: "프로젝트가 (데모) 생성되었습니다.",
-                data: newProject,
-            });
-            }, 800); // 0.8초 지연을 시뮬레이션하여 로딩 상태를 확인
-        });
-    };
+    //         resolve({
+    //             success: true,
+    //             message: "프로젝트가 (데모) 생성되었습니다.",
+    //             data: newProject,
+    //         });
+    //         }, 800); // 0.8초 지연을 시뮬레이션하여 로딩 상태를 확인
+    //     });
+    // };
 
     /**
      * https://pa-pico.tistory.com/20
@@ -74,17 +74,24 @@ function CreateProject(props) {
 
         try {
             // --- 데모용 코드 ---
-            const response = await fakeCreateProjectAPI({ title: projectTitle, description: projectDesc });
+            // const response = await fakeCreateProjectAPI({ title: projectTitle, description: projectDesc });
 
-            // // 3. 올바른 API 엔드포인트와 데이터로 요청
-            // const response = await api.post("/projects", { 
-            // title: projectTitle, 
-            // description: projectDesc
-            // });
+            const response = await fetch('http://localhost:8080/project', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: projectTitle,
+                    description: projectDesc,
+                }),
+            });
+
+            const data = await response.json();
             
             // 성공 콜백 함수 호출
             if (props.onCreateProjectSuccess) {
-                props.onCreateProjectSuccess(response.data); // 생성된 프로젝트 데이터를 전달
+                props.onCreateProjectSuccess(data); // 생성된 프로젝트 데이터를 전달
             }
 
             handleClose();
@@ -132,7 +139,7 @@ function CreateProject(props) {
                         {error && <div className="login-error">{error}</div>}
                     </div>
 
-                    <button type="submit" className="login-button">
+                    <button disabled={!projectTitle.trim()} type="submit" className={!projectTitle.trim() ? "login-secondary-button" : "login-button"}>
                         생성하기
                     </button>
 
