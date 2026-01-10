@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import SignUp from './Signupmodal';
+import SignUp from '../pages/Signupmodal';
 
 describe("Signupmodal Component", () => {
 

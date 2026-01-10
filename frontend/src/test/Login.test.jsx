@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom'; // toHaveBeenCalledWith 같은 matcher를 사용하기 위해 import
-import Login from './Login'; // Login.jsx 파일명에 따라 경로 수정
+import Login from '../pages/Login'; // Login.jsx 파일명에 따라 경로 수정
 
 // api 클라이언트를 모의(mock) 처리합니다.
-import { api } from './client';
-jest.mock('./client');
+import { api } from '../pages/client';
+jest.mock('../pages/client');
 
 
 // 테스트 스위트(Test Suite) 정의
