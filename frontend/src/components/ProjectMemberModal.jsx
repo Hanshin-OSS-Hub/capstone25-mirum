@@ -3,7 +3,7 @@ import { HiOutlineUserPlus } from "react-icons/hi2";
 
 function ProjectMemberModal(props) {
   const [userInput, setUserInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const members = props.members || [];
@@ -61,7 +61,7 @@ function ProjectMemberModal(props) {
                     {member.name.charAt(0).toUpperCase()}
                   </div>
                   <span style={ { fontSize: "16px", color: "#111827" } }>{member.name}</span>
-                  {member.role === "MEMBER" ? (
+                  {member.role === "LEADER" ? (
                       <span style={ { marginLeft: 8, fontSize: 12, color: "#f59e0b", fontWeight: "bold", background: "#fffbeb", borderRadius: 6, padding: "2px 6px" } }>리더</span>
                     ) : (
                       <></>
@@ -69,7 +69,7 @@ function ProjectMemberModal(props) {
                     )}
                 </div>
                 <div style={ { position: "relative" } }>
-                  {sortedMembers[0].role === "MEMBER" && member.username !== myUsername ? (
+                  {sortedMembers[0].role === "LEADER" && member.username !== myUsername ? (
                     <button style={ { marginLeft: 8, background: "transparent", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" } }
                   onClick={() => { setOpenMenuId(member.id); setIsMenuOpen(!isMenuOpen);}}>
                     ⋯

@@ -4,13 +4,14 @@ import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiHome, HiUser // 👈 아이콘 추가 임포트
 } from "react-icons/hi2";
 import CreateProjectModal from './CreateProject';
-import { useLocation } from 'react-router-dom'; 
+import ProfileModal from '../components/ProfileModal';
+// import { useLocation } from 'react-router-dom'; 
 
 function Home() {
     const navigate = useNavigate();
-    const location = useLocation();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [projects, setProjects] = useState(() => {
         const saved = localStorage.getItem("projects");
         if (saved) {
@@ -18,6 +19,9 @@ function Home() {
         }
         return [];
     });
+
+    // const location = useLocation();
+
     // // 서버 연결 전, mockProjects에서 삭제된 프로젝트를 필터링하여 초기값으로 사용 (테스트용)
     // const [projects, setProjects] = useState(() => {
     //     if (location.state?.deletedProjectId) {
@@ -52,7 +56,7 @@ function Home() {
         <div className="phone-mockup-wrapper">
             <div className="dashboard-container">
                 {/* 1. 헤더 영역 */}
-                <header className="header">
+                <header className="header" style={ { position: "relative" } }>
                     <div className="header-left">
                         <div className="logo-box">M</div>
                         <span className="logo-text">Mirum</span>
@@ -61,8 +65,18 @@ function Home() {
                         <button className="profile-btn" style={ { backgroundColor: "transparent" }}>
                             <HiOutlineBell size={20} />
                         </button>
-                        <button className="profile-btn">김</button>
+                        <button 
+                            className="profile-btn" 
+                            onClick={() => setIsProfileModalOpen(true)}
+                        >
+                            {localStorage.getItem("name")?.charAt(0) || "?"}
+                        </button>
                     </div>
+
+                    <ProfileModal 
+                        isOpen={isProfileModalOpen} 
+                        onClose={() => setIsProfileModalOpen(false)} 
+                    />
                 </header>
 
                 {/* 2. 메인 콘텐츠 영역 (회색 배경) */}
@@ -71,7 +85,7 @@ function Home() {
 
                         {/* 인사말 섹션 */}
                         <section className="greeting-section">
-                            <h1>안녕하세요, 김미룸님! 👋</h1>
+                            <h1>안녕하세요, {localStorage.getItem("name") || "김미룸"}님! 👋</h1>
                             <p>오늘도 팀 프로젝트를 효율적으로 관리해보세요.</p>
                         </section>
 

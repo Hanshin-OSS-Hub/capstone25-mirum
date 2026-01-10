@@ -55,20 +55,25 @@ function Login(props) {
 
             // --- 데모용 코드 ---
             const fakeUserData = {
-                id: 1,
-                role: "user",
-                userName,
-                name: "미룸 데모 유저",
+                // 토큰 발급
                 accessToken: "demo-access-token-123",
                 refreshToken: "demo-refresh-token-456",
+                // 사용자 정보
+                id: 1,
+                role: "user",
+                username: userName,
+                name: "미룸 데모 유저",
+                email: "demo@example.com",
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
             
-            // ✅ 여기서 토큰을 localStorage에 저장합니다.
+            // ✅ 여기서 토큰을 localStorage에 저장합니다.s
             localStorage.setItem("accessToken", fakeUserData.accessToken);
             localStorage.setItem("refreshToken", fakeUserData.refreshToken);
             localStorage.setItem("username", userName);
+            localStorage.setItem("name", fakeUserData.name);
+            localStorage.setItem("email", fakeUserData.email);
             
             if (props.onLoginSuccess)
                 props.onLoginSuccess();

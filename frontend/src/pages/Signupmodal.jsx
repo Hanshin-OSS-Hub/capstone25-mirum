@@ -13,7 +13,7 @@ export default function Signup({ isOpen, onClose, onSignupSuccess }) {
   if (!isOpen) return null;
 
   const handleOverlayClick = (e) => {
-    // 카드가 아니라 회색 배경을 클릭했을 때만 닫기
+    // 카드가 아니라 회색 배경을 클릭했을 때 닫기
     if (e.target === e.currentTarget && onClose) {
       onClose();
     }
@@ -31,7 +31,7 @@ export default function Signup({ isOpen, onClose, onSignupSuccess }) {
     }
 
     try {
-      const res = await fetch("/api/user", {
+      const res = await fetch("/user", {
         // 🔹 회원가입 엔드포인트 주소는 백엔드랑 맞춰서 필요하면 수정
         method: "POST",
         headers: { "Content-Type": "application/json" },
