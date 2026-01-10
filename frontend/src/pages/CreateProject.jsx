@@ -32,27 +32,59 @@ function CreateProject(props) {
         }
     }
 
-    // 데모용 가짜 API 함수 (네트워크 지연 시뮬레이션)
-    // const fakeCreateProjectAPI = (projectData) => {
-    //     return new Promise((resolve) => {
-    //         setTimeout(() => {
-    //         const newProject = {
-    //             id: Math.floor(Math.random() * 1000) + 1, // 임의의 ID 생성
-    //             title: projectData.title,
-    //             description: projectData.description,
-    //             progress: 0,
-    //             members: ["나 미룸"], // 배열로 전달
-    //             day: new Date().toISOString(),
-    //         };
+    /** [백엔드 개발자 참고]
+      프론트엔드에서 프로젝트 생성 시 POST /project로 아래와 같은 JSON을 전송합니다:
+      {
+        "title": <string>,
+        "description": <string>
+      }
 
-    //         resolve({
-    //             success: true,
-    //             message: "프로젝트가 (데모) 생성되었습니다.",
-    //             data: newProject,
-    //         });
-    //         }, 800); // 0.8초 지연을 시뮬레이션하여 로딩 상태를 확인
-    //     });
-    // };
+      서버는 아래와 같은 형식의 데이터를 JSON으로 반환해야 합니다
+      // 프론트엔드에서 입력값으로 state를 즉시 갱신할 수도 있지만,
+      // 서버에서 반환된 프로젝트 객체로 상태를 갱신하는 이유는
+      // 1) 서버(DB)가 최종적이고 신뢰할 수 있는 데이터 소스(authoritative source)이기 때문이며,
+      // 2) 서버에서 실제로 저장된 값(예: id 자동 생성, 멤버/리더 자동 추가, 권한, 기타 비즈니스 로직 반영 등)이
+      //    프론트엔드 입력값과 다를 수 있기 때문입니다.
+      // 따라서 서버 응답을 기준으로 상태를 동기화하면 데이터 일관성과 신뢰성을 보장할 수 있습니다.
+      {
+        "id": <string|number>,
+        "projectName": <string>,
+        "description": <string>,
+        "progress": <number>,
+        "members": [
+          {
+            "userId": <string|number>,
+            "username": <string>,
+            "role": <string> // 예: "LEADER"
+          }
+        ],
+        "day": <string> // ISO 날짜
+      }
+    */
+    const fakeCreateProjectAPI = (projectData) => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const newProject = {
+                    id: Math.floor(Math.random() * 1000) + 1, // 임의의 프로젝트 ID 생성
+                    projectName: projectData.title,
+                    description: projectData.description,
+                    progress: 0,
+                    // 생성한 유저를 리더로 추가 (임의로 userId 1 사용)
+                    members: [
+                        { userId: 1, username: "qwer", role: "LEADER", name: "미룸 데모 유저", profileImg: null, email: "demo@mirum.com" }
+                    ], 
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                };
+
+                resolve({
+                    success: true,
+                    message: "프로젝트가 (데모) 생성되었습니다.",
+                    data: newProject,
+                });
+            }, 100); // 0.1초 지연을 시뮬레이션하여 로딩 상태를 확인
+        });
+    };
 
     /**
      * https://pa-pico.tistory.com/20
@@ -74,28 +106,27 @@ function CreateProject(props) {
 
         try {
             // --- 데모용 코드 ---
-            // const response = await fakeCreateProjectAPI({ title: projectTitle, description: projectDesc });
+            const response = await fakeCreateProjectAPI({ title: projectTitle, description: projectDesc });
+            const data = response.data;
 
-            const response = await fetch('http://localhost:8080/project', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    title: projectTitle,
-                    description: projectDesc,
-                }),
-            });
-
-            const data = await response.json();
+            // 실제 API 요청 시 아래 주석 해제
+            // const response = await fetch('http://localhost:8080/project', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            //     body: JSON.stringify({
+            //         title: projectTitle,
+            //         description: projectDesc,
+            //     }),
+            // });
+            // const data = await response.json();
             
             // 성공 콜백 함수 호출
             if (props.onCreateProjectSuccess) {
                 props.onCreateProjectSuccess(data); // 생성된 프로젝트 데이터를 전달
             }
-
             handleClose();
-
         } catch (error) {
             setError(error.message || "프로젝트 생성에 실패했습니다.");
         }

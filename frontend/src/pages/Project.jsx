@@ -2,12 +2,10 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HiOutlineCog6Tooth, HiOutlineUserPlus } from "react-icons/hi2";
 import "./Project.css";
-import { mockUsers } from '../data/user';
-import { mockMembers } from "../data/members";
-import { mockProjects } from "../data/projects";
-import { mockTasks } from "../data/tasks";
+import { useLocation } from "react-router-dom";
 import ProjectUpdateModal from "../components/ProjectUpdateModal";
 import ProjectMemberModal from "../components/ProjectMemberModal";
+import { api } from "../pages/client";
 
 function ProjectConfigMenu(props) {
     return (
@@ -26,9 +24,7 @@ function ProjectConfigMenu(props) {
 }
 
 function Project() {
-  // const location = useLocation();
-  // const project = location.state?.project;    // Home에서 넘긴 project 객체
-
+  const myUsername = localStorage.getItem("username") || "";
   const navigate = useNavigate();
   const { id } = useParams();                    // /project/:id 에서 id 읽기
 
@@ -41,61 +37,54 @@ function Project() {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
 
+  // 테스트용
+  const location = useLocation();
+  const myMember = members.find(m => m.username === myUsername);
+  const isLeader = myMember?.role?.toUpperCase() === "LEADER";
+
+  useEffect(() => {
+    setProject(location.state?.project);    // Home에서 넘긴 project 객체
+    setMembers(location.state?.project.members || []); // Home에서 넘긴 members 배열
+  }, [id]);
 
   // 새로고침 등으로 state가 날아갔을 때 대비
-  const name = project?.title || "프로젝트 이름";
+  const name = project?.projectName || "프로젝트 이름";
   const desc = project?.description || "프로젝트 설명";
   const memberCount = Array.isArray(members)
     ? members.length
     : 0;
-  const day = project?.day ? project.day.slice(0, 10) : "-";
+  const day = project?.created_at ? project.created_at.slice(0, 10) : "-";
 
   // 대시보드(홈)로 돌아가기
   const handleBack = () => {
     navigate("/dashboard");
   };
 
-  // [READ] 프로젝트 상세 정보 요청 (테스트용)
-  useEffect(() => {
-      // handleGetProjectDetails();
-      // handleGetProjectMembers();
-      const proj = mockProjects.find(p => p.id === parseInt(id));
-      setProject(proj);
-      const mems = mockMembers.filter(m => proj.members.includes(m.id));
-      setMembers(mems);
-      // const projTasks = mockTasks.filter(t => t.projectId === parseInt(id));
-      // setTasks(projTasks);
-  }, []);
+  // // [READ] 프로젝트 상세 정보 요청 (테스트용)
+  // useEffect(() => {
+  //     const proj = mockProjects.find(p => p.id === parseInt(id));
+  //     setProject(proj);
+  //     const mems = mockMembers.filter(m => proj.members.includes(m.id));
+  //     setMembers(mems);
+  //     // const projTasks = mockTasks.filter(t => t.projectId === parseInt(id));
+  //     // setTasks(projTasks);
+  // }, []);
+
 
   // [READ] 프로젝트 상세 정보 api 요청
   const handleGetProjectDetails = () => {
-      fetch(`http://localhost:8080/project/${id}`, {
-        headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}`}
-      })
-      .then((response) => response.json())
+      api.get(`http://localhost:8080/project/${id}`)
       .then((data) => {
           setProject(data);
-          // (프로젝트 상세 정보 처리 로직 추가)
+          setError("");
       })
       .catch((error) => {
         setProject(null);
-          console.error("프로젝트 상세 정보 불러오기 중 오류 발생:", error);
+        alert(error.message || "프로젝트 정보를 불러오는데 실패했습니다.");
       });
   };
 
-  // [UPDATE] 프로젝트 정보 수정 요청 (테스트용)
-  const updateProjectDetailsInfo = (data) => {
-      setProject(prevProject => ({
-          ...prevProject,
-          title: data.title,
-          description: data.description
-      }));
-      alert("프로젝트 정보를 업데이트했습니다.");
-      setIsUpdateModalOpen(false);
-  }
-
-  // [UPDATE] 프로젝트 정보 수정 api 요청
-    /** [백엔드 개발자 참고]
+   /** [백엔드 개발자 참고]
     프론트엔드에서 프로젝트 수정 시 PUT /project로 아래와 같은 JSON을 전송합니다:
     {
       "projectId": <string|number>,
@@ -115,60 +104,72 @@ function Project() {
       "projectName": <string>,
       "description": <string>
     }
-    */
+  */
+
+  // [UPDATE] 프로젝트 정보 수정 요청 (테스트용)
+  const updateProjectDetailsInfo = (data) => {
+      setProject(prevProject => {
+        const updated = {
+          ...prevProject,
+          projectName: data.projectName,
+          description: data.description
+        };
+        // localStorage projects도 함께 갱신
+        const saved = localStorage.getItem("projects");
+        if (saved) {
+          const arr = JSON.parse(saved);
+          const idx = arr.findIndex(p => p.id === updated.id);
+          if (idx !== -1) {
+            arr[idx] = { ...arr[idx], ...updated };
+            localStorage.setItem("projects", JSON.stringify(arr));
+          }
+        }
+        return updated;
+      });
+      alert("프로젝트 정보를 업데이트했습니다.");
+      setIsUpdateModalOpen(false);
+  }
+
+  // [UPDATE] 프로젝트 정보 수정 api 요청
   const handleUpdateProject = (data) => {
-    fetch(`http://localhost:8080/project`, {
-      method: "PUT",
-      headers: { 
-        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        projectId: id,
-        projectName: data.title,
-        description: data.description
-      }),
-    })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("프로젝트 정보 업데이트에 실패했습니다.");
-      }
-      return response.json();
-    })
+    api.put(`http://localhost:8080/project/${id}`, data)
     .then((updatedProject) => {
         setProject(updatedProject);
         alert("프로젝트 정보를 업데이트했습니다.");
         setIsUpdateModalOpen(false);
     })
     .catch((error) => {
-        console.error("프로젝트 정보 업데이트 중 오류 발생:", error);
+        alert(error.message || "프로젝트 정보 업데이트에 실패했습니다.");
     });
   };
 
   // [DELETE] 프로젝트 삭제 요청 (테스트용)
   const deleteProjectTest = () => {
     alert("프로젝트가 삭제되었습니다. (테스트용)");
-    navigate("/dashboard", { state: { deletedProjectId: id } });
+    const saved = localStorage.getItem("projects");
+    let filteredProjects = [];
+    if (saved) {
+      const arr = JSON.parse(saved);
+      filteredProjects = arr.filter(p => p.id !== parseInt(id));
+      localStorage.setItem("projects", JSON.stringify(filteredProjects));
+    }
+    navigate("/dashboard");
+    // navigate("/dashboard", { state: { deletedProjectId: id } });
   };
 
   // [DELETE] 프로젝트 삭제 api 요청
+  // 멤버가 혼자이고 리더인 경우에만 삭제 가능 로직 필요
   const handleDeleteProject = () => {
     if (window.confirm("정말로 이 프로젝트를 삭제하시겠습니까?")) {
-        fetch(`http://localhost:8080/projects/${id}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}`},
-        })
-        .then((response) => {
-        if (response.ok) {
-            navigate("/dashboard");
-        } else {
-            alert("프로젝트 삭제에 실패했습니다.");
-        }
+      api.delete(`http://localhost:8080/projects/${id}`)
+      .then(() => {
+        alert("프로젝트가 삭제되었습니다.");
+        navigate("/dashboard");
       })
       .catch((error) => {
-          console.error("프로젝트 삭제 중 오류 발생:", error);
+        alert(error.message || "프로젝트 삭제 중 오류가 발생했습니다.");
       });
-    }   
+    }     
   };
 
   // [CREATE] 멤버 초대(추가) api 요청
@@ -199,30 +200,51 @@ function Project() {
     })
   };
 
-  // [READ] 멤버 정보 요청 (테스트용)
-  const membersWithUserInfo = members.map(member => {
-    const user = mockUsers.find(u => u.id === member.userId);
-    return {
-      ...member,
-      username: user?.username,
-      profileImg: user?.profileImg || "",
-      name: user?.name || "이름없음",
-      // email: user?.email || "",
-    }
-  })
+  /** [백엔드 개발자 참고]
+    프론트엔드에서 프로젝트 멤버 정보를 요청할 때 GET /members/:projectId로 아래와 같은 형식의 데이터를 기대합니다:
+    [
+      {
+        "userId": <string|number>,
+        "username": <string>,
+        "name": <string>,
+        "profileImg": <string>,
+        "role": <string>, // 예: "LEADER", "MEMBER"
+        // (선택) "email": <string>
+      },
+      ...
+    ]
+
+    프론트엔드에서 별도의 mockUsers 조인 없이 바로 멤버 정보를 렌더링하려면,
+    username, name, profileImg 등 모든 필드를 서버에서 내려주는 것이 가장 이상적입니다.
+    (예: username으로 내 멤버 객체를 찾거나, 프로필 이미지를 바로 표시)
+    
+    서버가 위와 같은 구조로 응답하면, 프론트엔드는 members.map(...)만으로 바로 렌더링이 가능합니다.
+    
+    만약 일부 필드가 누락되면, 프론트엔드에서 추가 가공/조인 로직이 필요하므로
+    모든 멤버 관련 정보는 서버에서 제공해주시길 권장합니다.
+  */
+
+  // // [READ] 멤버 정보 요청 (테스트용)
+  // const membersWithUserInfo = members.map(member => {
+  //   const user = mockUsers.find(u => u.id === member.userId);
+  //   return {
+  //     ...member,
+  //     // username: user?.username,
+  //     profileImg: user?.profileImg || "",
+  //     name: user?.name || "이름없음",
+  //     // email: user?.email || "",
+  //   }
+  // })
 
   // [READ] 멤버 정보 api 요청
   const handleGetProjectMembers = () => {
-      fetch(`http://localhost:8080/member/${id}`, {
-        headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}`}
-      })
-      .then((response) => response.json())
-      .then((data) => {
-          setMembers(data);
-      })
-      .catch((error) => {
-          console.error("멤버 불러오기 중 오류 발생:", error);
-      });
+    api.get(`http://localhost:8080/members/${id}`)
+    .then((data) => {
+        setMembers(data);
+    })
+    .catch((error) => {
+        alert(error.message || "멤버 정보를 불러오는데 실패했습니다.");
+    });
   };
 
   // [UPDATE] 멤버 권한 수정 api 요청
@@ -254,7 +276,14 @@ function Project() {
 
   // [DELETE] 멤버 탈퇴/방출 api 요청
   const handleDeleteMember = (targetUsername) => {
-    if (window.confirm(`정말로 ${targetUsername}를 탈퇴/방출하시겠습니까?`)) {
+    let deleteConfirmation = false;
+    targetUsername === myUsername
+      ? (window.confirm("정말로 탈퇴하시겠습니까?") ? deleteConfirmation = true : null)
+      : (//사용자가 leader인 경우에만 다른 멤버를 방출할 수 있음
+        window.confirm(`정말로 ${targetUsername}를 방출하시겠습니까?`) ? deleteConfirmation = true : null
+      );
+
+    if (deleteConfirmation) {
       fetch(`http://localhost:8080/${id}`, {
         method: "DELETE",
         headers: { 
@@ -290,7 +319,11 @@ function Project() {
   //     });
   //   }
 
-
+  // useEffect(() => {
+  //   handleGetProjectDetails();
+  //   handleGetProjectMembers();
+  // }, [id]);
+  
   // project 자체가 없는 경우 간단한 예외 화면
   if (!project) {
     return (
@@ -347,28 +380,34 @@ function Project() {
         {isMemberModalOpen && project && (
           <ProjectMemberModal
             projectId={id}
-            members={membersWithUserInfo}
+            members={members}
             onClose={() => setIsMemberModalOpen(false)}
             onInvite={() => handleInviteMember()}
             onModify={() => handleChangeMemberAuth()}
-            onEject={() => handleDeleteMember()}
+            onEject={(username) => handleDeleteMember(username)}
           />
         )}
         <div className="pj-header-row">
           <div>
             <div style={ { position: "relative", display: "flex", flexDirection: "row", alignItems: "flex-end" } }>
               <h1 className="pj-title">{name} </h1>
-              <span style={ {cursor: "pointer"} } onClick={ () => {setIsConfigMenuOpen(!isConfigMenuOpen);} }>
-                <HiOutlineCog6Tooth />
-              </span>
-              { isConfigMenuOpen && 
-                <ProjectConfigMenu 
-                  setIsConfigMenuOpen={setIsConfigMenuOpen} 
-                  setIsUpdateModalOpen={setIsUpdateModalOpen} 
-                  setIsMemberModalOpen={setIsMemberModalOpen} 
-                  onDelete={() => deleteProjectTest()}
-                  // onDelete={() => handleDeleteProject()} 
-                  project={project} /> }
+              {
+                isLeader ? (
+                  <>
+                    <span style={ {cursor: "pointer"} } onClick={ () => {setIsConfigMenuOpen(!isConfigMenuOpen);} }>
+                      <HiOutlineCog6Tooth />
+                    </span>
+                    { isConfigMenuOpen && 
+                      <ProjectConfigMenu 
+                        setIsConfigMenuOpen={setIsConfigMenuOpen} 
+                        setIsUpdateModalOpen={setIsUpdateModalOpen} 
+                        setIsMemberModalOpen={setIsMemberModalOpen} 
+                        onDelete={() => deleteProjectTest()}
+                        // onDelete={() => handleDeleteProject()} 
+                        project={project} /> }
+                    </>
+                ) : (<></>)
+              }
             </div>
             <p className="pj-sub">
               {desc}

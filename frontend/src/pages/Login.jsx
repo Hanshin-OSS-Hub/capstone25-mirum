@@ -43,29 +43,35 @@ function Login(props) {
 
         try {
             // API 클라이언트를 사용하여 로그인 요청
-            const data = await api.post("login", { username: userName, password: password });
+            // const data = await api.post("login", { username: userName, password: password });
             
-            // ✅ 여기서 토큰을 localStorage에 저장합니다.
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("refreshToken", data.refreshToken);
-
-            if (props.onLoginSuccess)
-                props.onLoginSuccess();
-
-            // // --- 데모용 코드 ---
-            // const fakeUserData = {
-            //     userName,
-            //     name: "미룸 데모 유저",
-            //     accessToken: "demo-access-token-123",
-            //     refreshToken: "demo-refresh-token-456",
-            // };
-            //
             // // ✅ 여기서 토큰을 localStorage에 저장합니다.
-            // localStorage.setItem("accessToken", fakeUserData.accessToken);
-            // localStorage.setItem("refreshToken", fakeUserData.refreshToken);
-            //
+            // localStorage.setItem("accessToken", data.accessToken);
+            // localStorage.setItem("refreshToken", data.refreshToken);
+            // localStorage.setItem("username", userName);
+
             // if (props.onLoginSuccess)
             //     props.onLoginSuccess();
+
+            // --- 데모용 코드 ---
+            const fakeUserData = {
+                id: 1,
+                role: "user",
+                userName,
+                name: "미룸 데모 유저",
+                accessToken: "demo-access-token-123",
+                refreshToken: "demo-refresh-token-456",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            
+            // ✅ 여기서 토큰을 localStorage에 저장합니다.
+            localStorage.setItem("accessToken", fakeUserData.accessToken);
+            localStorage.setItem("refreshToken", fakeUserData.refreshToken);
+            localStorage.setItem("username", userName);
+            
+            if (props.onLoginSuccess)
+                props.onLoginSuccess();
 
         } catch (error) {
             setError(error.message || "알 수 없는 오류가 발생했습니다.");
@@ -110,7 +116,7 @@ function Login(props) {
                         {error && <div className="login-error">{error}</div>}
                     </div>
 
-                    <button type="submit" className="login-button">
+                    <button disabled={!userName || !password} type="submit" className={!userName || !password ? "login-secondary-button" : "login-button"}>
                         로그인
                     </button>
 

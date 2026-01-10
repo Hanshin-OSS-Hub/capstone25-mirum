@@ -4,7 +4,6 @@ import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiHome, HiUser // 👈 아이콘 추가 임포트
 } from "react-icons/hi2";
 import CreateProjectModal from './CreateProject';
-import { mockProjects } from '../data/projects'; // 샘플 프로젝트 데이터
 import { useLocation } from 'react-router-dom'; 
 
 function Home() {
@@ -12,29 +11,37 @@ function Home() {
     const location = useLocation();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // 초기 렌더링 시점에 필터링을 수행하여 깜빡임(Flash) 현상 방지
     const [projects, setProjects] = useState(() => {
-        if (location.state?.deletedProjectId) {
-            return mockProjects.filter(p => p.id !== Number(location.state.deletedProjectId));
+        const saved = localStorage.getItem("projects");
+        if (saved) {
+            return JSON.parse(saved);
         }
-        return mockProjects;
+        return [];
     });
+    // // 서버 연결 전, mockProjects에서 삭제된 프로젝트를 필터링하여 초기값으로 사용 (테스트용)
+    // const [projects, setProjects] = useState(() => {
+    //     if (location.state?.deletedProjectId) {
+    //         return mockProjects.filter(p => p.id !== Number(location.state.deletedProjectId));
+    //     }
+    //     return mockProjects;
+    // });
 
-    useEffect(() => {
-        // state가 남아있으면 새로고침 시 문제가 될 수 있으므로 청소만 담당
-        if (location.state?.deletedProjectId) {
-            navigate(location.pathname, { replace: true, state: null });
-        }
-    }, [location, navigate]);
+    // // 삭제 후 state 정리만 담당 (필요시)
+    // useEffect(() => {
+    //     if (location.state?.deletedProjectId) {
+    //         navigate(location.pathname, { replace: true, state: null });
+    //     }
+    // }, [location, navigate]);
 
     // [READ] 프로젝트 목록 api 요청
     const handleGetProjectList = async () => {
-        fetch('http://localhost:8080/project', {
-            headers: { "authorization": `Bearer ${localStorage.getItem("accessToken")}`}
+        api.get('project')
+        .then(response => {
+            setProjects(response.data);
         })
-        .then(response => response.json())
-        .then(data => setProjects(data))
-        .catch(error => console.error('Error fetching projects:', error));
+        .catch(error => {
+            console.error('Error fetching projects:', error);
+        });
     }
 
     // useEffect(() => {
@@ -68,131 +75,148 @@ function Home() {
                             <p>오늘도 팀 프로젝트를 효율적으로 관리해보세요.</p>
                         </section>
 
-                        {/* 요약 카드 섹션 (가로 배치) */}
-                        <section className="summary-cards">
-                            <div className="card summary-card">
-                                <div className="card-info">
-                                    <span>🔥 진행 중인 프로젝트</span>
-                                    <strong>{projects.length}개</strong>
+                        <CreateProjectModal
+                            isOpen={isModalOpen}
+                            onClose={() => setIsModalOpen(false)}
+                            onCreateProjectSuccess={(data) => {
+                                setIsModalOpen(false);
+                                alert("프로젝트 생성 완료!");
+                                // handleGetProjectList();
+                                setProjects((prev) => {
+                                    const newProjects = [...prev, data];
+                                    localStorage.setItem("projects", JSON.stringify(newProjects));
+                                    return newProjects;
+                                });
+                            }}
+                        />
+
+                        {
+                            projects.length === 0 ? (
+                                <div style={{ textAlign: "center", marginTop: "50px", color: "#666", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+                                    <p>진행 중인 프로젝트가 없습니다.</p>
+                                    <button className="primary-btn" onClick={() => setIsModalOpen(true)}>+ 새 프로젝트 생성</button>
                                 </div>
-                                <div className="icon-box blue">🚀</div>
-                            </div>
+                            ) : (
+                                <>
+                                {/* 요약 카드 섹션 (가로 배치) */}
+                                <section className="summary-cards">
+                                    <div className="card summary-card">
+                                        <div className="card-info">
+                                            <span>🔥 진행 중인 프로젝트</span>
+                                            <strong>{projects.length}개</strong>
+                                        </div>
+                                        <div className="icon-box blue">🚀</div>
+                                    </div>
 
-                            <div className="card summary-card">
-                                <div className="card-info">
-                                    <span>⏰ 금일 마감까지 남은 시간</span>
-                                    <strong>3시간 20분</strong> {/* 예시값, 실제 계산 필요 */}
-                                </div>
-                                <div className="icon-box green">⏳</div>
-                            </div>
+                                    <div className="card summary-card">
+                                        <div className="card-info">
+                                            <span>⏰ 금일 마감까지 남은 시간</span>
+                                            <strong>3시간 20분</strong> {/* 예시값, 실제 계산 필요 */}
+                                        </div>
+                                        <div className="icon-box green">⏳</div>
+                                    </div>
 
-                            <div className="card summary-card">
-                                <div className="card-info">
-                                    <span>🎯 오늘의 목표 달성률</span>
-                                    <strong>60%</strong> {/* 예시값, 실제 계산 필요 */}
-                                </div>
-                                <div className="icon-box purple">📈</div>
-                            </div>
-                        </section>
+                                    <div className="card summary-card">
+                                        <div className="card-info">
+                                            <span>🎯 오늘의 목표 달성률</span>
+                                            <strong>60%</strong> {/* 예시값, 실제 계산 필요 */}
+                                        </div>
+                                        <div className="icon-box purple">📈</div>
+                                    </div>
+                                </section>
 
-                        {/* 내 프로젝트 섹션 */}
-                        <section className="project-section">
-                            <div className="section-header">
-                                <h2>내 프로젝트</h2>
-                                <button className="primary-btn" onClick={() => setIsModalOpen(true)}>+ 새 프로젝트</button>
-                            </div>
+                                {/* 내 프로젝트 섹션 */}
+                                <section className="project-section">
+                                    <div className="section-header">
+                                        <h2>내 프로젝트</h2>
+                                        <button className="primary-btn" onClick={() => setIsModalOpen(true)}>+ 새 프로젝트</button>
+                                    </div>
 
-                            <div className="project-grid">
-                            {
-                                projects.map((project) => {
-                                    return(
-                                        // 1. 최상위 요소에 고유한 'key'를 추가합니다. (project.id가 가장 이상적입니다.)
-                                        <div
-                                            key={project.id}
-                                            data-testid="project-card"
-                                            className="card project-card"
-                                            onClick={() =>
-                                                navigate(`/project/${project.id}`, {
-                                                // state: { project },   // ✅ 프로젝트 전체 정보를 함께 넘김
-                                                })
-                                            }
-                                        >
+                                    <div className="project-grid">
+                                    {
+                                        projects.map((project) => {
+                                            return(
+                                                // 1. 최상위 요소에 고유한 'key'를 추가합니다. (project.id가 가장 이상적입니다.)
+                                                <div
+                                                    key={project.id}
+                                                    data-testid="project-card"
+                                                    className="card project-card"
+                                                    onClick={() =>
+                                                        navigate(`/project/${project.id}`, {
+                                                        state: { project },   // ✅ 프로젝트 전체 정보를 함께 넘김
+                                                        })
+                                                    }
+                                                >
+                                                    <div className="project-header">
+                                                    <div className="project-text">
+                                                        {/* 2. 하드코딩된 텍스트를 props로 받은 데이터로 교체합니다. */}
+                                                        <h2>{project?.projectName}</h2>
+                                                        <p className="project-desc">
+                                                            <br />
+                                                            {
+                                                            project?.description?.length > 30 ? project.description.slice(0, 20) : project.description
+                                                        }</p>
+                                                    </div>
+                                                    <div className="project-icon">📂</div>
+                                                    </div>
+
+                                                    <div className="progress-bar">
+                                                    <div className="full" style={{ width: `${project?.progress}%`, height: 100, backgroundColor: project.progress > 80 ? '#c900fbed' : (project.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
+                                                    </div>
+
+                                                    <div className="card-footer">                                                
+                                                    <span>👤 {project?.members?.length || 0}명</span>
+                                                    <span>📅 {project?.created_at ? project.created_at.slice(0, 10) : "-"}</span>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })
+                                    }
+
+                                        {/* 프로젝트 카드 1 */}
+                                        {/* <div className="card project-card">
                                             <div className="project-header">
-                                              <div className="project-text">
-                                                  {/* 2. 하드코딩된 텍스트를 props로 받은 데이터로 교체합니다. */}
-                                                  <h2>{project.title}</h2>
-                                                  <p className="project-desc">
-                                                    <br />
-                                                    {
-                                                    project.description.length > 30 ? project.description.slice(0, 20) : project.description
-                                                  }</p>
-                                              </div>
-                                              <div className="project-icon">📂</div>
+                                                <div className="project-text">
+                                                    <h3>마케팅 전략</h3>
+                                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                                </div>
+
+                                                <div className="project-icon">📂</div>
                                             </div>
 
                                             <div className="progress-bar">
-                                              <div className="full" style={{ width: `${project.progress}%`, height: 100, backgroundColor: project.progress > 80 ? '#c900fbed' : (project.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
+                                                <div className="fill" style={{ width: '65%' }}></div>
                                             </div>
 
-                                            <div className="card-footer">                                                
-                                              <span>👤 {project.members.length || 0}명</span>
-                                              <span>📅 {project.day ? project.day.slice(0, 10) : "-"}</span>
+                                            <div className="card-footer">
+                                                <span>👤 3명</span>
+                                                <span>📅 2시간 전</span>
                                             </div>
-                                        </div>
-                                    )
-                                })
-                            }
+                                        </div> */}
 
-                                {/* 프로젝트 카드 1 */}
-                                {/* <div className="card project-card">
-                                    <div className="project-header">
-                                        <div className="project-text">
-                                            <h3>마케팅 전략</h3>
+                                        {/* 프로젝트 카드 2 */}
+                                        {/* <div className="card project-card">
+                                            <div style = { { "display" : "flex", "gap": "24px"} }>
+                                                <h3>마케팅 과제</h3>
+                                                <div className="project-icon">📂</div>
+                                            </div>
                                             <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                            <div className="progress-bar">
+                                                <div className="fill" style={{width: '30%'}}></div>
+                                            </div>
+                                            <div className="card-footer">
+                                                <span>👤 2명</span>
+                                                <span>📅 1일 전</span>
+                                            </div>
+                                        </div>        */}
+
                                         </div>
+                                    </section>
+                                </>
+                            )
+                        }
 
-                                        <div className="project-icon">📂</div>
-                                    </div>
-
-                                    <div className="progress-bar">
-                                        <div className="fill" style={{ width: '65%' }}></div>
-                                    </div>
-
-                                    <div className="card-footer">
-                                        <span>👤 3명</span>
-                                        <span>📅 2시간 전</span>
-                                    </div>
-                                </div> */}
-
-                                {/* 프로젝트 카드 2 */}
-                                {/* <div className="card project-card">
-                                    <div style = { { "display" : "flex", "gap": "24px"} }>
-                                        <h3>마케팅 과제</h3>
-                                        <div className="project-icon">📂</div>
-                                    </div>
-                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                    <div className="progress-bar">
-                                        <div className="fill" style={{width: '30%'}}></div>
-                                    </div>
-                                    <div className="card-footer">
-                                        <span>👤 2명</span>
-                                        <span>📅 1일 전</span>
-                                    </div>
-                                </div>        */}
-                            
-                                <CreateProjectModal
-                                    isOpen={isModalOpen}
-                                    onClose={() => setIsModalOpen(false)}
-                                    onCreateProjectSuccess={(data) => {
-                                        setIsModalOpen(false);
-                                        alert("프로젝트 생성 완료!");
-                                        handleGetProjectList();
-                                        // setProjects((prev) => [...prev, data]);
-                                    }}
-                                />
-
-                                </div>
-                            </section>
+                        
                         </div>
                     </main>
                     <nav className="mobile-tab-bar">

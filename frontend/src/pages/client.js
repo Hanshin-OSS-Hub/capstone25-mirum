@@ -3,7 +3,7 @@
  * - 자동으로 Authorization 헤더에 AccessToken을 추가합니다.
  * - API 요청이 401 에러로 실패 시, RefreshToken으로 AccessToken을 자동 재발급하고 원래 요청을 재시도합니다.
  */
-async function apiClient(endpoint, options = {}) {
+export async function apiClient(endpoint, options = {}) {
   const fetchWithAuth = async (isRetry = false) => {
     const accessToken = localStorage.getItem("accessToken");
     const headers = {
@@ -15,7 +15,7 @@ async function apiClient(endpoint, options = {}) {
       headers["Authorization"] = `Bearer ${accessToken}`;
     }
 
-    const response = await fetch(`/api/${endpoint}`, {
+    const response = await fetch(`${endpoint}`, {
       ...options,
       headers,
     });
@@ -27,7 +27,7 @@ async function apiClient(endpoint, options = {}) {
         if (!refreshToken) throw new Error("No refresh token");
 
         // 2. 토큰 재발급 API 호출
-        const refreshResponse = await fetch(`/api/jwt/refresh`, {
+        const refreshResponse = await fetch(`jwt/refresh`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
@@ -66,9 +66,20 @@ async function apiClient(endpoint, options = {}) {
     // 응답 본문이 없는 경우(e.g., 204 No Content)를 대비하여 확인
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
-      return response.json();
+      const result = await response.json();
+      if (result && typeof result === "object" && "success" in result && "data" in result) {
+        if (result.success) {
+          return result.data;
+        } else {
+          // 서버가 success: false를 반환한 경우
+          throw new Error(result.message || "API 요청 실패");
+        }
+      } else {
+        return result;
+      }
+    } else {
+      return; // 본문이 없으면 undefined 반환
     }
-    return; // 본문이 없으면 undefined 반환
   };
 
   return fetchWithAuth();
