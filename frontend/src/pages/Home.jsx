@@ -3,19 +3,27 @@ import { useNavigate } from "react-router-dom";
 import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiHome, HiUser // 👈 아이콘 추가 임포트
 } from "react-icons/hi2";
+import { api } from './client';
+import { useAuth } from '../context/useAuth';
 import CreateProjectModal from './CreateProject';
 import ProfileModal from '../components/ProfileModal';
-// import { useLocation } from 'react-router-dom'; 
+
+
+
+// 환경 변수로 테스트/API 모드 선택
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 function Home() {
     const navigate = useNavigate();
+    const { isAuthenticated, user } = useAuth();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
     const [projects, setProjects] = useState(() => {
-        const saved = localStorage.getItem("projects");
-        if (saved) {
-            return JSON.parse(saved);
+        if (USE_MOCK) {
+            const saved = localStorage.getItem("projects");
+            return saved ? JSON.parse(saved) : [];
         }
         return [];
     });
@@ -48,12 +56,14 @@ function Home() {
         });
     }
 
-    // useEffect(() => {
-    //     handleGetProjectList();
-    // }, []);
+    useEffect(() => {
+        if (!USE_MOCK) {
+            handleGetProjectList();
+        }
+    }, []);
 
     return (
-        <div className="phone-mockup-wrapper">
+        <>
             <div className="dashboard-container">
                 {/* 1. 헤더 영역 */}
                 <header className="header" style={ { position: "relative" } }>
@@ -229,30 +239,10 @@ function Home() {
                                 </>
                             )
                         }
-
-                        
                         </div>
                     </main>
-                    <nav className="mobile-tab-bar">
-                        <button className="tab-item active">
-                            <HiHome size={24} />
-                            <span>홈</span>
-                        </button>
-                        <button className="tab-item">
-                            <HiOutlineFolder size={24} />
-                            <span>프로젝트</span>
-                        </button>
-                        <button className="tab-item">
-                            <HiCheck size={24} />
-                            <span>작업</span>
-                        </button>
-                        <button className="tab-item">
-                            <HiUser size={24} />
-                            <span>내 정보</span>
-                        </button>
-                    </nav>
                 </div>
-            </div>
+            </>
         // <>
         // {/* Header */}
         //   <header className="header">{/*"bg-white border-b border-gray-200">*/}

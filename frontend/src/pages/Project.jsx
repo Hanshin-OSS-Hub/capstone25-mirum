@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HiOutlineCog6Tooth, HiOutlineUserPlus } from "react-icons/hi2";
-import "./Project.css";
+import { api } from "../pages/client";
+import { useAuth } from "../context/useAuth";
 import { useLocation } from "react-router-dom";
 import ProjectUpdateModal from "../components/ProjectUpdateModal";
 import ProjectMemberModal from "../components/ProjectMemberModal";
-import { api } from "../pages/client";
+import "./Project.css";
+
+// 환경 변수로 테스트/API 모드 선택
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 function ProjectConfigMenu(props) {
     return (
@@ -24,8 +28,8 @@ function ProjectConfigMenu(props) {
 }
 
 function Project() {
-  const myUsername = localStorage.getItem("username") || "";
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
   const { id } = useParams();                    // /project/:id 에서 id 읽기
 
   const [isConfigMenuOpen, setIsConfigMenuOpen] = useState(false);
@@ -37,15 +41,24 @@ function Project() {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
 
-  // 테스트용
   const location = useLocation();
+  const myUsername = localStorage.getItem("username") || "";
   const myMember = members.find(m => m.username === myUsername);
   const isLeader = myMember?.role?.toUpperCase() === "LEADER";
 
+  // ==================== [초기 데이터 로드] ====================
+  // 테스트 모드: location.state에서 데이터 가져오기
   useEffect(() => {
-    setProject(location.state?.project);    // Home에서 넘긴 project 객체
-    setMembers(location.state?.project.members || []); // Home에서 넘긴 members 배열
-  }, [id]);
+    alert(`현재 모드: ${USE_MOCK ? "테스트용(Mock)" : "API"}`);
+    if (USE_MOCK) {
+      setProject(location.state?.project);
+      setMembers(location.state?.project.members || []);
+    } else {
+      // API 모드: 서버에서 데이터 가져오기
+      handleGetProjectDetailsAPI();
+      handleGetProjectMembersAPI();
+    }
+  }, [location.state?.project, handleGetProjectDetailsAPI, handleGetProjectMembersAPI]);
 
   // 새로고침 등으로 state가 날아갔을 때 대비
   const name = project?.projectName || "프로젝트 이름";
@@ -60,19 +73,10 @@ function Project() {
     navigate("/dashboard");
   };
 
-  // // [READ] 프로젝트 상세 정보 요청 (테스트용)
-  // useEffect(() => {
-  //     const proj = mockProjects.find(p => p.id === parseInt(id));
-  //     setProject(proj);
-  //     const mems = mockMembers.filter(m => proj.members.includes(m.id));
-  //     setMembers(mems);
-  //     // const projTasks = mockTasks.filter(t => t.projectId === parseInt(id));
-  //     // setTasks(projTasks);
-  // }, []);
-
+  // ==================== [실제 API 함수들] ====================
 
   // [READ] 프로젝트 상세 정보 api 요청
-  const handleGetProjectDetails = () => {
+  const handleGetProjectDetailsAPI = useCallback(() => {
       api.get(`http://localhost:8080/project/${id}`)
       .then((data) => {
           setProject(data);
@@ -82,7 +86,7 @@ function Project() {
         setProject(null);
         alert(error.message || "프로젝트 정보를 불러오는데 실패했습니다.");
       });
-  };
+    }, [id]);
 
    /** [백엔드 개발자 참고]
     프론트엔드에서 프로젝트 수정 시 PUT /project로 아래와 같은 JSON을 전송합니다:
@@ -106,32 +110,8 @@ function Project() {
     }
   */
 
-  // [UPDATE] 프로젝트 정보 수정 요청 (테스트용)
-  const updateProjectDetailsInfo = (data) => {
-      setProject(prevProject => {
-        const updated = {
-          ...prevProject,
-          projectName: data.projectName,
-          description: data.description
-        };
-        // localStorage projects도 함께 갱신
-        const saved = localStorage.getItem("projects");
-        if (saved) {
-          const arr = JSON.parse(saved);
-          const idx = arr.findIndex(p => p.id === updated.id);
-          if (idx !== -1) {
-            arr[idx] = { ...arr[idx], ...updated };
-            localStorage.setItem("projects", JSON.stringify(arr));
-          }
-        }
-        return updated;
-      });
-      alert("프로젝트 정보를 업데이트했습니다.");
-      setIsUpdateModalOpen(false);
-  }
-
   // [UPDATE] 프로젝트 정보 수정 api 요청
-  const handleUpdateProject = (data) => {
+  const handleUpdateProjectAPI = (data) => {
     api.put(`http://localhost:8080/project/${id}`, data)
     .then((updatedProject) => {
         setProject(updatedProject);
@@ -143,23 +123,8 @@ function Project() {
     });
   };
 
-  // [DELETE] 프로젝트 삭제 요청 (테스트용)
-  const deleteProjectTest = () => {
-    alert("프로젝트가 삭제되었습니다. (테스트용)");
-    const saved = localStorage.getItem("projects");
-    let filteredProjects = [];
-    if (saved) {
-      const arr = JSON.parse(saved);
-      filteredProjects = arr.filter(p => p.id !== parseInt(id));
-      localStorage.setItem("projects", JSON.stringify(filteredProjects));
-    }
-    navigate("/dashboard");
-    // navigate("/dashboard", { state: { deletedProjectId: id } });
-  };
-
   // [DELETE] 프로젝트 삭제 api 요청
-  // 멤버가 혼자이고 리더인 경우에만 삭제 가능 로직 필요
-  const handleDeleteProject = () => {
+  const handleDeleteProjectAPI = () => {
     if (window.confirm("정말로 이 프로젝트를 삭제하시겠습니까?")) {
       api.delete(`http://localhost:8080/projects/${id}`)
       .then(() => {
@@ -173,7 +138,7 @@ function Project() {
   };
 
   // [CREATE] 멤버 초대(추가) api 요청
-  const handleInviteMember = (userInput) => {
+  const handleInviteMemberAPI = (userInput) => {
     fetch(`http://localhost:8080/invitations`, {
       method: "POST",
       headers: { 
@@ -193,7 +158,6 @@ function Project() {
     })
     .then((data) => {
       alert(`${userInput}님을 초대했습니다.`);
-      setUserInput("");
     })
     .catch((error) => {
       alert("초대에 실패했습니다.", error.message);
@@ -237,7 +201,7 @@ function Project() {
   // })
 
   // [READ] 멤버 정보 api 요청
-  const handleGetProjectMembers = () => {
+  const handleGetProjectMembersAPI = useCallback(() => {
     api.get(`http://localhost:8080/members/${id}`)
     .then((data) => {
         setMembers(data);
@@ -245,10 +209,10 @@ function Project() {
     .catch((error) => {
         alert(error.message || "멤버 정보를 불러오는데 실패했습니다.");
     });
-  };
+  }, [id]);
 
   // [UPDATE] 멤버 권한 수정 api 요청
-  const handleChangeMemberAuth = (targetUsername, role) => {
+  const handleChangeMemberAuthAPI = (targetUsername, role) => {
     fetch(`http://localhost:8080/members/${id}/role`, {
       method: "PUT",
       headers: { 
@@ -275,7 +239,7 @@ function Project() {
   }
 
   // [DELETE] 멤버 탈퇴/방출 api 요청
-  const handleDeleteMember = (targetUsername) => {
+  const handleDeleteMemberAPI = (targetUsername) => {
     let deleteConfirmation = false;
     targetUsername === myUsername
       ? (window.confirm("정말로 탈퇴하시겠습니까?") ? deleteConfirmation = true : null)
@@ -303,26 +267,53 @@ function Project() {
     }
   }
 
-  // 추후 구현 예정
-  // const handleGetProjectTasks = () => {
-  //     fetch(`http://localhost:8080/tasks/project/${id}`, {
-  //       headers: { 
-  //         "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-  //         "Content-Type": "text/plain",
-  //       },
-  //     })
-  //     .then((response) => response.json())
-  //     .then((data) => {}
-  //     )
-  //     .catch((error) => {
-  //         console.error("작업 불러오기 중 오류 발생:", error);
-  //     });
-  //   }
+  // ==================== [테스트용 함수들] ====================
 
-  // useEffect(() => {
-  //   handleGetProjectDetails();
-  //   handleGetProjectMembers();
-  // }, [id]);
+  // [UPDATE] 프로젝트 정보 수정 요청 (테스트용)
+  const updateProjectDetailsInfoTest = (data) => {
+      setProject(prevProject => {
+        const updated = {
+          ...prevProject,
+          projectName: data.projectName,
+          description: data.description
+        };
+        // localStorage projects도 함께 갱신
+        const saved = localStorage.getItem("projects");
+        if (saved) {
+          const arr = JSON.parse(saved);
+          const idx = arr.findIndex(p => p.id === updated.id);
+          if (idx !== -1) {
+            arr[idx] = { ...arr[idx], ...updated };
+            localStorage.setItem("projects", JSON.stringify(arr));
+          }
+        }
+        return updated;
+      });
+      alert("프로젝트 정보를 업데이트했습니다.");
+      setIsUpdateModalOpen(false);
+  }
+
+  // [DELETE] 프로젝트 삭제 요청 (테스트용)
+  const deleteProjectTest = () => {
+    alert("프로젝트가 삭제되었습니다. (테스트용)");
+    const saved = localStorage.getItem("projects");
+    let filteredProjects = [];
+    if (saved) {
+      const arr = JSON.parse(saved);
+      filteredProjects = arr.filter(p => p.id !== parseInt(id));
+      localStorage.setItem("projects", JSON.stringify(filteredProjects));
+    }
+    navigate("/dashboard");
+  };
+
+  // ==================== [핸들러 선택] ====================
+  // 환경변수에 따라 API 또는 테스트 함수 사용
+  const handleUpdateProject = USE_MOCK ? updateProjectDetailsInfoTest : handleUpdateProjectAPI;
+  const handleDeleteProject = USE_MOCK ? deleteProjectTest : handleDeleteProjectAPI;
+  const handleInviteMember = USE_MOCK ? (() => alert("테스트 모드: 멤버 초대")) : handleInviteMemberAPI;
+  const handleGetProjectMembers = USE_MOCK ? (() => {}) : handleGetProjectMembersAPI;
+  const handleChangeMemberAuth = USE_MOCK ? (() => alert("테스트 모드: 멤버 권한 변경")) : handleChangeMemberAuthAPI;
+  const handleDeleteMember = USE_MOCK ? ((username) => alert(`테스트 모드: ${username} 제거`)) : handleDeleteMemberAPI;
   
   // project 자체가 없는 경우 간단한 예외 화면
   if (!project) {
@@ -373,8 +364,7 @@ function Project() {
             project={project}
             error={error}
             onClose={() => setIsUpdateModalOpen(false)}
-            onUpdate={(data) => updateProjectDetailsInfo(data)}
-            // onUpdate={() => handleUpdateProject()}
+            onUpdate={(data) => handleUpdateProject(data)}
           />
         )}
         {isMemberModalOpen && project && (
@@ -402,8 +392,7 @@ function Project() {
                         setIsConfigMenuOpen={setIsConfigMenuOpen} 
                         setIsUpdateModalOpen={setIsUpdateModalOpen} 
                         setIsMemberModalOpen={setIsMemberModalOpen} 
-                        onDelete={() => deleteProjectTest()}
-                        // onDelete={() => handleDeleteProject()} 
+                        onDelete={() => handleDeleteProject()}
                         project={project} /> }
                     </>
                 ) : (<></>)
