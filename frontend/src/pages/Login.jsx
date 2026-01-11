@@ -1,14 +1,21 @@
 import { useState } from "react";
+import { useAuth } from "../context/useAuth";
 import './modal.css';
 import { api } from './client';
 
+// 환경 변수로 테스트/API 모드 선택
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+
 function Login(props) {
+
+    const { login } = useAuth();
+    
     const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
-    if (!props.isOpen)
-        return null;
+    // if (!props.isOpen)
+    //     return null;
 
     /**
      * https://velog.io/@sunkim/Javascript-e.target과-e.currentTarget의-차이점
@@ -32,7 +39,7 @@ function Login(props) {
      부모 요소에서도 작동하지 않도록 방지하는 함수(?).
      */
     
-    const handleSubmit = async (event) =>  {
+    const handleSubmitAPI = async (event) =>  {
         event.preventDefault();
         setError("");
 
@@ -41,30 +48,46 @@ function Login(props) {
             return;
         }
 
-        try {
-            // API 클라이언트를 사용하여 로그인 요청
-            // const data = await api.post("login", { username: userName, password: password });
-            
-            // // ✅ 여기서 토큰을 localStorage에 저장합니다.
-            // localStorage.setItem("accessToken", data.accessToken);
-            // localStorage.setItem("refreshToken", data.refreshToken);
-            // localStorage.setItem("username", userName);
-
-            // if (props.onLoginSuccess)
-            //     props.onLoginSuccess();
-
-            // --- 데모용 코드 ---
-            const fakeUserData = {
-                // 토큰 발급
-                accessToken: "demo-access-token-123",
-                refreshToken: "demo-refresh-token-456",
-                // 사용자 정보
-                id: 1,
-                role: "user",
+        api.post("login", { username: userName, password: password })
+        .then((data) => {
+            // 로그인 성공 시 처리
+            login({
+                accessToken: data.accessToken,
+                refreshToken: data.refreshToken,
                 username: userName,
-                name: "미룸 데모 유저",
-                email: "demo@example.com",
-                created_at: new Date().toISOString(),
+                name: data.name,
+                email: data.email
+            });
+
+            if (props.onLoginSuccess)
+                props.onLoginSuccess();
+        })
+        .catch((error) => {
+            alert(error.message || "알 수 없는 오류가 발생했습니다.");
+        });
+    }
+
+    const handleSubmitTest = (event) =>  {
+        event.preventDefault();
+        setError("");
+
+        if (!userName || !password) {
+            setError("아이디와 비밀번호를 입력해주세요.");
+            return;
+        }
+
+        // --- 데모용 코드 ---
+        const fakeUserData = {
+            // 토큰 발급
+            accessToken: "demo-access-token-123",
+            refreshToken: "demo-refresh-token-456",
+            // 사용자 정보
+            id: 1,
+            role: "user",
+            username: userName,
+            name: "미룸 데모 유저",
+            email: "demo@example.com",
+            created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
             
@@ -77,11 +100,9 @@ function Login(props) {
             
             if (props.onLoginSuccess)
                 props.onLoginSuccess();
-
-        } catch (error) {
-            setError(error.message || "알 수 없는 오류가 발생했습니다.");
-        }
     }
+
+    const handleSubmit = USE_MOCK ? handleSubmitTest : handleSubmitAPI;
 
     return (
         <>

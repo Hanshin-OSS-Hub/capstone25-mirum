@@ -1,35 +1,13 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../pages/client';
+import { useAuth } from '../context/useAuth';
 
 function ProfileModal({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-  // 컴포넌트가 마운트되거나 isOpen이 변경될 때 사용자 정보 가져오기
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const name = localStorage.getItem('name');
-    const email = localStorage.getItem('email');
-    const username = localStorage.getItem('username');
-
-    setUserData({
-      name: name || '사용자',
-      email: email || '-',
-      username: username || '-',
-    });
-  }, [isOpen]);
+  const { user, logout } = useAuth();
 
   // 로그아웃 처리
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('name');
-    localStorage.removeItem('email');
-    localStorage.removeItem('username');
+    logout(); // AuthContext의 logout 함수 (localStorage 자동 정리)
     navigate('/');
     onClose();
   };
@@ -66,7 +44,7 @@ function ProfileModal({ isOpen, onClose }) {
           }
         `}</style>
 
-        {userData ? (
+        {user ? (
           <>
             <div
               style={{
@@ -93,20 +71,23 @@ function ProfileModal({ isOpen, onClose }) {
                   flexShrink: 0,
                 }}
               >
-                {userData.name?.charAt(0) || '?'}
+                {user.name?.charAt(0) || '?'}
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1f2937' }}>
-                  {userData.name || '사용자'}
+                  {user.name || '사용자'}
                 </h3>
                 <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-                  {userData.email || '-'}
+                  {user.username || '-'}
+                </p>
+                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+                  {user.email || '-'}
                 </p>
               </div>
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              {userData.username && (
+            {/* <div style={{ marginBottom: '20px' }}>
+              {user.username && (
                 <div
                   style={{
                     display: 'flex',
@@ -116,11 +97,9 @@ function ProfileModal({ isOpen, onClose }) {
                     fontSize: '14px',
                   }}
                 >
-                  <span style={{ color: '#6b7280', fontWeight: 500 }}>아이디</span>
-                  <span style={{ color: '#1f2937', fontWeight: 500 }}>{userData.username}</span>
                 </div>
               )}
-            </div>
+            </div> */}
 
             <button
               onClick={handleLogout}
