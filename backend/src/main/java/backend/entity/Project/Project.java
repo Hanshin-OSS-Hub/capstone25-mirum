@@ -3,6 +3,7 @@ package backend.entity.Project;
 import backend.dto.project.ProjectUpdateDTO;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -27,6 +28,9 @@ public class Project {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
     private List<ProjectMember> projectMembers =  new ArrayList<>();
+
+    @Formula("(SELECT count(*) FROM projectMember pm WHERE pm.projectId = id)")
+    private int memberCount;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
     private List<ProjectInvite> projectInvites =  new ArrayList<>();

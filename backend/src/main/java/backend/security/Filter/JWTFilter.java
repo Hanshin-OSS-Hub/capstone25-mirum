@@ -1,6 +1,8 @@
 package backend.security.Filter;
 
+import backend.global.response.ApiResponse;
 import backend.security.JWT.JWTUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 //첫 요청만 동작함
 public class JWTFilter extends OncePerRequestFilter {
@@ -48,9 +51,14 @@ public class JWTFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } else {
+            Map<String, String> data = Map.of("error", "Invalid token");
+            ApiResponse<Map<String, String>> apiResponse = ApiResponse.exception(data);
+            ObjectMapper mapper = new ObjectMapper();
+            String result = mapper.writeValueAsString(apiResponse);
+
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"error\":\"토큰 만료 또는 유효하지 않은 토큰\"}");
+            response.getWriter().write(result);
             return;
         }
 

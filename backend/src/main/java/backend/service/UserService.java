@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.AccessDeniedException;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -80,13 +79,13 @@ public class UserService implements UserDetailsService {
         }
 
         //조회
-        User enetity = userRepository.findByUsernameAndIsLockAndIsSocial(dto.getUsername(), false, false)
+        User entity = userRepository.findByUsernameAndIsLockAndIsSocial(dto.getUsername(), false, false)
                 .orElseThrow(() -> new UsernameNotFoundException(dto.getUsername()));
 
         //회원 정보 수정
-        enetity.updateUser(dto);
+        entity.updateUser(dto);
 
-        return userRepository.save(enetity).getId();
+        return userRepository.save(entity).getId();
     }
 
     // 자체/소셜 로그인 회원 탈퇴

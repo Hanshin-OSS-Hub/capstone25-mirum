@@ -3,6 +3,7 @@ package backend.service;
 import backend.dto.project.ProjectResponseDTO;
 import backend.dto.project.ProjectMemberDTO;
 import backend.dto.project.ProjectUpdateDTO;
+import backend.dto.project.ProjectsDTO;
 import backend.entity.Project.Project;
 import backend.entity.Project.ProjectMember;
 import backend.entity.Project.ProjectMemberRoleType;
@@ -61,7 +62,7 @@ public class ProjectService {
         List<ProjectMemberDTO> projectMemberDTOS = projectMembers.stream()
                 .map(a -> ProjectMemberDTO.builder()
                         .role(a.getRole())
-                        .username(a.getUser().getUsername())
+                        .nickname(a.getUser().getNickname())
                         .build()
                 )
                 .toList();
@@ -73,6 +74,22 @@ public class ProjectService {
                 .projectName(project.getProjectName())
                 .members(projectMemberDTOS)
                 .build();
+    }
+
+    // 내가 속한 프로젝트 목록 가져오기
+    // 추후 테스크 구현하고 이부분 바꾸면 됨
+    public List<ProjectsDTO> getAllProjects(String username) {
+        List<Project> projects = projectRepository.findAllProjectsByUsername(username);
+
+        return projects.stream()
+                .map(p -> ProjectsDTO.builder()
+                        .projectName(p.getProjectName())
+                        .description(p.getDescription())
+                        .memberCount((long) p.getMemberCount())
+                        // 이거 바꿔야 함
+                        .taskProgress(50)
+                        .build()
+                ).toList();
     }
 
     //U

@@ -16,17 +16,19 @@ import java.util.Map;
 public class CustomControllerAdvice {
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleAccessDeniedException(AccessDeniedException ex) {
+        Map<String, String> response = Map.of("detail", "접근 권한이 없습니다.");
         return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body("접근 권한이 없습니다."); //403 에러
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.exception(response)); //403 에러
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleRuntimeException(RuntimeException ex) {
+        Map<String, String> response = Map.of("detail", "잘못된 요청입니다.");
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body("잘못된 요청입니다.");  //400에러
+                .body(ApiResponse.exception(response));  //400에러
     }
 
     @ExceptionHandler(EntityNotFoundException.class)

@@ -7,6 +7,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ProjectMemberDTO {
-    private String username;
+    private String nickname;
     private ProjectMemberRoleType role;
 }

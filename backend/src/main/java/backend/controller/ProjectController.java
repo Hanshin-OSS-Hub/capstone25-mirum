@@ -2,16 +2,16 @@ package backend.controller;
 
 import backend.dto.project.ProjectResponseDTO;
 import backend.dto.project.ProjectUpdateDTO;
+import backend.dto.project.ProjectsDTO;
 import backend.global.response.ApiResponse;
 import backend.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,7 +32,7 @@ public class ProjectController {
     // 프로젝트 정보
     // 프로젝트 정보 반환
     @GetMapping("/project/{projectId}")
-    public ResponseEntity<ApiResponse<ProjectResponseDTO>> getProject(@AuthenticationPrincipal String username, @PathVariable Long projectId) {
+    public ResponseEntity<ApiResponse<ProjectResponseDTO>> getProject(@PathVariable Long projectId) {
         return ResponseEntity.ok(ApiResponse.response(projectService.getProjectInfo(projectId)));
     }
 
@@ -50,5 +50,11 @@ public class ProjectController {
     public ResponseEntity<ApiResponse<Void>>  deleteProject(@AuthenticationPrincipal String username, @PathVariable Long projectId) {
         projectService.deleteProject(projectId, username);
         return ResponseEntity.ok(ApiResponse.response(null));
+    }
+
+    // 내가 속한 프로젝트 목록 가져오기
+    @GetMapping("/projects")
+    public ResponseEntity<ApiResponse<List<ProjectsDTO>>> getAllProjects(@AuthenticationPrincipal String username){
+        return ResponseEntity.ok(ApiResponse.response(projectService.getAllProjects(username)));
     }
 }

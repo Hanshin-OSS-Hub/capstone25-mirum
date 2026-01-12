@@ -2,12 +2,12 @@ package backend.controller;
 
 import backend.dto.project.MemberRoleDTO;
 import backend.dto.project.ProjectMemberDTO;
+import backend.dto.project.ProjectMemberDeleteDTO;
 import backend.global.response.ApiResponse;
 import backend.service.ProjectMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,9 +43,9 @@ public class ProjectMemberController {
     public ResponseEntity<ApiResponse<Void>> deleteProjectMember(
             @PathVariable Long projectId,
             @AuthenticationPrincipal String username,
-            @RequestBody String targetUsername
-    ) {
-        projectMemberService.deleteMember(username, projectId, targetUsername);
+            @RequestBody ProjectMemberDeleteDTO targetUsername
+            ) {
+        projectMemberService.deleteMember(username, projectId, targetUsername.getUsername());
         return ResponseEntity.ok()
                 .body(ApiResponse.response(null));
     }

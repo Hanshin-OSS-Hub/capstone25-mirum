@@ -2,7 +2,9 @@ package backend.controller;
 
 import backend.dto.user.UserRequestDTO;
 import backend.dto.user.UserResponseDTO;
+import backend.global.response.ApiResponse;
 import backend.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -23,45 +25,49 @@ public class UserController {
 
     // 자체 로그인 유저 존재 확인
     @PostMapping(value = "/user/exist", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Boolean> existUserApi(
+    public ResponseEntity<ApiResponse<Boolean>> existUserApi(
             @Validated(UserRequestDTO.existGroup.class) @RequestBody UserRequestDTO dto
     ) {
-        return ResponseEntity.ok(userService.existUser(dto));
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.response(userService.existUser(dto)));
     }
 
     // 회원가입
     @PostMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Long>> joinApi(
+    public ResponseEntity<ApiResponse<Map<String, Long>>> joinApi(
             @Validated(UserRequestDTO.addGroup.class) @RequestBody UserRequestDTO dto
     ) {
         Long id = userService.addUser(dto);
         Map<String, Long> responseBody = Collections.singletonMap("userEntityId", id);
-        return ResponseEntity.status(201).body(responseBody);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.response(responseBody));
     }
 
     // 유저 정보
     @GetMapping(value = "/user") //, consumes = MediaType.APPLICATION_JSON_VALUE
-    public UserResponseDTO userMeApi() {
-        return userService.readUser();
+    public ResponseEntity<ApiResponse<UserResponseDTO>> userMeApi() {
+        return ResponseEntity.status(HttpStatus.OK)
+                        .body(ApiResponse.response(userService.readUser()));
     }
 
 
 
     // 유저 수정 (자체 로그인 유저만)
     @PutMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Long> updateUserApi(
+    public ResponseEntity<ApiResponse<Long>> updateUserApi(
             @Validated(UserRequestDTO.updateGroup.class) @RequestBody UserRequestDTO dto
     ) throws AccessDeniedException {
-        return ResponseEntity.status(200).body(userService.updateUser(dto));
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.response(userService.updateUser(dto)));
     }
 
     // 유저 제거 (자체/소셜)
     @DeleteMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Boolean> deleteUserApi(
+    public ResponseEntity<ApiResponse<Void>> deleteUserApi(
             @Validated(UserRequestDTO.deleteGroup.class) @RequestBody UserRequestDTO dto
     ) throws AccessDeniedException {
-
         userService.deleteUser(dto);
-        return ResponseEntity.status(200).body(true);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.response(null));
     }
 }
