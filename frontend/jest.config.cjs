@@ -4,7 +4,7 @@ module.exports = {
   testEnvironment: 'jsdom',
 
   // 각 테스트 파일이 실행되기 전에 실행할 스크립트 파일 지정
-  setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
+  setupFilesAfterEnv: ['<rootDir>/src/test/setupTests.js'],
 
   // CSS, SASS 등의 파일을 만났을 때 에러가 나지 않도록 모의(mock) 처리
   moduleNameMapper: {

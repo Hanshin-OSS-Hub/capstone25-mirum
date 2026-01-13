@@ -32,7 +32,7 @@ resource "aws_iam_policy" "lambda_iam_policy" {
                 Effect = "Allow"
                 Resource = [
                     "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:instance/*",
-                    "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:document/AWS-RunShellScript"
+                    "arn:aws:ssm:${var.region}::document/AWS-RunShellScript"
                 ]
             },
             {
@@ -176,36 +176,8 @@ resource "aws_iam_role" "github_actions_role" {
   })
 }
 
-# IAM Policy for GitHub Actions Role
-resource "aws_iam_policy" "github_actions_policy" {
-  name        = "github_actions_policy"
-  description = "IAM policy for GitHub Actions to deploy to AWS"
-  policy      = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "ecr:GetAuthorizationToken"
-        ],
-        Effect = "Allow",
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:CompleteLayerUpload",
-          "ecr:InitiateLayerUpload",
-          "ecr:PutImage",
-          "ecr:UploadLayerPart"
-        ],
-        Resource = aws_ecr_repository.docker.arn
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "github_actions_role_policy_attachment" {
+# AWS 관리형 정책 사용 (ECR Power User)
+resource "aws_iam_role_policy_attachment" "github_actions_ecr_power_user" {
   role       = aws_iam_role.github_actions_role.name
-  policy_arn = aws_iam_policy.github_actions_policy.arn
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
 }

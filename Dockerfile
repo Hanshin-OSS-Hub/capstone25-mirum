@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim AS build
+FROM amazoncorretto:17-alpine-jdk AS build
 
 WORKDIR /workspace/app
 
@@ -13,7 +13,7 @@ COPY backend/src src
 
 RUN ./gradlew bootjar -x test
 
-FROM openjdk:17-jre-slim
+FROM amazoncorretto:17-alpine-jdk
 
 WORKDIR /app
 

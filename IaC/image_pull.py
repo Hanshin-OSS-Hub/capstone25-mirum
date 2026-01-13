@@ -24,8 +24,7 @@ def lambda_handler(event, context):
         'sudo docker pull {}'.format(image_uri),
         'sudo docker stop my-app-container || true',
         'sudo docker rm my-app-container || true',
-        'sudo docker run -d --name my-app-container -p 8080:8080 '
-        '-e DB_ENDPOINT={} {}'.format(db_endpoint, image_uri),
+        'sudo docker run -d --name my-app-container -p 8080:8080 -e DB_ENDPOINT="{}" {}'.format(db_endpoint, image_uri),
         'echo "--- Deployment finished ---"'
     ]
     
