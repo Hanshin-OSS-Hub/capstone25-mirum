@@ -39,8 +39,29 @@ export default function AuthProvider({ children }) {
         setUser(null);
     };
 
+    const updateUser = (updatedData) => {
+        // localStorage 업데이트
+        if (updatedData.name) {
+            localStorage.setItem("name", updatedData.name);
+        }
+        if (updatedData.email) {
+            localStorage.setItem("email", updatedData.email);
+        }
+        // state 업데이트
+        setUser(prev => ({
+            ...prev,
+            name: updatedData.name || prev.name,
+            email: updatedData.email || prev.email
+        }));
+    };
+
+    const deleteUser = () => {
+        // 상태 초기화만 담당
+        logout();
+    }
+
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser, deleteUser }}>
             {children}
         </AuthContext.Provider>
     );
