@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HiOutlineCog6Tooth, HiOutlineUserPlus } from "react-icons/hi2";
 import { api } from "../pages/client";
-import { useAuth } from "../context/useAuth";
+import { apiClient } from "../pages/client";
 import { useLocation } from "react-router-dom";
 import ProjectUpdateModal from "../components/ProjectUpdateModal";
 import ProjectMemberModal from "../components/ProjectMemberModal";
@@ -29,7 +29,6 @@ function ProjectConfigMenu(props) {
 
 function Project() {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
   const { id } = useParams();                    // /project/:id 에서 id 읽기
 
   const [isConfigMenuOpen, setIsConfigMenuOpen] = useState(false);
@@ -45,20 +44,6 @@ function Project() {
   const myUsername = localStorage.getItem("username") || "";
   const myMember = members.find(m => m.username === myUsername);
   const isLeader = myMember?.role?.toUpperCase() === "LEADER";
-
-  // ==================== [초기 데이터 로드] ====================
-  // 테스트 모드: location.state에서 데이터 가져오기
-  useEffect(() => {
-    alert(`현재 모드: ${USE_MOCK ? "테스트용(Mock)" : "API"}`);
-    if (USE_MOCK) {
-      setProject(location.state?.project);
-      setMembers(location.state?.project.members || []);
-    } else {
-      // API 모드: 서버에서 데이터 가져오기
-      handleGetProjectDetailsAPI();
-      handleGetProjectMembersAPI();
-    }
-  }, [location.state?.project, handleGetProjectDetailsAPI, handleGetProjectMembersAPI]);
 
   // 새로고침 등으로 state가 날아갔을 때 대비
   const name = project?.projectName || "프로젝트 이름";
@@ -139,30 +124,21 @@ function Project() {
 
   // [CREATE] 멤버 초대(추가) api 요청
   const handleInviteMemberAPI = (userInput) => {
-    fetch(`http://localhost:8080/invitations`, {
-      method: "POST",
-      headers: { 
-        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        "projectId": id,
-        "invitedName": userInput
-      }),
+    api.post(`http://localhost:8080/invitations`, {
+      "projectId": id,
+      "invitedName": userInput
     })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("초대에 실패했습니다.");
-      }
-      return response.json();
-    })
-    .then((data) => {
+    .then(() => {
       alert(`${userInput}님을 초대했습니다.`);
     })
     .catch((error) => {
-      alert("초대에 실패했습니다.", error.message);
-    })
+      alert(error.message || "초대에 실패했습니다.");
+    });
   };
+
+  const handleInviteMemberTest = (userInput) => {
+    alert(`테스트: ${userInput}님을 초대했습니다.`);
+  }
 
   /** [백엔드 개발자 참고]
     프론트엔드에서 프로젝트 멤버 정보를 요청할 때 GET /members/:projectId로 아래와 같은 형식의 데이터를 기대합니다:
@@ -211,30 +187,20 @@ function Project() {
     });
   }, [id]);
 
+  //사용자가 leader인 경우에만 멤버 권한 수정/탈퇴 가능
+
   // [UPDATE] 멤버 권한 수정 api 요청
   const handleChangeMemberAuthAPI = (targetUsername, role) => {
-    fetch(`http://localhost:8080/members/${id}/role`, {
-      method: "PUT",
-      headers: { 
-        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        "username": targetUsername,
-        "role": role
-      })
+    api.put(`http://localhost:8080/members/${id}/role`, {
+      "username": targetUsername,
+      "role": role
     })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("멤버 권한 변경에 실패했습니다.");
-      }
-      else {
-        alert("멤버 권한을 변경했습니다.");
-        handleGetProjectMembers(); // 멤버 정보 갱신
-      }
+    .then(() => {
+      alert("멤버 권한을 변경했습니다.");
+      handleGetProjectMembers(); // 멤버 정보 갱신
     })
     .catch((error) => {
-      alert("멤버 권한 변경에 실패했습니다.", error.message);
+      alert(error.message || "멤버 권한 변경에 실패했습니다.");
     });
   }
 
@@ -243,26 +209,26 @@ function Project() {
     let deleteConfirmation = false;
     targetUsername === myUsername
       ? (window.confirm("정말로 탈퇴하시겠습니까?") ? deleteConfirmation = true : null)
-      : (//사용자가 leader인 경우에만 다른 멤버를 방출할 수 있음
+      : (
         window.confirm(`정말로 ${targetUsername}를 방출하시겠습니까?`) ? deleteConfirmation = true : null
       );
 
     if (deleteConfirmation) {
-      fetch(`http://localhost:8080/${id}`, {
+      apiClient(`http://localhost:8080/members/${id}`, {
         method: "DELETE",
-        headers: { 
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-          "Content-Type": "text/plain",
-        },
-        body: targetUsername,
+        body: JSON.stringify({ username: targetUsername })
       })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("멤버 탈퇴/방출에 실패했습니다.");
+      .then(() => {
+        alert("멤버를 탈퇴/방출했습니다.");
+        handleGetProjectMembers(); // 멤버 정보 갱신
+        
+        // 자신이 탈퇴한 경우 대시보드로 이동
+        if (targetUsername === myUsername) {
+          navigate("/dashboard");
         }
       })
       .catch((error) => {
-        alert("멤버 탈퇴/방출에 실패했습니다.", error.message);
+        alert(error.message || "멤버 탈퇴/방출에 실패했습니다.");
       });
     }
   }
@@ -310,10 +276,24 @@ function Project() {
   // 환경변수에 따라 API 또는 테스트 함수 사용
   const handleUpdateProject = USE_MOCK ? updateProjectDetailsInfoTest : handleUpdateProjectAPI;
   const handleDeleteProject = USE_MOCK ? deleteProjectTest : handleDeleteProjectAPI;
-  const handleInviteMember = USE_MOCK ? (() => alert("테스트 모드: 멤버 초대")) : handleInviteMemberAPI;
+  const handleInviteMember = USE_MOCK ? handleInviteMemberTest : handleInviteMemberAPI;
   const handleGetProjectMembers = USE_MOCK ? (() => {}) : handleGetProjectMembersAPI;
   const handleChangeMemberAuth = USE_MOCK ? (() => alert("테스트 모드: 멤버 권한 변경")) : handleChangeMemberAuthAPI;
   const handleDeleteMember = USE_MOCK ? ((username) => alert(`테스트 모드: ${username} 제거`)) : handleDeleteMemberAPI;
+
+  // ==================== [초기 데이터 로드] ====================
+  // 테스트 모드: location.state에서 데이터 가져오기
+  useEffect(() => {
+    alert(`현재 모드: ${USE_MOCK ? "테스트용(Mock)" : "API"}`);
+    if (USE_MOCK) {
+      setProject(location.state?.project);
+      setMembers(location.state?.project.members || []);
+    } else {
+      // API 모드: 서버에서 데이터 가져오기
+      handleGetProjectDetailsAPI();
+      handleGetProjectMembersAPI();
+    }
+  }, [location.state?.project, handleGetProjectDetailsAPI, handleGetProjectMembersAPI]);
   
   // project 자체가 없는 경우 간단한 예외 화면
   if (!project) {
