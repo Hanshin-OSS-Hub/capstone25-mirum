@@ -1,10 +1,10 @@
 package backend.config;
 
-import backend.domain.user.entity.UserRoleType;
-import backend.domain.user.jwt.service.JwtService;
-import backend.filter.JWTFilter;
-import backend.filter.LoginFilter;
-import backend.handler.RefreshTokenLogoutHandler;
+import backend.entity.UserRoleType;
+import backend.security.JWT.JwtService;
+import backend.security.Filter.JWTFilter;
+import backend.security.Filter.LoginFilter;
+import backend.security.Handler.RefreshTokenLogoutHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
