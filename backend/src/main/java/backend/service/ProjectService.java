@@ -83,6 +83,7 @@ public class ProjectService {
 
         return projects.stream()
                 .map(p -> ProjectsDTO.builder()
+                        .projectId(p.getId())
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())

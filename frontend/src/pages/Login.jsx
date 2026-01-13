@@ -58,14 +58,36 @@ function Login(props) {
         }
 
         api.post("login", { username: userName, password: password })
-        .then((data) => {
-            // 로그인 성공 시 처리
+        .then(async (data) => {
+            // 로그인 성공 시 토큰 저장
+            // 백엔드 로그인 응답: { accessToken, refreshToken }만 반환
+            // 사용자 정보는 별도 API로 조회 필요
+            
+            // 1. 토큰을 임시로 localStorage에 저장 (프로필 조회를 위한 인증용)
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+            
+            // 2. 사용자 프로필 정보 조회 (GET /user)
+            let name = null;
+            let email = null;
+            try {
+                const userProfile = await api.get("user");
+                // 백엔드 응답: { username, social, nickname, email }
+                // nickname을 name으로 매핑
+                name = userProfile.nickname || null;
+                email = userProfile.email || null;
+            } catch (profileError) {
+                console.error("사용자 프로필 조회 실패:", profileError);
+                // 프로필 조회 실패해도 로그인은 유지 (username만 저장된 상태)
+            }
+
+            // 3. 모든 정보를 한 번에 login() 함수로 저장
             login({
                 accessToken: data.accessToken,
                 refreshToken: data.refreshToken,
                 username: userName,
-                name: data.name,
-                email: data.email
+                name: name,
+                email: email
             });
 
             if (props.onLoginSuccess)

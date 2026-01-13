@@ -65,7 +65,8 @@ function Home() {
     const handleGetProjectList = useCallback(async () => {
         api.get('projects')
         .then(response => {
-            setProjects(response.data);
+            setProjects(response);
+            localStorage.setItem("projects", JSON.stringify(response));
         })
         .catch(error => {
             alert(error.message || '프로젝트 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
@@ -306,9 +307,9 @@ function Home() {
                             onCreateProjectSuccess={(data) => {
                                 setIsModalOpen(false);
                                 alert("프로젝트 생성 완료!");
-                                // handleGetProjectList();
-                                setProjects((prev) => {
-                                    const newProjects = [...prev, data];
+                                handleGetProjectList();
+                                setProjects((projects) => {
+                                    const newProjects = [...projects, data];
                                     localStorage.setItem("projects", JSON.stringify(newProjects));
                                     return newProjects;
                                 });
@@ -316,7 +317,7 @@ function Home() {
                         />
 
                         {
-                            projects.length === 0 ? (
+                            projects === undefined || projects.length === 0 ? (
                                 <div style={{ textAlign: "center", marginTop: "50px", color: "#666", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
                                     <p>진행 중인 프로젝트가 없습니다.</p>
                                     <button className="primary-btn" onClick={() => setIsModalOpen(true)}>+ 새 프로젝트 생성</button>
@@ -359,41 +360,42 @@ function Home() {
 
                                     <div className="project-grid">
                                     {
-                                        projects.map((project) => {
+                                        projects.map((p) => {
                                             return(
                                                 // 1. 최상위 요소에 고유한 'key'를 추가합니다. (project.id가 가장 이상적입니다.)
                                                 <div
-                                                    key={project.id}
+                                                    key={p.projectId}
                                                     data-testid="project-card"
                                                     className="card project-card"
                                                     onClick={() => {
+                                                        const projectId = p.projectId;
                                                         if (USE_MOCK) {
-                                                            navigate(`/project/${project.id}`, { state: { project } });
+                                                            navigate(`/project/${projectId}`, { state: { p } });
                                                         } else {
-                                                            navigate(`/project/${project.id}`);
+                                                            navigate(`/project/${projectId}`);
                                                         }
                                                     }}
                                                 >
                                                     <div className="project-header">
                                                     <div className="project-text">
                                                         {/* 2. 하드코딩된 텍스트를 props로 받은 데이터로 교체합니다. */}
-                                                        <h2>{project?.projectName}</h2>
+                                                        <h2>{p?.projectName}</h2>
                                                         <p className="project-desc">
                                                             <br />
                                                             {
-                                                            project?.description?.length > 30 ? project.description.slice(0, 20) : project.description
+                                                            p?.description?.length > 30 ? p.description.slice(0, 20) : p.description
                                                         }</p>
                                                     </div>
                                                     <div className="project-icon">📂</div>
                                                     </div>
 
                                                     <div className="progress-bar">
-                                                    <div className="full" style={{ width: `${project?.taskProgress}%`, height: 100, backgroundColor: project.progress > 80 ? '#c900fbed' : (project.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
+                                                    <div className="full" style={{ width: `${p?.taskProgress}%`, height: 100, backgroundColor: p.progress > 80 ? '#c900fbed' : (p.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
                                                     </div>
 
                                                     <div className="card-footer">                                                
-                                                    <span>👤 {USE_MOCK ? project.members.length : project.memberCount || 0}명</span>
-                                                    <span>📅 {USE_MOCK ? project.created_at.slice(0, 10) : project.creationDate?.slice(0, 10) || "-"}</span>
+                                                    <span>👤 {USE_MOCK ? p.members.length : p.memberCount || 0}명</span>
+                                                    <span>📅 {USE_MOCK ? p.created_at.slice(0, 10) : p.creationDate?.slice(0, 10) || "-"}</span>
                                                     </div>
                                                 </div>
                                             )

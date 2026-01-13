@@ -289,7 +289,7 @@ function Project() {
   // ==================== [초기 데이터 로드] ====================
   // 테스트 모드: location.state에서 데이터 가져오기
   useEffect(() => {
-    alert(`현재 모드: ${USE_MOCK ? "테스트용(Mock)" : "API"}`);
+    // alert(`현재 모드: ${USE_MOCK ? "테스트용(Mock)" : "API"}`);
     if (USE_MOCK) {
       setProject(location.state?.project);
       setMembers(location.state?.project.members || []);
@@ -298,7 +298,7 @@ function Project() {
       handleGetProjectDetailsAPI();
       handleGetProjectMembersAPI();
     }
-  }, [location.state?.project, handleGetProjectDetailsAPI, handleGetProjectMembersAPI]);
+  }, [ ]); // handleGetProjectDetailsAPI, handleGetProjectMembersAPI 제거 (무한 루프 방지)
   
   // project 자체가 없는 경우 간단한 예외 화면
   if (!project) {

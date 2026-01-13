@@ -106,21 +106,14 @@ function CreateProject(props) {
 
         try {
             // --- 데모용 코드 ---
-            const response = await fakeCreateProjectAPI({ title: projectTitle, description: projectDesc });
-            const data = response.data;
+            // const response = await fakeCreateProjectAPI({ title: projectTitle, description: projectDesc });
+            // const data = response.data;
 
             // 실제 API 요청 시 아래 주석 해제
-            // const response = await fetch('http://localhost:8080/project', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify({
-            //         title: projectTitle,
-            //         description: projectDesc,
-            //     }),
-            // });
-            // const data = await response.json();
+            const data = await api.post('http://localhost:8080/project', {
+                projectName: projectTitle,
+                description: projectDesc,
+            });
             
             // 성공 콜백 함수 호출
             if (props.onCreateProjectSuccess) {

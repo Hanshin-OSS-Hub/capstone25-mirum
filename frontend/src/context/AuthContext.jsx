@@ -12,24 +12,37 @@ export default function AuthProvider({ children }) {
         const email = localStorage.getItem("email");
         if (token && username) {
             setIsAuthenticated(true);
-            setUser({ username, name, email });
+            // "null" 문자열을 null로 변환
+            setUser({ 
+                username, 
+                name: name && name !== "null" ? name : null, 
+                email: email && email !== "null" ? email : null 
+            });
         }
     }, []);
 
     const login = (userData) => {
-        // localStorage에 저장
+        // localStorage에 저장 (null/undefined는 저장하지 않음)
         localStorage.setItem("accessToken", userData.accessToken);
         localStorage.setItem("refreshToken", userData.refreshToken);
         localStorage.setItem("username", userData.username);
-        localStorage.setItem("name", userData.name);
-        localStorage.setItem("email", userData.email);
+        if (userData.name) {
+            localStorage.setItem("name", userData.name);
+        } else {
+            localStorage.removeItem("name");
+        }
+        if (userData.email) {
+            localStorage.setItem("email", userData.email);
+        } else {
+            localStorage.removeItem("email");
+        }
         
         // state 업데이트
         setIsAuthenticated(true);
         setUser({
             username: userData.username,
-            name: userData.name,
-            email: userData.email
+            name: userData.name || null,
+            email: userData.email || null
         });
     };
 

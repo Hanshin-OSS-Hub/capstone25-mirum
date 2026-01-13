@@ -29,7 +29,7 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
     private List<ProjectMember> projectMembers =  new ArrayList<>();
 
-    @Formula("(SELECT count(*) FROM projectMember pm WHERE pm.projectId = id)")
+    @Formula("(SELECT count(*) FROM ProjectMember pm WHERE pm.project_id = id)")
     private int memberCount;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
