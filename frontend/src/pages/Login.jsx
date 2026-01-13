@@ -14,31 +14,40 @@ function Login(props) {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
-    // if (!props.isOpen)
-    //     return null;
 
-    /**
-     * https://velog.io/@sunkim/Javascript-e.target과-e.currentTarget의-차이점
-     event.target: 이벤트가 발생한 요소 (자식 태그?)
-     event.currentTarget: 이벤트가 발생한 요소 전체 (부모+자식)
+    // ------------------------------------------------------------------------
+    // 참고 자료:
+    //  * https://velog.io/@sunkim/Javascript-e.target과-e.currentTarget의-차이점
+    //  event.target: 이벤트가 발생한 요소 (자식 태그?)
+    //  event.currentTarget: 이벤트가 발생한 요소 전체 (부모+자식)
      
-     (cf) onClose 파라미터 (함수)가 제대로 안 넘어올 수도 있으니 나름 예외처리(?)
-     */
+    //  (cf) onClose 파라미터 (함수)가 제대로 안 넘어올 수도 있으니 나름 예외처리(?)
+    //  ------------------------------------------------------------------------
 
     const handleOverlayClick = (event) => {
         if (event.target === event.currentTarget && props.onClose)
             props.onClose();
     }
 
-    /**
-     * https://pa-pico.tistory.com/20
-     event.preventDefault(): <a> 나 <submit(?)> 처럼 자체 기능이 탑재된
-         태그들의 동작을 못하게 하는 함수(?).
+    //  ------------------------------------------------------------------------
+    //  참고 자료:
+    //  * https://pa-pico.tistory.com/20
+    //  event.preventDefault(): <a> 나 <submit(?)> 처럼 자체 기능이 탑재된
+    //      태그들의 동작을 못하게 하는 함수(?).
+    //
+    //  (cf) event.stopPropagation(): 자식 태그에 연결된 이벤트 동작이
+    //  부모 요소에서도 작동하지 않도록 방지하는 함수(?).
+    //  ------------------------------------------------------------------------
 
-     (cf) event.stopPropagation(): 자식 태그에 연결된 이벤트 동작이
-     부모 요소에서도 작동하지 않도록 방지하는 함수(?).
+    /**
+     * 로그인 API
+     * 
+     * @param {Event} event - 폼 제출 이벤트
+     * @returns {Promise<void>} POST /login API 호출 후 인증 토큰 및 사용자 정보를 AuthContext에 저장
+     * @description username과 password를 서버에 전송하여 인증 후, 토큰과 사용자 정보를 받아 login() 호출
+     * 서버 응답 예시: { "accessToken": "...", "refreshToken": "...", "name": "홍길동", "email": "hong@example.com" }
      */
-    
+
     const handleSubmitAPI = async (event) =>  {
         event.preventDefault();
         setError("");
@@ -82,24 +91,20 @@ function Login(props) {
             accessToken: "demo-access-token-123",
             refreshToken: "demo-refresh-token-456",
             // 사용자 정보
-            id: 1,
+            // id: 1,  // 테스트용 고유 ID
             role: "user",
             username: userName,
             name: "미룸 데모 유저",
             email: "demo@example.com",
             created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
-            
-            // ✅ 여기서 토큰을 localStorage에 저장합니다.s
-            localStorage.setItem("accessToken", fakeUserData.accessToken);
-            localStorage.setItem("refreshToken", fakeUserData.refreshToken);
-            localStorage.setItem("username", userName);
-            localStorage.setItem("name", fakeUserData.name);
-            localStorage.setItem("email", fakeUserData.email);
-            
-            if (props.onLoginSuccess)
-                props.onLoginSuccess();
+            updated_at: new Date().toISOString()
+        };
+        
+        // ✅ login() 함수 호출 → localStorage 저장 + context 업데이트
+        login(fakeUserData);
+        
+        if (props.onLoginSuccess)
+            props.onLoginSuccess();
     }
 
     const handleSubmit = USE_MOCK ? handleSubmitTest : handleSubmitAPI;

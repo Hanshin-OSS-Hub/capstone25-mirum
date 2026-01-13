@@ -64,7 +64,7 @@ function UserEditModal(props) {
           <input
             type="text"
             disabled
-            value={user?.id ?? user?.username ?? ''}
+            value={ user?.username ?? '' }
             style={{ width: '100%', padding: '8px', marginBottom: '12px', border: '1px solid #d1d5db', borderRadius: '4px' }}
           />
           <h4>이름</h4>
@@ -141,10 +141,10 @@ function ProfileModal(props) {
    * @param {Object} updatedData - { name: string, email: string }
    * @returns {void} 서버가 userId만 반환하므로 클라이언트의 updatedData를 사용하여 updateUser() 호출
    * 
-   * 2번 방식 (서버에서 전체 유저 정보 반환):
+   * 다른 방식 (서버에서 전체 유저 정보 반환):
    * @param {Object} updatedData - { name: string, email: string }
    * @returns {void} 서버가 { id, username, name, email, ... } 를 반환하므로 response.data를 updateUser()에 전달
-   * 서버 응답 예시: { "id": 1, "username": "user123", "name": "홍길동", "email": "hong@example.com" }
+   * 서버 응답 예시: { "id": 1(?), "username": "user123", "name": "홍길동", "email": "hong@example.com" }
    */
 
   const handleProfileSaveApi = (updatedData) => {

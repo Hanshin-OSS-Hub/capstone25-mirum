@@ -4,18 +4,14 @@ import {
     HiOutlineBell, HiOutlineFolder, HiCheck, HiHome, HiUser // 👈 아이콘 추가 임포트
 } from "react-icons/hi2";
 import { api } from './client';
-import { useAuth } from '../context/useAuth';
 import CreateProjectModal from './CreateProject';
 import ProfileModal from '../components/ProfileModal';
-
-
 
 // 환경 변수로 테스트/API 모드 선택
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 function Home() {
     const navigate = useNavigate();
-    const { isAuthenticated, user } = useAuth();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -45,14 +41,33 @@ function Home() {
     //     }
     // }, [location, navigate]);
 
-    // [READ] 프로젝트 목록 api 요청
+    /**
+     * [READ] 프로젝트 목록 조회 API
+     * 
+     * @returns {Promise<void>} GET /projects API 호출 후 프로젝트 목록을 setProjects로 업데이트
+     * @description 서버에서 프로젝트 목록을 가져와 상태를 업데이트. 실패 시 alert 표시
+     * 
+     * 서버 응답 예시:
+     * [
+     *   {
+     *     "id": "uuid-or-projectId",
+     *     "projectName": "프로젝트 이름",
+     *     "description": "프로젝트 설명",
+     *     "taskProgress": 65,           // 진행률 (0-100)
+     *     "memberCount": 3,             // 멤버 수
+     *     "creationDate": "2024-01-15T00:00:00Z"  // ISO 8601 날짜
+     *   },
+     *   ...
+     * ]
+     */
+
     const handleGetProjectList = async () => {
-        api.get('project')
+        api.get('projects')
         .then(response => {
             setProjects(response.data);
         })
         .catch(error => {
-            console.error('Error fetching projects:', error);
+            alert(error.message || '프로젝트 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
         });
     }
 
@@ -166,11 +181,13 @@ function Home() {
                                                     key={project.id}
                                                     data-testid="project-card"
                                                     className="card project-card"
-                                                    onClick={() =>
-                                                        navigate(`/project/${project.id}`, {
-                                                        state: { project },   // ✅ 프로젝트 전체 정보를 함께 넘김
-                                                        })
-                                                    }
+                                                    onClick={() => {
+                                                        if (USE_MOCK) {
+                                                            navigate(`/project/${project.id}`, { state: { project } });
+                                                        } else {
+                                                            navigate(`/project/${project.id}`);
+                                                        }
+                                                    }}
                                                 >
                                                     <div className="project-header">
                                                     <div className="project-text">
@@ -186,12 +203,12 @@ function Home() {
                                                     </div>
 
                                                     <div className="progress-bar">
-                                                    <div className="full" style={{ width: `${project?.progress}%`, height: 100, backgroundColor: project.progress > 80 ? '#c900fbed' : (project.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
+                                                    <div className="full" style={{ width: `${project?.taskProgress}%`, height: 100, backgroundColor: project.progress > 80 ? '#c900fbed' : (project.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
                                                     </div>
 
                                                     <div className="card-footer">                                                
-                                                    <span>👤 {project?.members?.length || 0}명</span>
-                                                    <span>📅 {project?.created_at ? project.created_at.slice(0, 10) : "-"}</span>
+                                                    <span>👤 {project?.memberCount || 0}명</span>
+                                                    <span>📅 {project?.creationDate ? project.creationDate.slice(0, 10) : "-"}</span>
                                                     </div>
                                                 </div>
                                             )
