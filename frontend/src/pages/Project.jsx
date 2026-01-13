@@ -233,6 +233,11 @@ function Project() {
     }
   }
 
+  const handleDeleteMemberTest = (username) => {
+    alert(`테스트 모드: ${username} 제거`);
+  }
+
+
   // ==================== [테스트용 함수들] ====================
 
   // [UPDATE] 프로젝트 정보 수정 요청 (테스트용)
@@ -279,7 +284,7 @@ function Project() {
   const handleInviteMember = USE_MOCK ? handleInviteMemberTest : handleInviteMemberAPI;
   const handleGetProjectMembers = USE_MOCK ? (() => {}) : handleGetProjectMembersAPI;
   const handleChangeMemberAuth = USE_MOCK ? (() => alert("테스트 모드: 멤버 권한 변경")) : handleChangeMemberAuthAPI;
-  const handleDeleteMember = USE_MOCK ? ((username) => alert(`테스트 모드: ${username} 제거`)) : handleDeleteMemberAPI;
+  const handleDeleteMember = USE_MOCK ? handleDeleteMemberTest : handleDeleteMemberAPI;
 
   // ==================== [초기 데이터 로드] ====================
   // 테스트 모드: location.state에서 데이터 가져오기
@@ -352,8 +357,8 @@ function Project() {
             projectId={id}
             members={members}
             onClose={() => setIsMemberModalOpen(false)}
-            onInvite={() => handleInviteMember()}
-            onModify={() => handleChangeMemberAuth()}
+            onInvite={(userInput) => handleInviteMember(userInput)}
+            onModify={(username, role) => handleChangeMemberAuth(username, role)}
             onEject={(username) => handleDeleteMember(username)}
           />
         )}

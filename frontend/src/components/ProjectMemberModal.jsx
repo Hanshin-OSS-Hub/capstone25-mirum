@@ -68,23 +68,35 @@ function ProjectMemberModal(props) {
                       // <span style={ { marginLeft: 8, fontSize: 12, color: "#6b7280", fontWeight: "bold", background: "#f3f4f6", borderRadius: 6, padding: "2px 6px" } }>멤버</span>
                     )}
                 </div>
-                <div style={ { position: "relative" } }>
-                  {sortedMembers[0].role === "LEADER" && member.username !== myUsername ? (
+                <div style={ { position: "relative", display: "flex", alignItems: "center" } }>
+                  {member.username === myUsername && (
+                    <span style={{ marginLeft: 8, fontSize: 12, color: "#2563eb", fontWeight: "bold", background: "#e0e7ff", borderRadius: 6, padding: "2px 6px" }}>me</span>
+                  )}
+                  {(sortedMembers[0].role === "LEADER" || member.username === myUsername) && (
                     <button style={ { marginLeft: 8, background: "transparent", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" } }
-                  onClick={() => { setOpenMenuId(member.id); setIsMenuOpen(!isMenuOpen);}}>
+                  onClick={() => { setOpenMenuId(member.userId); setIsMenuOpen(!isMenuOpen);}}>
                     ⋯
                   </button>
-                  ) : (
-                    <span style={{ marginLeft: 8, fontSize: 12, color: "#2563eb", fontWeight: "bold", background: "#e0e7ff", borderRadius: 6, padding: "2px 6px" }}>me</span>
-                  )
-                  }
+                  )}
                   {/* <button style={ { backgroundColor: "#ef4444", color: "#fff", border: "none", borderRadius: "8px", padding: "8px 16px", cursor: "pointer" } }>추방</button> */}
-                  {isMenuOpen && openMenuId === member.id && (
-                    <div style={ { width: "100px", height: "90px", border: "1px solid #ccc", borderRadius: 8, position: "absolute", right: 0, top: "100%", backgroundColor: "#fff", zIndex: 10} }>
+                  {isMenuOpen && openMenuId === member.userId && (
+                    <div style={ { width: "100px", border: "1px solid #ccc", borderRadius: 8, position: "absolute", right: 0, top: "100%", backgroundColor: "#fff", zIndex: 10} }>
                       <ul style={ { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column" } }>
-                        <li style={ { cursor: "pointer", padding: "10px 12px 8px 12px", borderBottom: "1px solid #e5e7eb" } }>권한 변경</li>
+                        {member.username !== myUsername && (
+                          <li style={ { cursor: "pointer", padding: "10px 12px 8px 12px", borderBottom: "1px solid #e5e7eb" } }
+                          onClick={() => {
+                            const newRole = member.role === "LEADER" ? "MEMBER" : "LEADER";
+                            props.onModify(member.username, newRole);
+                            setIsMenuOpen(false);
+                          }}
+                        >
+                          {member.role === "LEADER" ? "일반멤버" : "리더 임명"}
+                          </li>
+                        )}
                         <li style={ { cursor: "pointer", padding: "10px 12px 8px 12px" } }
-                        onClick={() => props.onEject(member.username)}>추방</li>
+                          onClick={() => props.onEject(member.username)}>
+                          {member.username === myUsername ? "탈퇴" : "추방"}
+                        </li>
                       </ul>
                     </div>
                   )}

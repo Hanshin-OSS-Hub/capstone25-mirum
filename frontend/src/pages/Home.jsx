@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
-import {
-    HiOutlineBell, HiOutlineFolder, HiCheck, HiHome, HiUser // 👈 아이콘 추가 임포트
-} from "react-icons/hi2";
+import { HiOutlineBell } from "react-icons/hi2";
 import { api } from './client';
 import CreateProjectModal from './CreateProject';
 import ProjectInvitationModal from '../components/ProjectInvitationModal';
@@ -64,7 +62,7 @@ function Home() {
      * ]
      */
 
-    const handleGetProjectList = async () => {
+    const handleGetProjectList = useCallback(async () => {
         api.get('projects')
         .then(response => {
             setProjects(response.data);
@@ -72,7 +70,7 @@ function Home() {
         .catch(error => {
             alert(error.message || '프로젝트 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
         });
-    }
+        }, []);
     
     
     /**
@@ -114,7 +112,7 @@ function Home() {
      * - 프론트엔드에서 composite key 불필요
      */
 
-    const handleGetInvitationsApi = async () => {
+    const handleGetInvitationsApi = useCallback(async () => {
         api.get('invitations/received')
         .then(response => {
             setInvitations(response.data);
@@ -122,7 +120,8 @@ function Home() {
         .catch(error => {
             alert(error.message || '초대 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
         });
-    }
+    }, []);
+
 
     /**
      * [CREATE] 초대 수락 API

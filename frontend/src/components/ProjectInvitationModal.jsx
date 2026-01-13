@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { HiCheck, HiXMark } from 'react-icons/hi2';
-import { USE_MOCK } from '../pages/Home';
 
 /**
  * ProjectInvitationModal
