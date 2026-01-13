@@ -77,16 +77,17 @@ function Home() {
                         </button>
                         <button 
                             className="profile-btn" 
-                            onClick={() => setIsProfileModalOpen(true)}
+                            onClick={() => setIsProfileModalOpen(!isProfileModalOpen)}
                         >
                             {localStorage.getItem("name")?.charAt(0) || "?"}
                         </button>
                     </div>
 
-                    <ProfileModal 
-                        isOpen={isProfileModalOpen} 
-                        onClose={() => setIsProfileModalOpen(false)} 
-                    />
+                    {isProfileModalOpen && (
+                        <ProfileModal 
+                            onClose={() => setIsProfileModalOpen(false)} 
+                        />
+                    )}
                 </header>
 
                 {/* 2. 메인 콘텐츠 영역 (회색 배경) */}
