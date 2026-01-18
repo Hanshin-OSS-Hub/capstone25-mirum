@@ -122,6 +122,7 @@ export function client(endpoint, options={}) {
         return response.text();
     }
   }
+  return fetchWithAuth();
 }
 
 export const api = {
