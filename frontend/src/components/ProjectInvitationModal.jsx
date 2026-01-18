@@ -57,85 +57,87 @@ function ProjectInvitationModal(props) {
         프로젝트 초대
       </h2>
 
-      {invitations === null ? (
-        <div style={{ textAlign: 'center', padding: '20px 0', color: '#6b7280', fontSize: '14px' }}>
-          로딩 중...
-        </div>
-      ) : invitations.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '20px 0', color: '#6b7280', fontSize: '14px' }}>
-          새로운 초대가 없습니다.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {invitations
-            .filter(invitation => invitation.status === "INVITED")  // INVITED 상태만 표시
-            .map((invitation) => (
-            <div
-              key={invitation.id}
-              style={{
-                padding: '12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                backgroundColor: '#f9fafb',
-              }}
-            >
-              <div style={{ marginBottom: '8px' }}>
-                <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>
-                  {invitation.projectName}
-                </p>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#6b7280' }}>
-                  {invitation.inviterName || 'Unknown'}님의 초대
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                <button
-                  onClick={() => handleAccept(invitation)}
-                  disabled={loadingId === `${invitation.projectName}-${invitation.inviterName}`}
+      {
+        !Array.isArray(invitations) ? (
+          <div style={{ textAlign: 'center', padding: '20px 0', color: '#6b7280', fontSize: '14px' }}>
+              로딩 중...
+          </div>
+        ) : invitations.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '20px 0', color: '#6b7280', fontSize: '14px' }}>
+            새로운 초대가 없습니다.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {
+            invitations
+              .filter(invitation => invitation.status === "INVITED")  // INVITED 상태만 표시
+              .map((invitation) => (
+                <div
+                  key={invitation.id}
                   style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    border: 'none',
-                    background: '#10b981',
-                    color: 'white',
-                    borderRadius: '6px',
-                    cursor: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 'not-allowed' : 'pointer',
-                    opacity: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 0.6 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                  }}
-                >
-                  <HiCheck size={16} />
-                  수락
-                </button>
-                <button
-                  onClick={() => handleReject(invitation)}
-                  disabled={loadingId === `${invitation.projectName}-${invitation.inviterName}`}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
+                    padding: '12px',
                     border: '1px solid #e5e7eb',
-                    background: 'white',
-                    color: '#6b7280',
-                    borderRadius: '6px',
-                    cursor: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 'not-allowed' : 'pointer',
-                    opacity: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 0.6 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    fontSize: '13px',
-                    fontWeight: 500,
+                    borderRadius: '8px',
+                    backgroundColor: '#f9fafb',
                   }}
                 >
-                  <HiXMark size={16} />
-                  거절
-                </button>
-              </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>
+                      {invitation.projectName}
+                    </p>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#6b7280' }}>
+                      {invitation.inviterName || 'Unknown'}님의 초대
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                    <button
+                      onClick={() => handleAccept(invitation)}
+                      disabled={loadingId === `${invitation.projectName}-${invitation.inviterName}`}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        border: 'none',
+                        background: '#10b981',
+                        color: 'white',
+                        borderRadius: '6px',
+                        cursor: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 'not-allowed' : 'pointer',
+                        opacity: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 0.6 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                      }}
+                    >
+                      <HiCheck size={16} />
+                      수락
+                    </button>
+                    <button
+                      onClick={() => handleReject(invitation)}
+                      disabled={loadingId === `${invitation.projectName}-${invitation.inviterName}`}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        border: '1px solid #e5e7eb',
+                        background: 'white',
+                        color: '#6b7280',
+                        borderRadius: '6px',
+                        cursor: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 'not-allowed' : 'pointer',
+                        opacity: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 0.6 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                      }}
+                    >
+                      <HiXMark size={16} />
+                      거절
+                    </button>
+                  </div>
             </div>
           ))}
         </div>

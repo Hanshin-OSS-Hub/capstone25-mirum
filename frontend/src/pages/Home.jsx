@@ -116,7 +116,7 @@ function Home() {
     const handleGetInvitationsApi = useCallback(async () => {
         api.get('invitations/received')
         .then(response => {
-            setInvitations(response.data);
+            setInvitations(response);
         })
         .catch(error => {
             alert(error.message || '초대 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
@@ -308,6 +308,7 @@ function Home() {
                                 setIsModalOpen(false);
                                 alert("프로젝트 생성 완료!");
                                 handleGetProjectList();
+                                // setter 함수의 이전 값을 prev로 꺼내서 갱신하는 로직인데 왜 prev가 undefined였을까..?
                                 setProjects((projects) => {
                                     const newProjects = [...projects, data];
                                     localStorage.setItem("projects", JSON.stringify(newProjects));
@@ -317,12 +318,12 @@ function Home() {
                         />
 
                         {
-                            projects === undefined || projects.length === 0 ? (
+                           !Array.isArray(projects) || projects.length === 0 ? (
                                 <div style={{ textAlign: "center", marginTop: "50px", color: "#666", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
                                     <p>진행 중인 프로젝트가 없습니다.</p>
                                     <button className="primary-btn" onClick={() => setIsModalOpen(true)}>+ 새 프로젝트 생성</button>
                                 </div>
-                            ) : (
+                           ) : (
                                 <>
                                 {/* 요약 카드 섹션 (가로 배치) */}
                                 <section className="summary-cards">
