@@ -24,9 +24,10 @@ export default function AppRoutes() {
 
   const handleModalClose = (result) => {
     setIsLoginModalOpen(false);
-    if (result === 'canceled')
+    if (result === 'canceled') {
+      localStorage.clear();
       navigate('/');
-    else
+    } else
       window.location.reload();
   }
 

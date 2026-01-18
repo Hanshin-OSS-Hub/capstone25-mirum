@@ -62,6 +62,7 @@ export function client(endpoint, options={}) {
 
             if (!refreshResponse.ok)
               throw new Error("토큰 재발급에 실패했습니다.");
+              window.dispatchEvent(new CustomEvent("openLoginModal"));
 
             const newTokenData = await refreshResponse.json();
             localStorage.setItem("accessToken", newTokenData.accessToken)
@@ -75,7 +76,7 @@ export function client(endpoint, options={}) {
         // 원래 실패했던 API 요청을 새로운 토큰으로 다시 시도 (isRetry = true)
         return await fetchWithAuth(true);
       } catch (refreshError) {
-        if (!isSessionExpired)
+        if (isSessionExpired)
           return Promise.reject(refreshError);
 
         isSessionExpired = true;
