@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 import { HiOutlineBell } from "react-icons/hi2";
 import { api } from '../api/client';
 import CreateProjectModal from '../components/CreateProject';
@@ -11,6 +12,7 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 function Home() {
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
@@ -24,6 +26,13 @@ function Home() {
         }
         return [];
     });
+
+    // 로그인 상태면 대시보드로 리다이렉트
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate("/");
+        }
+    }, [isAuthenticated, navigate]);
 
     // const location = useLocation();
 
