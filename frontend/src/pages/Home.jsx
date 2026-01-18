@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
 import { HiOutlineBell } from "react-icons/hi2";
 import { api } from '../api/client';
-import CreateProjectModal from './CreateProject';
+import CreateProjectModal from '../components/CreateProject';
 import ProjectInvitationModal from '../components/ProjectInvitationModal';
 import ProfileModal from '../components/ProfileModal';
 

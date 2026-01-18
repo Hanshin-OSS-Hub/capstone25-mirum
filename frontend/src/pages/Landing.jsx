@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import LoginModal from "./Login";
-import SignupModal from "./Signupmodal";
 import { HeroSection } from '../components/HeroSection';
 // import { FeaturesSection } from './components/FeaturesSection';
 // import { BenefitsSection } from './components/BenefitsSection';
 // import { PricingSection } from './components/PricingSection';
 // import { ContactSection } from './components/ContactSection';
 // import { Footer } from './components/Footer';
+import SignupModal from "../components/Signupmodal";
 
 export default function Landing() {
   const navigate = useNavigate();

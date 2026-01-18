@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HiOutlineCog6Tooth, HiOutlineUserPlus } from "react-icons/hi2";
-import { api } from "../pages/client";
-import { apiClient } from "../pages/client";
+import { api } from "../api/client";
+import { client } from "../api/client";
 import { useLocation } from "react-router-dom";
 import ProjectUpdateModal from "../components/ProjectUpdateModal";
 import ProjectMemberModal from "../components/ProjectMemberModal";
