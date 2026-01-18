@@ -5,6 +5,7 @@ import { api } from '../api/client';
 
 // 환경 변수로 테스트/API 모드 선택
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 function Login(props) {
 
@@ -61,15 +62,37 @@ function Login(props) {
             return;
         }
 
-        api.post("login", { username: userName, password: password })
-        .then(async (data) => {
-            // 로그인 성공 시 토큰 저장
-            // 백엔드 로그인 응답: { accessToken, refreshToken }만 반환
-            // 사용자 정보는 별도 API로 조회 필요
+        fetch(`${BASE_URL}/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username: userName, password: password }),
+            // credentials: "include",
+            // mode: "cors",
+            // cache: "no-cache",
+            // redirect: "follow",
+            // referrerPolicy: "no-referrer",
+        })
+        .then(async (response) => {
+            if (!response.ok) {
+                throw new Error("로그인에 실패하였습니다.");
+            }
+
+            // 백엔드 응답: ApiResponse 형태
+            // { success: true, message: "성공", data: { accessToken, refreshToken } }
+            const result = await response.json();
             
+            // ApiResponse 구조에서 data 추출
+            const tokenData = result?.data || result;
+            
+            if (!tokenData || !tokenData.accessToken || !tokenData.refreshToken) {
+                throw new Error("토큰 정보를 받아오지 못했습니다.");
+            }
+
             // 1. 토큰을 임시로 localStorage에 저장 (프로필 조회를 위한 인증용)
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("refreshToken", data.refreshToken);
+            localStorage.setItem("accessToken", tokenData.accessToken);
+            localStorage.setItem("refreshToken", tokenData.refreshToken);
             
             // 2. 사용자 프로필 정보 조회 (GET /user)
             let name = null;
@@ -87,8 +110,8 @@ function Login(props) {
 
             // 3. 모든 정보를 한 번에 login() 함수로 저장
             login({
-                accessToken: data.accessToken,
-                refreshToken: data.refreshToken,
+                accessToken: tokenData.accessToken,
+                refreshToken: tokenData.refreshToken,
                 username: userName,
                 name: name,
                 email: email
@@ -180,11 +203,9 @@ function Login(props) {
                     <button
                         type="button"
                         className="login-secondary-button"
-                        onClick={() => {
-                            props.onClickSignUp();
-                        }}
+                        onClick={handleCancel}
                     >
-                        계정이 없어요
+                        닫기
                     </button>
                 </form>
             </div>
