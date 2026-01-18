@@ -15,8 +15,13 @@ export default function Landing() {
   const { isAuthenticated } = useAuth();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  // const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+
+  const handleLoginClick = () => {
+    // 📢 "야! 로그인 모달 좀 열어줘!" 라고 방송
+    window.dispatchEvent(new CustomEvent("openLoginModal"));
+  };
 
   // 로그인 상태면 대시보드로 리다이렉트
   useEffect(() => {
@@ -52,7 +57,7 @@ export default function Landing() {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-3">
               <button
-                onClick={() => setIsLoginOpen(true)}
+                onClick={() => {handleLoginClick()}}
                 className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer whitespace-nowrap"
               >
                 로그인

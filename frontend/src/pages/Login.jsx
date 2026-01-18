@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import './modal.css';
-import { api } from './client';
+import { api } from '../api/client';
 
 // 환경 변수로 테스트/API 모드 선택
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -29,6 +29,10 @@ function Login(props) {
             props.onClose();
     }
 
+    const handleCancel = () => {
+      props.onCancel('canceled'); // ❌ 닫기 버튼 누르면 '취소' 알림
+    };
+
     //  ------------------------------------------------------------------------
     //  참고 자료:
     //  * https://pa-pico.tistory.com/20
@@ -45,7 +49,7 @@ function Login(props) {
      * @param {Event} event - 폼 제출 이벤트
      * @returns {Promise<void>} POST /login API 호출 후 인증 토큰 및 사용자 정보를 AuthContext에 저장
      * @description username과 password를 서버에 전송하여 인증 후, 토큰과 사용자 정보를 받아 login() 호출
-     * 서버 응답 예시: { "accessToken": "...", "refreshToken": "...", "name": "홍길동", "email": "hong@example.com" }
+     * 서버 응답 예시: { "accessToken": "...", "refreshToken": "..." }
      */
 
     const handleSubmitAPI = async (event) =>  {
@@ -139,7 +143,7 @@ function Login(props) {
                 <button
                     type="button"
                     className="login-close-btn"
-                    onClick={props.onClose}
+                    onClick={handleCancel}
                 >
                     ✕
                 </button>

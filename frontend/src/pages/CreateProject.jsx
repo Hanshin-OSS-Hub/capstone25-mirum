@@ -1,8 +1,10 @@
-import { useState } from "react";
+import {useState} from "react";
 import './modal.css';
-import { api } from './client';
+import {api} from '../api/client';
 
-function CreateProject(props) {
+const USE_Mock = import.meta.env.VITE_USE_MOCK === 'true';
+
+export default function CreateProject(props) {
     const [projectTitle, setProjectTitle] = useState("");
     const [projectDesc, setProjectDesc] = useState("");
     const [error, setError] = useState("");
@@ -86,6 +88,15 @@ function CreateProject(props) {
         });
     };
 
+    const handleCreateProjectApi = async () => {
+        return api.post('project', {
+            projectName: projectTitle,
+            description: projectDesc,
+        });
+    }
+
+    const handleCreateProject = USE_Mock ? fakeCreateProjectAPI : handleCreateProjectApi;
+
     /**
      * https://pa-pico.tistory.com/20
      event.preventDefault(): <a> 나 <submit(?)> 처럼 자체 기능이 탑재된
@@ -105,23 +116,15 @@ function CreateProject(props) {
         }
 
         try {
-            // --- 데모용 코드 ---
-            // const response = await fakeCreateProjectAPI({ title: projectTitle, description: projectDesc });
-            // const data = response.data;
-
-            // 실제 API 요청 시 아래 주석 해제
-            const data = await api.post('http://localhost:8080/project', {
-                projectName: projectTitle,
-                description: projectDesc,
-            });
-            
+            const data = await handleCreateProject();
             // 성공 콜백 함수 호출
             if (props.onCreateProjectSuccess) {
                 props.onCreateProjectSuccess(data); // 생성된 프로젝트 데이터를 전달
             }
             handleClose();
-        } catch (error) {
-            setError(error.message || "프로젝트 생성에 실패했습니다.");
+        }
+        catch (error) {
+            alert(error.message || "프로젝트 생성에 실패했습니다.")
         }
     }
 
@@ -182,5 +185,3 @@ function CreateProject(props) {
         </>
     );
 }
-
-export default CreateProject;

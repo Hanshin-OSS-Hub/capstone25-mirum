@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../pages/client';
+import { api } from '../api/client';
 import { useAuth } from '../context/useAuth';
 import { HiPencil } from 'react-icons/hi2';
 
