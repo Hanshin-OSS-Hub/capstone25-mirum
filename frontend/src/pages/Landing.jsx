@@ -132,22 +132,6 @@ export default function Landing() {
         <ContactSection /> */}
       </main>
 
-      {/* Modals */}
-      {isLoginOpen && (
-        <LoginModal
-          isOpen={isLoginOpen}
-          onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={() => {
-            setIsLoginOpen(false);
-            navigate("/dashboard");
-          }}
-          onClickSignUp={() => {
-            setIsLoginOpen(false);
-            setIsSignupOpen(true);
-          }}
-        />
-      )}
-
       {isSignupOpen && (
         <SignupModal
           isOpen={isSignupOpen}

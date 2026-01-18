@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "jest"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
