@@ -152,11 +152,10 @@ function Project() {
       ...data,
       projectId: Number(id) // id를 숫자로 변환하여 포함
     })
-    .then((updatedProject) => {
-        setProject(updatedProject);
+    .then(() => {
         alert("프로젝트 정보를 업데이트했습니다.");
         setIsUpdateModalOpen(false);
-        // 프로젝트 정보 갱신
+        // 서버에서 최신 프로젝트 정보를 다시 가져옴 (서버가 최종 데이터 소스)
         handleGetProjectDetailsAPI();
     })
     .catch((error) => {
@@ -190,7 +189,7 @@ function Project() {
    */
   const handleDeleteProjectAPI = () => {
     if (window.confirm("정말로 이 프로젝트를 삭제하시겠습니까?")) {
-      api.delete(`http://localhost:8080/projects/${id}`)
+      api.delete(`http://localhost:8080/project/${id}`)
       .then(() => {
         alert("프로젝트가 삭제되었습니다.");
         navigate("/dashboard");
