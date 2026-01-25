@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HiOutlineCog6Tooth, HiOutlineUserPlus } from "react-icons/hi2";
-import { api } from "../api/client";
-import { client } from "../api/client";
+import { api, client } from "../api/client";
+import { useAuth } from "../context/useAuth.js";
 import { useLocation } from "react-router-dom";
 import ProjectUpdateModal from "../components/ProjectUpdateModal";
 import ProjectMemberModal from "../components/ProjectMemberModal";
@@ -19,9 +19,9 @@ function ProjectConfigMenu(props) {
             ✕
           </span>
           <ul style={ { display: "flex", flexDirection: "column", listStyle: "none", padding: 10, gap: 10 } }>
-              <li style={{ cursor: "pointer" }} onClick={() => props.setIsMemberModalOpen(true)}>멤버 관리</li>
-              <li style={{ cursor: "pointer" }} onClick={() => props.setIsUpdateModalOpen(true)}>프로젝트 수정</li>
-              <li style={{ cursor: "pointer" }} onClick={() => { props.onDelete(); }}>프로젝트 삭제</li>
+              <li style={{ cursor: "pointer" }} onClick={() => { props.setIsConfigMenuOpen(false); props.setIsMemberModalOpen(true); }}>멤버 관리</li>
+              <li style={{ cursor: "pointer" }} onClick={() => { props.setIsConfigMenuOpen(false); props.setIsUpdateModalOpen(true); }}>프로젝트 수정</li>
+              <li style={{ cursor: "pointer" }} onClick={() => { props.setIsConfigMenuOpen(false); props.onDelete(); }}>프로젝트 삭제</li>
           </ul>
         </div>
     );
@@ -29,11 +29,13 @@ function ProjectConfigMenu(props) {
 
 function Project() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { id } = useParams();                    // /project/:id 에서 id 읽기
 
   const [isConfigMenuOpen, setIsConfigMenuOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [members, setMembers] = useState([]);
@@ -41,8 +43,8 @@ function Project() {
   const [tasks, setTasks] = useState([]);
 
   const location = useLocation();
-  const myUsername = localStorage.getItem("username") || "";
-  const myMember = members.find(m => m.username === myUsername);
+  const myUsername = user?.nickname || "";
+  const myMember = members.find(m => m.nickname === myUsername);
   const isLeader = myMember?.role?.toUpperCase() === "LEADER";
 
   // 새로고침 등으로 state가 날아갔을 때 대비
@@ -51,7 +53,7 @@ function Project() {
   const memberCount = Array.isArray(members)
     ? members.length
     : 0;
-  const day = project?.created_at ? project.created_at.slice(0, 10) : "-";
+  const day = project?.creationDate ? project.creationDate.slice(0, 10) : "-";
 
   // 대시보드(홈)로 돌아가기
   const handleBack = () => {
@@ -60,7 +62,38 @@ function Project() {
 
   // ==================== [실제 API 함수들] ====================
 
-  // [READ] 프로젝트 상세 정보 api 요청
+  /**
+   * [READ] 프로젝트 상세 정보 조회 API
+   *
+   * 현재 상태:
+   * @returns {Object} 서버가 프로젝트 기본 정보를 반환
+   * 서버 응답 예시:
+   * {
+   *   "projectId": "<string|number>",     // 프로젝트 고유 ID
+   *   "projectName": "<string>",          // 프로젝트 이름
+   *   "description": "<string>",           // 프로젝트 설명
+   *   "creationDate": "<ISO8601>"         // 생성일 (ISO 8601 형식)
+   * }
+   * 문제점: 멤버 수, 작업 수 등 추가 정보가 없어 별도 API 호출 필요
+   *
+   * 개선된 상태 (권장):
+   * @returns {Object} 서버가 프로젝트 전체 정보를 포함하여 반환
+   * 서버 응답 예시:
+   * {
+   *   "projectId": "<string|number>",     // 프로젝트 고유 ID
+   *   "projectName": "<string>",          // 프로젝트 이름
+   *   "description": "<string>",           // 프로젝트 설명
+   *   "creationDate": "<ISO8601>",        // 생성일 (ISO 8601 형식)
+   *   "memberCount": 5,                    // 멤버 수
+   *   "taskCount": 12,                      // 전체 작업 수
+   *   "completedTaskCount": 3,             // 완료된 작업 수
+   *   "leaderUsername": "johndoe"           // 리더 사용자명
+   * }
+   * 장점:
+   * - 프로젝트 상세 페이지 렌더링에 필요한 모든 정보를 한 번에 제공
+   * - 추가 API 호출 없이 대시보드 정보 표시 가능
+   * - 네트워크 요청 횟수 감소로 성능 향상
+   */
   const handleGetProjectDetailsAPI = useCallback(() => {
       api.get(`http://localhost:8080/project/${id}`)
       .then((data) => {
@@ -73,42 +106,88 @@ function Project() {
       });
     }, [id]);
 
-   /** [백엔드 개발자 참고]
-    프론트엔드에서 프로젝트 수정 시 PUT /project로 아래와 같은 JSON을 전송합니다:
-    {
-      "projectId": <string|number>,
-      "projectName": <string>,
-      "description": <string>
-    }
-
-    서버는 아래와 같은 형식의 데이터를 JSON으로 반환해야 합니다
-    // 프론트엔드에서 입력값으로 state를 즉시 갱신할 수도 있지만,
-    // 서버에서 반환된 프로젝트 객체로 상태를 갱신하는 이유는
-    // 1) 서버(DB)가 최종적이고 신뢰할 수 있는 데이터 소스(authoritative source)이기 때문이며,
-    // 2) 서버에서 실제로 저장된 값(예: 필드 자동 보정, 권한, 기타 비즈니스 로직 반영 등)이
-    //    프론트엔드 입력값과 다를 수 있기 때문입니다.
-    // 따라서 서버 응답을 기준으로 상태를 동기화하면 데이터 일관성과 신뢰성을 보장할 수 있습니다.
-    {
-      "projectId": <string|number>,
-      "projectName": <string>,
-      "description": <string>
-    }
-  */
-
-  // [UPDATE] 프로젝트 정보 수정 api 요청
+  /**
+   * [UPDATE] 프로젝트 정보 수정 API
+   *
+   * 현재 상태:
+   * @param {Object} data - 수정할 프로젝트 정보
+   * @param {string|number} data.projectId - 프로젝트 고유 ID
+   * @param {string} data.projectName - 프로젝트 이름
+   * @param {string} data.description - 프로젝트 설명
+   * @returns {Object} 서버가 수정된 프로젝트 정보를 반환
+   * 서버 응답 예시:
+   * {
+   *   "projectId": "<string|number>",
+   *   "projectName": "<string>",
+   *   "description": "<string>"
+   * }
+   * 문제점: 수정된 프로젝트 정보만 반환되어 추가 정보(멤버 수, 작업 수 등) 갱신 불가
+   *
+   * 개선된 상태 (권장):
+   * @param {Object} data - 수정할 프로젝트 정보
+   * @param {string|number} data.projectId - 프로젝트 고유 ID
+   * @param {string} data.projectName - 프로젝트 이름
+   * @param {string} data.description - 프로젝트 설명
+   * @returns {Object} 서버가 수정된 프로젝트 전체 정보를 반환
+   * 서버 응답 예시:
+   * {
+   *   "projectId": "<string|number>",
+   *   "projectName": "<string>",
+   *   "description": "<string>",
+   *   "creationDate": "<ISO8601>",
+   *   "memberCount": 5,
+   *   "taskCount": 12,
+   *   "completedTaskCount": 3,
+   *   "leaderUsername": "johndoe"
+   * }
+   * 장점:
+   * - 서버(DB)가 최종적이고 신뢰할 수 있는 데이터 소스이므로 서버 응답으로 상태 동기화
+   * - 서버에서 실제로 저장된 값(필드 자동 보정, 권한, 비즈니스 로직 반영 등) 반영
+   * - 데이터 일관성과 신뢰성 보장
+   * - 추가 정보 갱신으로 UI 일관성 유지
+   */
   const handleUpdateProjectAPI = (data) => {
-    api.put(`http://localhost:8080/project/${id}`, data)
+    // 백엔드 엔드포인트는 /project이고, projectId는 body에 포함되어야 함
+    api.put(`http://localhost:8080/project`, {
+      ...data,
+      projectId: Number(id) // id를 숫자로 변환하여 포함
+    })
     .then((updatedProject) => {
         setProject(updatedProject);
         alert("프로젝트 정보를 업데이트했습니다.");
         setIsUpdateModalOpen(false);
+        // 프로젝트 정보 갱신
+        handleGetProjectDetailsAPI();
     })
     .catch((error) => {
         alert(error.message || "프로젝트 정보 업데이트에 실패했습니다.");
     });
   };
 
-  // [DELETE] 프로젝트 삭제 api 요청
+  /**
+   * [DELETE] 프로젝트 삭제 API
+   *
+   * 현재 상태:
+   * @returns {void} 서버가 삭제 성공 시 빈 응답 또는 성공 메시지 반환
+   * 서버 응답 예시:
+   * - 204 No Content (빈 응답)
+   * - 또는 { "success": true, "message": "프로젝트가 삭제되었습니다." }
+   * 문제점: 삭제된 프로젝트 정보를 확인할 수 없어 로깅/감사 추적 어려움
+   *
+   * 개선된 상태 (권장):
+   * @returns {Object} 서버가 삭제된 프로젝트 정보를 반환 (선택사항)
+   * 서버 응답 예시:
+   * {
+   *   "success": true,
+   *   "message": "프로젝트가 삭제되었습니다.",
+   *   "deletedProjectId": "<string|number>",
+   *   "deletedAt": "<ISO8601>"
+   * }
+   * 장점:
+   * - 삭제된 프로젝트 ID 확인 가능
+   * - 삭제 시각 기록으로 감사 추적 가능
+   * - 클라이언트에서 삭제 확인 및 로깅 용이
+   */
   const handleDeleteProjectAPI = () => {
     if (window.confirm("정말로 이 프로젝트를 삭제하시겠습니까?")) {
       api.delete(`http://localhost:8080/projects/${id}`)
@@ -122,7 +201,34 @@ function Project() {
     }     
   };
 
-  // [CREATE] 멤버 초대(추가) api 요청
+  /**
+   * [CREATE] 멤버 초대(추가) API
+   *
+   * 현재 상태:
+   * @param {string} userInput - 초대할 사용자의 username 또는 email
+   * @returns {void} 서버가 초대 성공 시 빈 응답 또는 성공 메시지 반환
+   * 서버 응답 예시:
+   * - 201 Created (빈 응답)
+   * - 또는 { "success": true, "message": "초대가 전송되었습니다." }
+   * 문제점: 초대된 멤버 정보를 받을 수 없어 즉시 UI 업데이트 불가, 초대 ID 없어 추적 어려움
+   *
+   * 개선된 상태 (권장):
+   * @param {string} userInput - 초대할 사용자의 username 또는 email
+   * @returns {Object} 서버가 생성된 초대 정보를 반환
+   * 서버 응답 예시:
+   * {
+   *   "invitationId": "inv-uuid-1234",     // 초대 고유 ID (UUID)
+   *   "projectId": "proj-uuid-5678",        // 프로젝트 고유 ID
+   *   "inviterUsername": "johndoe",        // 초대한 사용자명
+   *   "inviteeUsername": "janedoe",         // 초대받은 사용자명
+   *   "status": "INVITED",                  // 초대 상태
+   *   "createdAt": "2024-01-15T10:30:00Z"  // 초대 생성 시각
+   * }
+   * 장점:
+   * - 초대 정보를 받아 즉시 UI에 반영 가능
+   * - 초대 ID로 추적 및 관리 용이
+   * - 초대 상태 확인 및 취소 기능 구현 가능
+   */
   const handleInviteMemberAPI = (userInput) => {
     api.post(`http://localhost:8080/invitations`, {
       "projectId": id,
@@ -140,31 +246,43 @@ function Project() {
     alert(`테스트: ${userInput}님을 초대했습니다.`);
   }
 
-  /** [백엔드 개발자 참고]
-    프론트엔드에서 프로젝트 멤버 정보를 요청할 때 GET /members/:projectId로 아래와 같은 형식의 데이터를 기대합니다:
-    [
-      {
-        "userId": <string|number>,
-        "username": <string>,
-        "name": <string>,
-        "profileImg": <string>,
-        "role": <string>, // 예: "LEADER", "MEMBER"
-        // (선택) "email": <string>
-      },
-      ...
-    ]
+  /**
+   * [READ] 프로젝트 멤버 목록 조회 API
+   *
+   * 현재 상태:
+   * @returns {Array} 서버가 기본 멤버 정보만 반환
+   * 서버 응답 예시:
+   * [
+   *   {
+   *     "nickname": "<string>",           // 닉네임
+   *     "role": "<string>",               // "LEADER" 또는 "MEMBER"
+   *   },
+   *   ...
+   * ]
+   * 문제점: 일부 필드가 누락될 경우 프론트엔드에서 추가 가공/조인 필요, username만으로는 식별/표시가 제한적임
+   *
+   * 개선된 상태 (권장):
+   * @returns {Array} 서버가 모든 멤버 관련 정보를 포함하여 반환
+   * 서버 응답 예시:
+   * [
+   *   {
+   *     "userId": "user-uuid-1234",       // 멤버 고유 ID (UUID)
+   *     "username": "johndoe",            // 유일한 사용자명
+   *     "name": "홍길동",                  // 실명 또는 닉네임
+   *     "profileImg": "https://...",      // 프로필 이미지 URL
+   *     "role": "LEADER",                 // "LEADER", "MEMBER" 등
+   *     "email": "john@example.com"       // (선택) 이메일
+   *   },
+   *   ...
+   * ]
+   * 장점:
+   * - 프론트엔드에서 members.map(...)만으로 바로 렌더링 가능
+   * - username, name, profileImg 등 모든 정보가 있어 추가 가공 불필요
+   * - 멤버 식별 및 표시가 명확함
+   */
 
-    프론트엔드에서 별도의 mockUsers 조인 없이 바로 멤버 정보를 렌더링하려면,
-    username, name, profileImg 등 모든 필드를 서버에서 내려주는 것이 가장 이상적입니다.
-    (예: username으로 내 멤버 객체를 찾거나, 프로필 이미지를 바로 표시)
-    
-    서버가 위와 같은 구조로 응답하면, 프론트엔드는 members.map(...)만으로 바로 렌더링이 가능합니다.
-    
-    만약 일부 필드가 누락되면, 프론트엔드에서 추가 가공/조인 로직이 필요하므로
-    모든 멤버 관련 정보는 서버에서 제공해주시길 권장합니다.
-  */
 
-  // // [READ] 멤버 정보 요청 (테스트용)
+      // // [READ] 멤버 정보 요청 (테스트용)
   // const membersWithUserInfo = members.map(member => {
   //   const user = mockUsers.find(u => u.id === member.userId);
   //   return {
@@ -178,7 +296,7 @@ function Project() {
 
   // [READ] 멤버 정보 api 요청
   const handleGetProjectMembersAPI = useCallback(() => {
-    api.get(`http://localhost:8080/members/${id}`)
+    api.get(`http://localhost:8080/member/${id}`)
     .then((data) => {
         setMembers(data);
     })
@@ -189,9 +307,35 @@ function Project() {
 
   //사용자가 leader인 경우에만 멤버 권한 수정/탈퇴 가능
 
-  // [UPDATE] 멤버 권한 수정 api 요청
+  /**
+   * [UPDATE] 멤버 권한 수정 API
+   *
+   * 현재 상태:
+   * @param {string} targetUsername - 권한을 변경할 멤버의 username
+   * @param {string} role - 변경할 권한 ("LEADER" 또는 "MEMBER")
+   * @returns {void} 서버가 권한 변경 성공 시 빈 응답 또는 성공 메시지 반환
+   * 서버 응답 예시:
+   * - 200 OK (빈 응답)
+   * - 또는 { "success": true, "message": "멤버 권한을 변경했습니다." }
+   * 문제점: 변경된 멤버 정보를 받을 수 없어 즉시 UI 업데이트를 위해 별도 조회 API 호출 필요
+   *
+   * 개선된 상태 (권장):
+   * @param {string} targetUsername - 권한을 변경할 멤버의 username
+   * @param {string} role - 변경할 권한 ("LEADER" 또는 "MEMBER")
+   * @returns {Object} 서버가 변경된 멤버 정보를 반환
+   * 서버 응답 예시:
+   * {
+   *   "username": "janedoe",               // 멤버 사용자명
+   *   "role": "LEADER",                    // 변경된 권한
+   *   "updatedAt": "2024-01-15T10:30:00Z" // 변경 시각
+   * }
+   * 장점:
+   * - 변경된 멤버 정보를 받아 즉시 UI 업데이트 가능
+   * - 추가 조회 API 호출 불필요로 성능 향상
+   * - 변경 시각 기록으로 감사 추적 가능
+   */
   const handleChangeMemberAuthAPI = (targetUsername, role) => {
-    api.put(`http://localhost:8080/members/${id}/role`, {
+    api.put(`http://localhost:8080/member/${id}/role`, {
       "username": targetUsername,
       "role": role
     })
@@ -204,7 +348,33 @@ function Project() {
     });
   }
 
-  // [DELETE] 멤버 탈퇴/방출 api 요청
+  /**
+   * [DELETE] 멤버 탈퇴/방출 API
+   *
+   * 현재 상태:
+   * @param {string} targetUsername - 탈퇴/방출할 멤버의 username
+   * @returns {void} 서버가 탈퇴/방출 성공 시 빈 응답 또는 성공 메시지 반환
+   * 서버 응답 예시:
+   * - 200 OK (빈 응답)
+   * - 또는 { "success": true, "message": "멤버를 탈퇴/방출했습니다." }
+   * 문제점: 탈퇴된 멤버 정보를 받을 수 없어 즉시 UI 업데이트를 위해 별도 조회 API 호출 필요
+   *
+   * 개선된 상태 (권장):
+   * @param {string} targetUsername - 탈퇴/방출할 멤버의 username
+   * @returns {Object} 서버가 탈퇴/방출된 멤버 정보를 반환
+   * 서버 응답 예시:
+   * {
+   *   "username": "janedoe",               // 탈퇴/방출된 멤버 사용자명
+   *   "projectId": "proj-uuid-5678",       // 프로젝트 고유 ID
+   *   "deletedAt": "2024-01-15T10:30:00Z", // 탈퇴/방출 시각
+   *   "reason": "MEMBER_LEAVE"             // 탈퇴 사유 (MEMBER_LEAVE, LEADER_REMOVE 등)
+   * }
+   * 장점:
+   * - 탈퇴/방출된 멤버 정보를 받아 즉시 UI 업데이트 가능
+   * - 추가 조회 API 호출 불필요로 성능 향상
+   * - 탈퇴 시각 및 사유 기록으로 감사 추적 가능
+   * - 자신이 탈퇴한 경우 프로젝트 페이지에서 자동 리디렉션 처리 용이
+   */
   const handleDeleteMemberAPI = (targetUsername) => {
     let deleteConfirmation = false;
     targetUsername === myUsername
@@ -214,7 +384,7 @@ function Project() {
       );
 
     if (deleteConfirmation) {
-      apiClient(`http://localhost:8080/members/${id}`, {
+      client(`http://localhost:8080/member/${id}`, {
         method: "DELETE",
         body: JSON.stringify({ username: targetUsername })
       })
@@ -298,7 +468,7 @@ function Project() {
       handleGetProjectDetailsAPI();
       handleGetProjectMembersAPI();
     }
-  }, [ ]); // handleGetProjectDetailsAPI, handleGetProjectMembersAPI 제거 (무한 루프 방지)
+  }, []); // handleGetProjectDetailsAPI, handleGetProjectMembersAPI 제거 (무한 루프 방지)
   
   // project 자체가 없는 경우 간단한 예외 화면
   if (!project) {
@@ -346,6 +516,7 @@ function Project() {
       <main className="pj-main">
         {isUpdateModalOpen && project && (
           <ProjectUpdateModal
+            id={id}
             project={project}
             error={error}
             onClose={() => setIsUpdateModalOpen(false)}
@@ -356,6 +527,7 @@ function Project() {
           <ProjectMemberModal
             projectId={id}
             members={members}
+            myUsername={myUsername}
             onClose={() => setIsMemberModalOpen(false)}
             onInvite={(userInput) => handleInviteMember(userInput)}
             onModify={(username, role) => handleChangeMemberAuth(username, role)}

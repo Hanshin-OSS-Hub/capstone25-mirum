@@ -14,7 +14,7 @@ function Home() {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
     const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -289,13 +289,18 @@ function Home() {
                     </div>
                     <div className="header-right">
                         <button className="profile-btn" style={ { backgroundColor: "transparent" }}
-                            onClick={() => setIsInvitationModalOpen(!isInvitationModalOpen)}
+                            onClick={() => {
+                                setIsProfileModalOpen(false);
+                                setIsInvitationModalOpen(!isInvitationModalOpen);
+                            }}
                         >
                             <HiOutlineBell size={20} />
                         </button>
                         <button 
                             className="profile-btn" 
-                            onClick={() => setIsProfileModalOpen(!isProfileModalOpen)}
+                            onClick={() => {
+                                setIsInvitationModalOpen(false);
+                                setIsProfileModalOpen(!isProfileModalOpen);}}
                         >
                             {user?.nickname.charAt(0) || "?"}
                         </button>
@@ -328,10 +333,10 @@ function Home() {
                         </section>
 
                         <CreateProjectModal
-                            isOpen={isModalOpen}
-                            onClose={() => setIsModalOpen(false)}
+                            isOpen={isCreateProjectModalOpen}
+                            onClose={() => setIsCreateProjectModalOpen(false)}
                             onCreateProjectSuccess={(data) => {
-                                setIsModalOpen(false);
+                                setIsCreateProjectModalOpen(false);
                                 alert("프로젝트 생성 완료!");
                                 handleGetProjectList();
                                 // setter 함수의 이전 값을 prev로 꺼내서 갱신하는 로직인데 왜 prev가 undefined였을까..?
@@ -347,7 +352,7 @@ function Home() {
                            !Array.isArray(projects) || projects.length === 0 ? (
                                 <div style={{ textAlign: "center", marginTop: "50px", color: "#666", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
                                     <p>진행 중인 프로젝트가 없습니다.</p>
-                                    <button className="primary-btn" onClick={() => setIsModalOpen(true)}>+ 새 프로젝트 생성</button>
+                                    <button className="primary-btn" onClick={() => setIsCreateProjectModalOpen(true)}>+ 새 프로젝트 생성</button>
                                 </div>
                            ) : (
                                 <>
@@ -382,7 +387,7 @@ function Home() {
                                 <section className="project-section">
                                     <div className="section-header">
                                         <h2>내 프로젝트</h2>
-                                        <button className="primary-btn" onClick={() => setIsModalOpen(true)}>+ 새 프로젝트</button>
+                                        <button className="primary-btn" onClick={() => setIsCreateProjectModalOpen(true)}>+ 새 프로젝트</button>
                                     </div>
 
                                     <div className="project-grid">

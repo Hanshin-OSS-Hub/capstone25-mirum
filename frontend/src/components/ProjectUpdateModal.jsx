@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 function ProjectUpdateModal(props) {
-    const [projectId, setProjectId] = useState(props.project?.id || null);
+    const [projectId, setProjectId] = useState(props.id || null);
     const [projectTitle, setProjectTitle] = useState(props.project?.projectName || '');
     const [projectDesc, setProjectDesc] = useState(props.project?.description || '');
 
@@ -22,9 +22,7 @@ function ProjectUpdateModal(props) {
 
     return (
         <>
-          <div style={ { position: "fixed", inset: 0, zIndex: 9999, backgroundColor: "rgba(15, 23, 42, 0.45)", display: "flex", alignItems: "center", justifyContent: "center", 
-          fontFamily: "Pretendard, system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
-          } }>
+          <div style={ { position: "fixed", inset: 0, zIndex: 9999, backgroundColor: "rgba(15, 23, 42, 0.45)", display: "flex", alignItems: "center", justifyContent: "center" } }>
             <div style={ { position: "relative", padding: "48px 56px 40px", width: "440px", border: "1px solid #e5e7eb", borderRadius: "32px", backgroundColor: "#fff", boxShadow: "0 20px 45px rgba(15, 23, 42, 0.16)"} }>
               <button style={ { position: "absolute", top: "18px", right: "22px", border: "None", background: "transparent", fontSize: "20px", color: "#9ca3af", cursor: "pointer"} }
                 type='button' onClick={handleClose}
