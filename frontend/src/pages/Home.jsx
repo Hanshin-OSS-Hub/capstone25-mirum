@@ -246,17 +246,10 @@ function Home() {
     const handleAcceptInvitation = USE_MOCK ? acceptInvitationTest : handleAcceptInvitationApi;
     const handleRejectInvitation = USE_MOCK ? rejectInvitationTest : handleRejectInvitationApi;
 
-    // 로그인 상태면 대시보드로 리다이렉트
-    useEffect(() => {
-        if (!isAuthenticated) {
-            localStorage.clear();
-            navigate("/");
-        }
-    }, [isAuthenticated, navigate]);
-
     useEffect(() => {
         if (USE_MOCK) {
             // 테스트 모드: 모의 초대 데이터 로드
+            localStorage.clear();
             getInvitationsTest();
         } else {
             // 실제 API 모드
@@ -264,6 +257,13 @@ function Home() {
             handleGetInvitations();
         }
     }, []);
+
+    // 로그인 상태면 대시보드로 리다이렉트
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate("/");
+        }
+    }, [isAuthenticated, navigate]);
 
     useEffect(() => {
         // user가 null이면 로딩 중으로 간주
@@ -297,7 +297,7 @@ function Home() {
                             className="profile-btn" 
                             onClick={() => setIsProfileModalOpen(!isProfileModalOpen)}
                         >
-                            {user.nickname?.charAt(0) || "?"}
+                            {user?.nickname.charAt(0) || "?"}
                         </button>
                     </div>
 
@@ -323,7 +323,7 @@ function Home() {
 
                         {/* 인사말 섹션 */}
                         <section className="greeting-section">
-                            <h1>안녕하세요, {user.nickname || "김미룸"}님! 👋</h1>
+                            <h1>안녕하세요, {user?.nickname || "김미룸"}님! 👋</h1>
                             <p>오늘도 팀 프로젝트를 효율적으로 관리해보세요.</p>
                         </section>
 
