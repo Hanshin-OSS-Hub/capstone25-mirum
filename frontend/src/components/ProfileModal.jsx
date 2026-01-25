@@ -7,21 +7,20 @@ import { HiPencil } from 'react-icons/hi2';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 function UserEditModal(props) {
-  const { user, onClose, onSave, onDelete } = props;
-  const [draftName, setDraftName] = useState(user?.name || "");
-  const [draftEmail, setDraftEmail] = useState(user?.email || "");
+  const [draftName, setDraftName] = useState(props.user?.nickname || "");
+  const [draftEmail, setDraftEmail] = useState(props.user?.email || "");
 
   useEffect(() => {
-    setDraftName(user?.name || "");
-    setDraftEmail(user?.email || "");
-  }, [user]);
+    setDraftName(props.user?.nickname || "");
+    setDraftEmail(props.user?.email || "");
+  }, [props.user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (onSave) {
-      onSave({ name: draftName, email: draftEmail });
+    if (props.onSave) {
+      props.onSave({ username: props.user.username, nickname: draftName, email: draftEmail });
     }
-    onClose();
+    props.onClose();
   };
 
   return (
@@ -38,7 +37,7 @@ function UserEditModal(props) {
         justifyContent: 'center',
         zIndex: 1000,
       }}
-      onClick={onClose}
+      onClick={props.onClose}
     >
       <div
         style={{
@@ -54,7 +53,7 @@ function UserEditModal(props) {
         <button
             type="button"
             className="login-close-btn"
-            onClick={onClose}
+            onClick={props.onClose}
         >
             ✕
         </button>
@@ -64,7 +63,7 @@ function UserEditModal(props) {
           <input
             type="text"
             disabled
-            value={ user?.username ?? '' }
+            value={ props.user?.username ?? '' }
             style={{ width: '100%', padding: '8px', marginBottom: '12px', border: '1px solid #d1d5db', borderRadius: '4px' }}
           />
           <h4>이름</h4>
@@ -110,7 +109,7 @@ function UserEditModal(props) {
                 e.target.style.color = '#9ca3af';
                 e.target.style.background = 'none';
               }}
-              onClick={() => onDelete()}
+              onClick={() => props.onDelete()}
             >
               회원탈퇴
             </button>
@@ -149,7 +148,7 @@ function ProfileModal(props) {
 
   const handleProfileSaveApi = (updatedData) => {
     api.put('/user', updatedData)
-      .then(response => {
+      .then(() => {
         updateUser(updatedData);
         alert('회원정보가 성공적으로 업데이트되었습니다.');
         }
@@ -252,7 +251,7 @@ function ProfileModal(props) {
                   flexShrink: 0,
                 }}
               >
-                {user.name?.charAt(0) || '?'}
+                {user.nickname?.charAt(0) || '?'}
                 <HiPencil 
                   style={{ 
                     position: 'absolute', 
@@ -271,7 +270,7 @@ function ProfileModal(props) {
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1f2937' }}>
-                  {user.name || '사용자'}
+                  {user.nickname || '사용자'}
                 </h3>
                 <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
                   {user.username || '-'}

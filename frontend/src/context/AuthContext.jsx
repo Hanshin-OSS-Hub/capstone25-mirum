@@ -8,14 +8,14 @@ export default function AuthProvider({ children }) {
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
         const username = localStorage.getItem("username");
-        const name = localStorage.getItem("name");
+        const nickname = localStorage.getItem("nickname");
         const email = localStorage.getItem("email");
         if (token && username) {
             token !== "null" && username !== "undefined" ? setIsAuthenticated(true) : setIsAuthenticated(false);
             // "null" 문자열을 null로 변환
             setUser({ 
                 username, 
-                name: name && name !== "null" ? name : null, 
+                nickname: nickname && nickname !== "null" ? nickname : null,
                 email: email && email !== "null" ? email : null 
             });
         }
@@ -29,14 +29,14 @@ export default function AuthProvider({ children }) {
         localStorage.setItem("accessToken", userData.accessToken);
         localStorage.setItem("refreshToken", userData.refreshToken);
         localStorage.setItem("username", userData.username);
-        userData.name ? localStorage.setItem("name", userData.name) : localStorage.removeItem("name");
+        userData.nickname ? localStorage.setItem("nickname", userData.nickname) : localStorage.removeItem("nickname");
         userData.email ? localStorage.setItem("email", userData.email) : localStorage.removeItem("email");
         
         // state 업데이트
         setIsAuthenticated(true);
         setUser({
             username: userData.username,
-            name: userData.name || null,
+            nickname: userData.nickname || null,
             email: userData.email || null
         });
     };
@@ -49,8 +49,8 @@ export default function AuthProvider({ children }) {
 
     const updateUser = (updatedData) => {
         // localStorage 업데이트
-        if (updatedData.name) {
-            localStorage.setItem("name", updatedData.name);
+        if (updatedData.nickname) {
+            localStorage.setItem("nickname", updatedData.nickname);
         }
         if (updatedData.email) {
             localStorage.setItem("email", updatedData.email);

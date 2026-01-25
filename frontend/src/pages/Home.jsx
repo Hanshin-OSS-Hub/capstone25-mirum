@@ -12,11 +12,12 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 function Home() {
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+    const { user, isAuthenticated } = useAuth();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const [invitations, setInvitations] = useState([]);
     const [projects, setProjects] = useState(() => {
@@ -26,13 +27,6 @@ function Home() {
         }
         return [];
     });
-
-    // 로그인 상태면 대시보드로 리다이렉트
-    useEffect(() => {
-        if (!isAuthenticated) {
-            navigate("/");
-        }
-    }, [isAuthenticated, navigate]);
 
     // const location = useLocation();
 
@@ -71,7 +65,7 @@ function Home() {
      * ]
      */
 
-    const handleGetProjectList = useCallback(async () => {
+    const handleGetProjectList = async () => {
         api.get('projects')
         .then(response => {
             setProjects(response);
@@ -80,7 +74,7 @@ function Home() {
         .catch(error => {
             alert(error.message || '프로젝트 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
         });
-        }, []);
+    };
     
     
     /**
@@ -122,7 +116,7 @@ function Home() {
      * - 프론트엔드에서 composite key 불필요
      */
 
-    const handleGetInvitationsApi = useCallback(async () => {
+    const handleGetInvitationsApi = async () => {
         api.get('invitations/received')
         .then(response => {
             setInvitations(response);
@@ -130,7 +124,9 @@ function Home() {
         .catch(error => {
             alert(error.message || '초대 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
         });
-    }, []);
+    };
+
+
 
 
     /**
@@ -250,6 +246,14 @@ function Home() {
     const handleAcceptInvitation = USE_MOCK ? acceptInvitationTest : handleAcceptInvitationApi;
     const handleRejectInvitation = USE_MOCK ? rejectInvitationTest : handleRejectInvitationApi;
 
+    // 로그인 상태면 대시보드로 리다이렉트
+    useEffect(() => {
+        if (!isAuthenticated) {
+            localStorage.clear();
+            navigate("/");
+        }
+    }, [isAuthenticated, navigate]);
+
     useEffect(() => {
         if (USE_MOCK) {
             // 테스트 모드: 모의 초대 데이터 로드
@@ -260,6 +264,19 @@ function Home() {
             handleGetInvitations();
         }
     }, []);
+
+    useEffect(() => {
+        // user가 null이면 로딩 중으로 간주
+        if (user === null) {
+            setLoading(true);
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
+
+    if (loading) {
+        return <div>로딩 중...</div>;
+    }
 
     return (
         <>
@@ -280,7 +297,7 @@ function Home() {
                             className="profile-btn" 
                             onClick={() => setIsProfileModalOpen(!isProfileModalOpen)}
                         >
-                            {localStorage.getItem("name")?.charAt(0) || "?"}
+                            {user.nickname?.charAt(0) || "?"}
                         </button>
                     </div>
 
@@ -306,7 +323,7 @@ function Home() {
 
                         {/* 인사말 섹션 */}
                         <section className="greeting-section">
-                            <h1>안녕하세요, {localStorage.getItem("name") || "김미룸"}님! 👋</h1>
+                            <h1>안녕하세요, {user.nickname || "김미룸"}님! 👋</h1>
                             <p>오늘도 팀 프로젝트를 효율적으로 관리해보세요.</p>
                         </section>
 

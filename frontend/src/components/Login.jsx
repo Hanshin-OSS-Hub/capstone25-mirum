@@ -95,17 +95,18 @@ function Login(props) {
             localStorage.setItem("refreshToken", tokenData.refreshToken);
             
             // 2. 사용자 프로필 정보 조회 (GET /user)
-            let name = null;
+            let nickname = null;
             let email = null;
             try {
                 const userProfile = await api.get("user");
                 // 백엔드 응답: { username, social, nickname, email }
-                // nickname을 name으로 매핑
-                name = userProfile.nickname || null;
+                nickname = userProfile.nickname || null;
                 email = userProfile.email || null;
             } catch (profileError) {
                 console.error("사용자 프로필 조회 실패:", profileError);
+                //
                 // 프로필 조회 실패해도 로그인은 유지 (username만 저장된 상태)
+                //
             }
 
             // 3. 모든 정보를 한 번에 login() 함수로 저장
@@ -113,7 +114,7 @@ function Login(props) {
                 accessToken: tokenData.accessToken,
                 refreshToken: tokenData.refreshToken,
                 username: userName,
-                name: name,
+                nickname: nickname,
                 email: email
             });
 
@@ -143,7 +144,7 @@ function Login(props) {
             // id: 1,  // 테스트용 고유 ID
             role: "user",
             username: userName,
-            name: "미룸 데모 유저",
+            nickname: "미룸 데모 유저",
             email: "demo@example.com",
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
