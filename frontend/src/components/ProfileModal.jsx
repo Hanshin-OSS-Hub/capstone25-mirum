@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../api/client';
+import { api, client } from '../api/client';
 import { useAuth } from '../context/useAuth';
 import { HiPencil } from 'react-icons/hi2';
 
@@ -46,18 +46,27 @@ function UserEditModal(props) {
           padding: '20px',
           width: '400px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          position: 'relative'
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 닫기 버튼 */}
-        <button
-            type="button"
-            className="login-close-btn"
-            onClick={props.onClose}
-        >
-            ✕
-        </button>
-        <h1 style={{ marginTop: 0 }}>프로필 수정</h1>
+
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "8px"
+        }}>
+          <h1>프로필 수정</h1>
+          {/* 닫기 버튼 */}
+          <button
+              type="button"
+              className="login-close-btn"
+              onClick={props.onClose}
+          >
+            닫기버튼
+          </button>
+        </div>
         <form onSubmit={handleSubmit}>
           <h4>아이디</h4>
           <input
@@ -88,32 +97,68 @@ function UserEditModal(props) {
               저장
             </button>
 
-            <button
-              style={{
-                width: 'auto',
-                padding: '10px',
-                border: 'none',
-                background: 'none',
+            <div
+                style={{
+                  width: 'auto',
+                  padding: '10px',
+                  border: 'none',
+                  background: 'none',
+                  display: "flex",
+                  justifyContent: "center",
+                  // alignItems: "center",
+                  // textAlign: "center"
+                }}
+            >
+              <span style={{
                 color: '#9ca3af',
                 fontSize: '14px',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 fontWeight: 500,
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.color = '#6b7280';
-                e.target.style.background = '#f3f4f6';
-                e.target.style.borderRadius = '6px';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.color = '#9ca3af';
-                e.target.style.background = 'none';
-              }}
-              onClick={() => props.onDelete()}
-            >
-              회원탈퇴
-            </button>
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = '#6b7280';
+                  e.target.style.background = '#f3f4f6';
+                  e.target.style.borderRadius = '6px';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = '#9ca3af';
+                  e.target.style.background = 'none';
+                }}
+                onClick={() => props.onDelete()}
+              >
+                회원탈퇴
+              </span>
+            </div>
           </div>
+
+
+
+            {/*<button*/}
+            {/*  style={{*/}
+            {/*    width: 'auto',*/}
+            {/*    padding: '10px',*/}
+            {/*    border: 'none',*/}
+            {/*    background: 'none',*/}
+            {/*    color: '#9ca3af',*/}
+            {/*    fontSize: '14px',*/}
+            {/*    cursor: 'pointer',*/}
+            {/*    transition: 'all 0.2s',*/}
+            {/*    fontWeight: 500,*/}
+            {/*  }}*/}
+            {/*  onMouseEnter={(e) => {*/}
+            {/*    e.target.style.color = '#6b7280';*/}
+            {/*    e.target.style.background = '#f3f4f6';*/}
+            {/*    e.target.style.borderRadius = '6px';*/}
+            {/*  }}*/}
+            {/*  onMouseLeave={(e) => {*/}
+            {/*    e.target.style.color = '#9ca3af';*/}
+            {/*    e.target.style.background = 'none';*/}
+            {/*  }}*/}
+            {/*  onClick={() => props.onDelete()}*/}
+            {/*>*/}
+            {/*  회원탈퇴*/}
+            {/*</button>*/}
         </form>
       </div>
     </div>
@@ -151,8 +196,7 @@ function ProfileModal(props) {
       .then(() => {
         updateUser(updatedData);
         alert('회원정보가 성공적으로 업데이트되었습니다.');
-        }
-      )
+      })
       .catch(error => {
         alert(error.message || '회원정보 업데이트에 실패했습니다. 다시 시도해주세요.');
       });
@@ -172,7 +216,8 @@ function ProfileModal(props) {
   const handleDeleteUserApi = async () => {
     if (window.confirm('정말 탈퇴하시겠습니까?')) {
       try {
-        await api.delete('/user');
+        // await api.delete('/user');
+        await client('/user', { method: 'DELETE', body: JSON.stringify({ username: user.username }) });
         deleteUser();
         navigate('/');
         props.onClose();
