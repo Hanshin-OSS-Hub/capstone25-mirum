@@ -230,7 +230,7 @@ function Project() {
    */
   const handleInviteMemberAPI = (userInput) => {
     api.post(`http://localhost:8080/invitations`, {
-      "projectId": id,
+      "projectId": Number(id),
       "invitedName": userInput
     })
     .then(() => {

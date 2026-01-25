@@ -67,10 +67,10 @@ function ProjectMemberModal(props) {
                     )}
                 </div>
                 <div style={ { position: "relative", display: "flex", alignItems: "center" } }>
-                  {member.username === myUsername && (
+                  {member.nickname === myUsername && (
                     <span style={{ marginLeft: 8, fontSize: 12, color: "#2563eb", fontWeight: "bold", background: "#e0e7ff", borderRadius: 6, padding: "2px 6px" }}>me</span>
                   )}
-                  {(sortedMembers[0].role === "LEADER" || member.username === myUsername) && (
+                  {(sortedMembers[0].role === "LEADER" || member.nickname === myUsername) && (
                     <button style={ { marginLeft: 8, background: "transparent", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" } }
                   onClick={() => { setOpenMenuId(member.userId); setIsMenuOpen(!isMenuOpen);}}>
                     ⋯
@@ -84,7 +84,7 @@ function ProjectMemberModal(props) {
                           <li style={ { cursor: "pointer", padding: "10px 12px 8px 12px", borderBottom: "1px solid #e5e7eb" } }
                           onClick={() => {
                             const newRole = member.role === "LEADER" ? "MEMBER" : "LEADER";
-                            props.onModify(member.username, newRole);
+                            props.onModify(member.nickname, newRole);
                             setIsMenuOpen(false);
                           }}
                         >
@@ -92,7 +92,7 @@ function ProjectMemberModal(props) {
                           </li>
                         )}
                         <li style={ { cursor: "pointer", padding: "10px 12px 8px 12px" } }
-                          onClick={() => props.onEject(member.username)}>
+                          onClick={() => props.onEject(member.nickname)}>
                           {member.nickname === myUsername ? "탈퇴하기" : "추방하기"}
                         </li>
                       </ul>
