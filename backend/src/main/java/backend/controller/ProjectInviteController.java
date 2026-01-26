@@ -21,7 +21,7 @@ public class ProjectInviteController {
 
     // 초대 발송
     // 초대 번호 반환
-    @PostMapping("/")
+    @PostMapping("")
     public ResponseEntity<ApiResponse<Map<String, Long>>> inviteMember(
             @AuthenticationPrincipal String username,
             @RequestBody InviteRequestDTO inviteRequestDTO

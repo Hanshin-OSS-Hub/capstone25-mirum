@@ -139,7 +139,7 @@ function Home() {
     const handleAcceptInvitationApi = async (invitationId) => {
         return api.post(`/invitations/${invitationId}/accept`)
         .then(() => {
-            setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+            setInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
             alert('프로젝트 초대를 수락했습니다.');
             // 초대 수락 후 프로젝트 목록 갱신
             handleGetProjectList();
@@ -157,9 +157,9 @@ function Home() {
      * @description 초대를 거절하면 해당 초대는 목록에서 제거됨
      */
     const handleRejectInvitationApi = async (invitationId) => {
-        return api.post(`/invitations/${invitationId}/reject`)
+        return api.put(`/invitations/${invitationId}/decline`)
         .then(() => {
-            setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+            setInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
             alert('프로젝트 초대를 거절했습니다.');
         })
         .catch(error => {
@@ -174,18 +174,21 @@ function Home() {
     const getInvitationsTest = () => {
         const mockInvitations = [
             {
+                "inviteId": 101,
                 "projectName": "프로젝트 A",
                 "inviterName": "inviter_user",
                 "inviteeName": "me",
                 "status": "INVITED"
             },
             {
+                "inviteId": 102,
                 "projectName": "프로젝트 B",
                 "inviterName": "another_user",
                 "inviteeName": "me",
                 "status": "INVITED"
             },
             {
+                "inviteId": 103,
                 "projectName": "프로젝트 C",
                 "inviterName": "team_lead",
                 "inviteeName": "me",
@@ -197,10 +200,13 @@ function Home() {
 
     // [CREATE] 초대 수락 (테스트용)
     // status를 INVITED → ACCEPTED로 변경 (목록에서 자동으로 필터링됨)
-    const acceptInvitationTest = (invitation) => {
+    const acceptInvitationTest = (invitationId) => {
+        const invitation = invitations.find(inv => inv.inviteId === invitationId);
+        if (!invitation) return;
+
         setInvitations(prev => 
             prev.map(inv => 
-                inv.projectName === invitation.projectName && inv.inviterName === invitation.inviterName
+                inv.inviteId === invitationId
                     ? { ...inv, status: "ACCEPTED" }
                     : inv
             )
@@ -229,15 +235,19 @@ function Home() {
 
     // [DELETE] 초대 거절 (테스트용)
     // status를 INVITED → DECLINED로 변경 (목록에서 자동으로 필터링됨)
-    const rejectInvitationTest = (invitation) => {
+    const rejectInvitationTest = (invitationId) => {
+        const invitation = invitations.find(inv => inv.inviteId === invitationId);
+
         setInvitations(prev => 
             prev.map(inv => 
-                inv.projectName === invitation.projectName && inv.inviterName === invitation.inviterName
+                inv.inviteId === invitationId
                     ? { ...inv, status: "DECLINED" }
                     : inv
             )
         );
-        alert(`(테스트 모드) "${invitation.projectName}" 프로젝트 초대를 거절했습니다.`);
+        if(invitation) {
+            alert(`(테스트 모드) "${invitation.projectName}" 프로젝트 초대를 거절했습니다.`);
+        }
     };
 
     // ==================== [핸들러 선택] ====================

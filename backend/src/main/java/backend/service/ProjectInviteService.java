@@ -100,6 +100,7 @@ public class ProjectInviteService {
         List<ProjectInvite> invite = projectInviteRepository.findAllByUserUsername(username);
 
         return invite.stream().map(i -> InviteResponseDTO.builder()
+                    .inviteId(i.getId())
                     .projectName(i.getProject().getProjectName())
                     .inviteeName(i.getUser().getUsername())
                     .status(i.getStatus())
@@ -113,6 +114,7 @@ public class ProjectInviteService {
         List<ProjectInvite> invite = projectInviteRepository.findAllByInviterName(username);
 
         return invite.stream().map(i -> InviteResponseDTO.builder()
+                .inviteId(i.getId())
                 .projectName(i.getProject().getProjectName())
                 .inviteeName(i.getUser().getUsername())
                 .status(i.getStatus())

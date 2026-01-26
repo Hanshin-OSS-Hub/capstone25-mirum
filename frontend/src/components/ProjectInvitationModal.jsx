@@ -92,8 +92,8 @@ function ProjectInvitationModal(props) {
 
                   <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                     <button
-                      onClick={() => handleAccept(invitation)}
-                      disabled={loadingId === `${invitation.projectName}-${invitation.inviterName}`}
+                      onClick={() => handleAccept(invitation.inviteId)}
+                      disabled={loadingId === invitation.inviteId}
                       style={{
                         flex: 1,
                         padding: '8px 12px',
@@ -101,8 +101,8 @@ function ProjectInvitationModal(props) {
                         background: '#10b981',
                         color: 'white',
                         borderRadius: '6px',
-                        cursor: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 'not-allowed' : 'pointer',
-                        opacity: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 0.6 : 1,
+                        cursor: loadingId === invitation.inviteId ? 'not-allowed' : 'pointer',
+                        opacity: loadingId === invitation.inviteId ? 0.6 : 1,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -115,8 +115,8 @@ function ProjectInvitationModal(props) {
                       수락
                     </button>
                     <button
-                      onClick={() => handleReject(invitation)}
-                      disabled={loadingId === `${invitation.projectName}-${invitation.inviterName}`}
+                      onClick={() => handleReject(invitation.inviteId)}
+                      disabled={loadingId === invitation.inviteId}
                       style={{
                         flex: 1,
                         padding: '8px 12px',
@@ -124,8 +124,8 @@ function ProjectInvitationModal(props) {
                         background: 'white',
                         color: '#6b7280',
                         borderRadius: '6px',
-                        cursor: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 'not-allowed' : 'pointer',
-                        opacity: loadingId === `${invitation.projectName}-${invitation.inviterName}` ? 0.6 : 1,
+                        cursor: loadingId === invitation.inviteId ? 'not-allowed' : 'pointer',
+                        opacity: loadingId === invitation.inviteId ? 0.6 : 1,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
