@@ -67,24 +67,27 @@ function ProjectMemberModal(props) {
                     )}
                 </div>
                 <div style={ { position: "relative", display: "flex", alignItems: "center" } }>
-                  {member.nickname === myUsername && (
+                  {member.username === myUsername && (
                     <span style={{ marginLeft: 8, fontSize: 12, color: "#2563eb", fontWeight: "bold", background: "#e0e7ff", borderRadius: 6, padding: "2px 6px" }}>me</span>
                   )}
-                  {(sortedMembers[0].role === "LEADER" || member.nickname === myUsername) && (
+                  {(sortedMembers[0].role === "LEADER" || member.username === myUsername) && (
                     <button style={ { marginLeft: 8, background: "transparent", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" } }
-                  onClick={() => { setOpenMenuId(member.userId); setIsMenuOpen(!isMenuOpen);}}>
+                    onClick={() => { setOpenMenuId(member.username); setIsMenuOpen(!isMenuOpen);}}>
                     ⋯
                   </button>
                   )}
                   {/* <button style={ { backgroundColor: "#ef4444", color: "#fff", border: "none", borderRadius: "8px", padding: "8px 16px", cursor: "pointer" } }>추방</button> */}
-                  {isMenuOpen && openMenuId === member.userId && (
+                  {isMenuOpen && openMenuId === member.username && (
                     <div style={ { width: "100px", border: "1px solid #ccc", borderRadius: 8, position: "absolute", right: 0, top: "100%", backgroundColor: "#fff", zIndex: 10} }>
                       <ul style={ { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column" } }>
-                        {member.nickname !== myUsername && (
+                        {member.username !== myUsername && (
                           <li style={ { cursor: "pointer", padding: "10px 12px 8px 12px", borderBottom: "1px solid #e5e7eb" } }
-                          onClick={() => {
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setIsMenuOpen(false);
+                            // 관리자 또는 일반 멤버로 권한 변경
                             const newRole = member.role === "LEADER" ? "MEMBER" : "LEADER";
-                            props.onModify(member.nickname, newRole);
+                            props.onModify(member.username, newRole);
                             setIsMenuOpen(false);
                           }}
                         >
@@ -92,8 +95,11 @@ function ProjectMemberModal(props) {
                           </li>
                         )}
                         <li style={ { cursor: "pointer", padding: "10px 12px 8px 12px" } }
-                          onClick={() => props.onEject(member.nickname)}>
-                          {member.nickname === myUsername ? "탈퇴하기" : "추방하기"}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setIsMenuOpen(false);
+                            props.onEject(member);} }>
+                          {member.username === myUsername ? "탈퇴하기" : "추방하기"}
                         </li>
                       </ul>
                     </div>

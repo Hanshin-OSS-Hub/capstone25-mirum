@@ -43,8 +43,8 @@ function Project() {
   const [tasks, setTasks] = useState([]);
 
   const location = useLocation();
-  const myUsername = user?.nickname || "";
-  const myMember = members.find(m => m.nickname === myUsername);
+  const myUsername = user?.username || "";
+  const myMember = members.find(m => m.username === myUsername);
   const isLeader = myMember?.role?.toUpperCase() === "LEADER";
 
   // 새로고침 등으로 state가 날아갔을 때 대비
@@ -235,6 +235,7 @@ function Project() {
     })
     .then(() => {
       alert(`${userInput}님을 초대했습니다.`);
+      handleGetProjectMembers(); // 멤버 정보 갱신
     })
     .catch((error) => {
       alert(error.message || "초대에 실패했습니다.");
@@ -295,7 +296,7 @@ function Project() {
 
   // [READ] 멤버 정보 api 요청
   const handleGetProjectMembersAPI = useCallback(() => {
-    api.get(`http://localhost:8080/member/${id}`)
+    api.get(`member/${id}`)
     .then((data) => {
         setMembers(data);
     })
@@ -334,7 +335,7 @@ function Project() {
    * - 변경 시각 기록으로 감사 추적 가능
    */
   const handleChangeMemberAuthAPI = (targetUsername, role) => {
-    api.put(`http://localhost:8080/member/${id}/role`, {
+    api.put(`member/${id}/role`, {
       "username": targetUsername,
       "role": role
     })
@@ -343,6 +344,7 @@ function Project() {
       handleGetProjectMembers(); // 멤버 정보 갱신
     })
     .catch((error) => {
+      console.error('멤버 권한 변경 실패:', error);
       alert(error.message || "멤버 권한 변경에 실패했습니다.");
     });
   }
@@ -350,8 +352,9 @@ function Project() {
   /**
    * [DELETE] 멤버 탈퇴/방출 API
    *
+   * @param member
+   *
    * 현재 상태:
-   * @param {string} targetUsername - 탈퇴/방출할 멤버의 username
    * @returns {void} 서버가 탈퇴/방출 성공 시 빈 응답 또는 성공 메시지 반환
    * 서버 응답 예시:
    * - 200 OK (빈 응답)
@@ -359,7 +362,6 @@ function Project() {
    * 문제점: 탈퇴된 멤버 정보를 받을 수 없어 즉시 UI 업데이트를 위해 별도 조회 API 호출 필요
    *
    * 개선된 상태 (권장):
-   * @param {string} targetUsername - 탈퇴/방출할 멤버의 username
    * @returns {Object} 서버가 탈퇴/방출된 멤버 정보를 반환
    * 서버 응답 예시:
    * {
@@ -374,25 +376,28 @@ function Project() {
    * - 탈퇴 시각 및 사유 기록으로 감사 추적 가능
    * - 자신이 탈퇴한 경우 프로젝트 페이지에서 자동 리디렉션 처리 용이
    */
-  const handleDeleteMemberAPI = (targetUsername) => {
+  const handleDeleteMemberAPI = (member) => {
     let deleteConfirmation = false;
-    targetUsername === myUsername
+    member.username === myUsername
       ? (window.confirm("정말로 탈퇴하시겠습니까?") ? deleteConfirmation = true : null)
       : (
-        window.confirm(`정말로 ${targetUsername}를 방출하시겠습니까?`) ? deleteConfirmation = true : null
+        window.confirm(`정말로 ${member.nickname} 님을 방출하시겠습니까?`) ? deleteConfirmation = true : null
       );
 
     if (deleteConfirmation) {
-      client(`http://localhost:8080/member/${id}`, {
+      client(`member/${id}`, {
         method: "DELETE",
-        body: JSON.stringify({ username: targetUsername })
+        headers: { 'Content-Type': 'text/plain' },
+        body: member.username,
+        // headers: { "Content-Type": "application/json" },
+        // body: JSON.stringify({ "username": member.username })
       })
       .then(() => {
         alert("멤버를 탈퇴/방출했습니다.");
         handleGetProjectMembers(); // 멤버 정보 갱신
         
         // 자신이 탈퇴한 경우 대시보드로 이동
-        if (targetUsername === myUsername) {
+        if (member.username === myUsername) {
           navigate("/dashboard");
         }
       })

@@ -61,8 +61,9 @@ public class ProjectService {
         //맴버 목록 가져와서 이름, 권한만 뽑은 뒤 DTO로 맵핑
         List<ProjectMemberDTO> projectMemberDTOS = projectMembers.stream()
                 .map(a -> ProjectMemberDTO.builder()
-                        .role(a.getRole())
+                        .username(a.getUser().getUsername())
                         .nickname(a.getUser().getNickname())
+                        .role(a.getRole())
                         .build()
                 )
                 .toList();

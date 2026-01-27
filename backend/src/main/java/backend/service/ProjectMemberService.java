@@ -31,6 +31,7 @@ public class ProjectMemberService {
         List<ProjectMember> members = projectMemberRepository.findAllByProjectId(projectId);
 
         return members.stream().map(m -> ProjectMemberDTO.builder()
+                .username(m.getUser().getUsername())
                 .nickname(m.getUser().getNickname())
                 .role(m.getRole())
                 .build()
