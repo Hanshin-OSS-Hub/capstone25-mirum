@@ -19,7 +19,8 @@ function Home() {
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const [invitations, setInvitations] = useState([]);
+    const [receivedInvitations, setReceivedInvitations] = useState([]);
+    const [sentInvitations, setSentInvitations] = useState([]);
     const [projects, setProjects] = useState(() => {
         if (USE_MOCK) {
             const saved = localStorage.getItem("projects");
@@ -44,6 +45,16 @@ function Home() {
     //         navigate(location.pathname, { replace: true, state: null });
     //     }
     // }, [location, navigate]);
+
+    const handleGetProjectInvitationsApi2 = useCallback(() => {
+      api.get(`invitations/sent`)
+          .then((data) => {
+            setSentInvitations(data);
+          })
+          .catch((error) => {
+            alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
+          })
+    })
 
     /**
      * [READ] 프로젝트 목록 조회 API
@@ -119,7 +130,7 @@ function Home() {
     const handleGetInvitationsApi = async () => {
         api.get('invitations/received')
         .then(response => {
-            setInvitations(response);
+            setReceivedInvitations(response);
         })
         .catch(error => {
             alert(error.message || '초대 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
@@ -139,7 +150,7 @@ function Home() {
     const handleAcceptInvitationApi = async (invitationId) => {
         return api.post(`/invitations/${invitationId}/accept`)
         .then(() => {
-            setInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
+            setReceivedInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
             alert('프로젝트 초대를 수락했습니다.');
             // 초대 수락 후 프로젝트 목록 갱신
             handleGetProjectList();
@@ -159,7 +170,7 @@ function Home() {
     const handleRejectInvitationApi = async (invitationId) => {
         return api.put(`/invitations/${invitationId}/decline`)
         .then(() => {
-            setInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
+            setReceivedInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
             alert('프로젝트 초대를 거절했습니다.');
         })
         .catch(error => {
@@ -195,16 +206,16 @@ function Home() {
                 "status": "INVITED"
             }
         ];
-        setInvitations(mockInvitations);
+        setReceivedInvitations(mockInvitations);
     };
 
     // [CREATE] 초대 수락 (테스트용)
     // status를 INVITED → ACCEPTED로 변경 (목록에서 자동으로 필터링됨)
     const acceptInvitationTest = (invitationId) => {
-        const invitation = invitations.find(inv => inv.inviteId === invitationId);
+        const invitation = receivedInvitations.find(inv => inv.inviteId === invitationId);
         if (!invitation) return;
 
-        setInvitations(prev => 
+        setReceivedInvitations(prev =>
             prev.map(inv => 
                 inv.inviteId === invitationId
                     ? { ...inv, status: "ACCEPTED" }
@@ -236,9 +247,9 @@ function Home() {
     // [DELETE] 초대 거절 (테스트용)
     // status를 INVITED → DECLINED로 변경 (목록에서 자동으로 필터링됨)
     const rejectInvitationTest = (invitationId) => {
-        const invitation = invitations.find(inv => inv.inviteId === invitationId);
+        const invitation = receivedInvitations.find(inv => inv.inviteId === invitationId);
 
-        setInvitations(prev => 
+        setReceivedInvitations(prev =>
             prev.map(inv => 
                 inv.inviteId === invitationId
                     ? { ...inv, status: "DECLINED" }
@@ -252,9 +263,11 @@ function Home() {
 
     // ==================== [핸들러 선택] ====================
     // 환경변수에 따라 API 또는 테스트 함수 사용
-    const handleGetInvitations = USE_MOCK ? getInvitationsTest : handleGetInvitationsApi;
+    const handleGetReceivedInvitations = USE_MOCK ? getInvitationsTest : handleGetInvitationsApi;
+    const handleGetSentInvitations = USE_MOCK ? handleGetProjectInvitationsApi2 : handleGetProjectInvitationsApi2;
     const handleAcceptInvitation = USE_MOCK ? acceptInvitationTest : handleAcceptInvitationApi;
     const handleRejectInvitation = USE_MOCK ? rejectInvitationTest : handleRejectInvitationApi;
+
 
     useEffect(() => {
         if (USE_MOCK) {
@@ -264,7 +277,8 @@ function Home() {
         } else {
             // 실제 API 모드
             handleGetProjectList();
-            handleGetInvitations();
+            handleGetReceivedInvitations();
+            handleGetSentInvitations();
         }
     }, []);
 
@@ -318,7 +332,9 @@ function Home() {
 
                     {isInvitationModalOpen && (
                         <ProjectInvitationModal 
-                            invitations={invitations}
+                            receivedInvitations={receivedInvitations}
+                            sentInvitations={sentInvitations}
+                            onClose={() => setIsInvitationModalOpen(false)}
                             onAccept={handleAcceptInvitation}
                             onReject={handleRejectInvitation}
                         />

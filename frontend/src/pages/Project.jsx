@@ -348,16 +348,6 @@ function Project() {
     setPendingInvites(demodata);
   }
 
-  const handleGetProjectInvitationsApi2 = useCallback(() => {
-    api.get(`invitations/sent`)
-        .then((data) => {
-          setPendingInvites(data);
-        })
-        .catch((error) => {
-          alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
-        })
-  })
-
   // [READ] 멤버 정보 api 요청
   const handleGetProjectMembersAPI = useCallback(() => {
     api.get(`member/${id}`)
