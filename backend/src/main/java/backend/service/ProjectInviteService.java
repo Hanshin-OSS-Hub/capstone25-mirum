@@ -110,8 +110,8 @@ public class ProjectInviteService {
     }
 
     // 발송한 초대 확인
-    public List<InviteResponseDTO> getSentInvites(String username) {
-        List<ProjectInvite> invite = projectInviteRepository.findAllByInviterName(username);
+    public List<InviteResponseDTO> getSentInvites(Long projectId) {
+        List<ProjectInvite> invite = projectInviteRepository.findAllByProjectId(projectId);
 
         return invite.stream().map(i -> InviteResponseDTO.builder()
                 .inviteId(i.getId())

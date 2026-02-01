@@ -13,7 +13,8 @@ import java.util.Optional;
 public interface ProjectInviteRepository extends JpaRepository<ProjectInvite, Long> {
     Optional<ProjectInvite> findByProjectIdAndUserUsername(Long projectId, String username);
 
-    List<ProjectInvite> findAllByInviterName(String inviterName);
+    @Query("SELECT i FROM ProjectInvite i JOIN FETCH i.user JOIN FETCH i.project WHERE i.project.id = :projectId")
+    List<ProjectInvite> findAllByProjectId(Long projectId);
 
     void deleteByProjectIdAndUserUsername(Long projectId, String username);
 
