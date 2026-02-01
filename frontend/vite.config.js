@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '^/(user|login|auth|project|projects|posts)': {
+      '^/(user|login|auth|project|projects|posts|member|invitations)': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,

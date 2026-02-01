@@ -6,6 +6,7 @@ function ProjectMemberModal(props) {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const members = props.members || [];
+  const pendingInvites = props.pendingInvites || [];
 
   // 현재 로그인한 사용자 username(localStorage에서 가져옴)
   // const myUsername = localStorage.getItem("username");
@@ -51,11 +52,11 @@ function ProjectMemberModal(props) {
           {/* 멤버 리스트 */}
           <div style={ { height: "300px", maxHeight: "300px", overflowY: "auto", marginTop: "16px", display: "flex", flexDirection: "column", gap: "12px" } }>
           {
-            filteredMembers.map(member => (
+            Array.isArray(members) && filteredMembers.map(member => (
               <label key={member.userId}>
               <div  style={ { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px", border: "1px solid #e5e7eb", borderRadius: "8px" } }>
                 <div style={ { display: "flex", alignItems: "center", gap: "12px" } }>
-                  <div style={ { width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "#d1d5db", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", color: "#fff" } }>
+                  <div style={ { width: "40px", height: "40px", borderRadius: "50%", background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", color: "#fff" } }>
                     {member.nickname.charAt(0).toUpperCase()}
                   </div>
                   <span style={ { fontSize: "16px", color: "#111827" } }>{member.nickname}</span>
@@ -109,7 +110,36 @@ function ProjectMemberModal(props) {
               </label>
             ))
           }
+          {/*</div>*/}
+
+          {/* 초대 목록 */}
+          {/*<div style={ { marginTop: "16px", height: "300px", maxHeight: "300px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" } }>*/}
+            {Array.isArray(pendingInvites) && pendingInvites.map(invite => (
+              <label key={invite.inviteId}>
+                <div style={ { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px", border: "1px solid #e5e7eb", borderRadius: "8px" } }>
+                  <div style={ { display: "flex", alignItems: "center", gap: "12px" } }>
+                    <div style={ { width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "#d1d5db", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", color: "#fff" } }>
+                      {invite.inviteeName.charAt(0).toUpperCase()}
+                    </div>
+                    <span style={ { fontSize: "16px", color: "#111827" } }>{invite.inviteeName}</span>
+                  </div>
+                  <div style={ { position: "relative", display: "flex", alignItems: "center" } }>
+                      <span style={{ marginLeft: 8, fontSize: 12, color: "#000", background: "#d1d5db", borderRadius: 6, padding: "2px 6px" }}>
+                        {invite.status === 'INVITED' ? "수락 대기중" : invite.status}
+                      </span>
+                    {(sortedMembers[0].role === "LEADER") && (
+                        <button style={ { marginLeft: 8, background: "transparent", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" } }>
+                          ⋯
+                        </button>
+                    )}
+                    {/*<button style={ { marginLeft: 8, background: "transparent", border: "none", cursor: "pointer", fontSize: "1px", color: "#9ca3af"} }>⋯</button>*/}
+                  </div>
+                </div>
+              </label>
+              )
+            )}
           </div>
+
         </div>
       </div>
     </>

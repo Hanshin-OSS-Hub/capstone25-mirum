@@ -38,6 +38,7 @@ function Project() {
   // const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [pendingInvites, setPendingInvites] = useState([]);
   const [members, setMembers] = useState([]);
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -294,6 +295,69 @@ function Project() {
   //   }
   // })
 
+  const handleGetProjectInvitationsApi = useCallback((id) => {
+    // 만약 이걸로 간다면 프로젝트 ID도 엔드포인트에 필요할 듯?
+    api.get(`invitations/sent`)
+        .then((data) => {
+          setPendingInvites(data);
+        })
+        .catch((error) => {
+          alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
+        })
+      })
+
+  const handleGetProjectInvitationsTest = (id) => {
+    const demodata = [
+        {
+          inviteId: "inv-uuid-1001",
+          projectId: id,
+          inviterName: "leader1",
+          inviteeName: "alice",
+          status: "INVITED",
+        },
+        {
+          inviteId: "inv-uuid-1002",
+          projectId: id,
+          inviterName: "leader1",
+          inviteeName: "bob",
+          status: "INVITED",
+        },
+        {
+          inviteId: "inv-uuid-1003",
+          projectId: id,
+          inviterName: "leader1",
+          inviteeName: "carol",
+          status: "ACCEPTED",
+        },
+        {
+          inviteId: "inv-uuid-1004",
+          projectId: id,
+          inviterName: "leader1",
+          inviteeName: "dave",
+          status: "DECLINED",
+        },
+        {
+          inviteId: "inv-uuid-1005",
+          projectId: id,
+          inviterName: "leader2",
+          inviteeName: "eve",
+          status: "INVITED",
+        },
+      ];
+
+    setPendingInvites(demodata);
+  }
+
+  const handleGetProjectInvitationsApi2 = useCallback(() => {
+    api.get(`invitations/sent`)
+        .then((data) => {
+          setPendingInvites(data);
+        })
+        .catch((error) => {
+          alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
+        })
+  })
+
   // [READ] 멤버 정보 api 요청
   const handleGetProjectMembersAPI = useCallback(() => {
     api.get(`member/${id}`)
@@ -385,12 +449,8 @@ function Project() {
       );
 
     if (deleteConfirmation) {
-      client(`member/${id}`, {
-        method: "DELETE",
-        headers: { 'Content-Type': 'text/plain' },
-        body: member.username,
-        // headers: { "Content-Type": "application/json" },
-        // body: JSON.stringify({ "username": member.username })
+      client(`member/${id}/${member.username}`, {
+        method: "DELETE"
       })
       .then(() => {
         alert("멤버를 탈퇴/방출했습니다.");
@@ -459,7 +519,7 @@ function Project() {
   const handleGetProjectMembers = USE_MOCK ? (() => {}) : handleGetProjectMembersAPI;
   const handleChangeMemberAuth = USE_MOCK ? (() => alert("테스트 모드: 멤버 권한 변경")) : handleChangeMemberAuthAPI;
   const handleDeleteMember = USE_MOCK ? handleDeleteMemberTest : handleDeleteMemberAPI;
-
+  const handleGetProjectInvitations = USE_MOCK ?  (id) => handleGetProjectInvitationsTest(id) : (id) => handleGetProjectInvitationsTest(id);
   // ==================== [초기 데이터 로드] ====================
   // 테스트 모드: location.state에서 데이터 가져오기
   useEffect(() => {
@@ -471,6 +531,9 @@ function Project() {
       // API 모드: 서버에서 데이터 가져오기
       handleGetProjectDetailsAPI();
       handleGetProjectMembersAPI();
+      if (id) {
+        handleGetProjectInvitations(id);
+      }
     }
   }, []); // handleGetProjectDetailsAPI, handleGetProjectMembersAPI 제거 (무한 루프 방지)
   
@@ -479,17 +542,15 @@ function Project() {
     return (
       <div className="pj-root">
         <header className="pj-top-bar">
-          <div className="pj-top-inner">
-            <div className="logo-area" style={{ cursor: "pointer" }} onClick={handleBack}>
-              <div className="logo-icon">M</div>
-              <span className="logo-text">Mirum</span>
-            </div>
+          <div className="logo-area" style={{ cursor: "pointer" }} onClick={handleBack}>
+            <div className="logo-icon">M</div>
+            <span className="logo-text">Mirum</span>
+          </div>
 
-            <div className="top-right">
-              <button className="icon-button" onClick={handleBack}>
-                ← 전체 프로젝트
-              </button>
-            </div>
+          <div className="top-right">
+            <button className="icon-button" onClick={handleBack}>
+              ← 전체 프로젝트
+            </button>
           </div>
         </header>
 
@@ -532,6 +593,7 @@ function Project() {
             projectId={id}
             members={members}
             myUsername={myUsername}
+            pendingInvites={pendingInvites}
             onClose={() => setIsMemberModalOpen(false)}
             onInvite={(userInput) => handleInviteMember(userInput)}
             onModify={(username, role) => handleChangeMemberAuth(username, role)}
