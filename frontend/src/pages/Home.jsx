@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
+import { useAuth } from "../features/auth/hooks/useAuth";
 import { HiOutlineBell } from "react-icons/hi2";
 import { api } from '../api/client';
 import CreateProjectModal from '../components/CreateProject';
-import ProjectInvitationModal from '../components/ProjectInvitationModal';
+import ProjectInvitationModal from '../features/invitations/components/ProjectInvitationModal';
 import ProfileModal from '../components/ProfileModal';
 
 // 환경 변수로 테스트/API 모드 선택

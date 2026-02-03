@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HiOutlineCog6Tooth, HiOutlineUserPlus } from "react-icons/hi2";
 import { api, client } from "../api/client";
-import { useAuth } from "../context/useAuth.js";
+import { useAuth } from "../features/auth/hooks/useAuth.js";
 import { useLocation } from "react-router-dom";
-import ProjectUpdateModal from "../components/ProjectUpdateModal";
-import ProjectMemberModal from "../components/ProjectMemberModal";
+import ProjectUpdateModal from "../features/projects/components/ProjectUpdateModal.jsx";
+import ProjectMemberModal from "../features/invitations/components/ProjectMemberModal.jsx";
 import "./Project.css";
 
 // 환경 변수로 테스트/API 모드 선택

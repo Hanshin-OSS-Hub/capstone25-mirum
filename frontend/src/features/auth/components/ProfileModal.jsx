@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, client } from '../api/client';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import { HiPencil } from 'react-icons/hi2';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
