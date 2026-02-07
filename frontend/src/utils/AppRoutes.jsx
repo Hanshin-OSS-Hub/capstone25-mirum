@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Landing from '../pages/Landing.jsx'
 import Home from '../pages/Home.jsx'
 import Project from '../pages/Project.jsx'
-import LoginModal from '../components/Login.jsx'
+import LoginModal from '../features/auth/components/Login.jsx'
 
 export default function AppRoutes() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);

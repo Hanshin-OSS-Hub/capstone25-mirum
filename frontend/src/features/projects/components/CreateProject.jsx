@@ -1,6 +1,6 @@
 import {useState} from "react";
-import './modal.css';
-import {api} from '../api/client';
+import '../../auth/components/modal.css';
+import {api} from '../../../api/client';
 
 const USE_Mock = import.meta.env.VITE_USE_MOCK === 'true';
 
