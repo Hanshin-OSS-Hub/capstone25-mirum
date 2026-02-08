@@ -41,7 +41,7 @@ export default function AppRoutes() {
             /* </PrivateRoute>  */
           }
           />
-          <Route path="/project/:id" element={<Project />}/>
+          <Route path="/api/project/:id" element={<Project />}/>
         </Routes>
 
         {/* Modals */}

@@ -30,7 +30,7 @@ function ProjectConfigMenu(props) {
 function Project() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { id } = useParams();                    // /project/:id 에서 id 읽기
+  const { id } = useParams();                    // /api/project/:id 에서 id 읽기
 
   const [isConfigMenuOpen, setIsConfigMenuOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -295,16 +295,15 @@ function Project() {
   //   }
   // })
 
-  const handleGetProjectInvitationsApi = useCallback((id) => {
-    // 만약 이걸로 간다면 프로젝트 ID도 엔드포인트에 필요할 듯?
-    api.get(`invitations/sent`)
+  const handleGetProjectInvitationsApi = useCallback((projectId) => {
+    api.get(`invitations/sent/${projectId}`)
         .then((data) => {
           setPendingInvites(data);
         })
         .catch((error) => {
           alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
         })
-      })
+      }, [])
 
   const handleGetProjectInvitationsTest = (id) => {
     const demodata = [
@@ -509,7 +508,7 @@ function Project() {
   const handleGetProjectMembers = USE_MOCK ? (() => {}) : handleGetProjectMembersAPI;
   const handleChangeMemberAuth = USE_MOCK ? (() => alert("테스트 모드: 멤버 권한 변경")) : handleChangeMemberAuthAPI;
   const handleDeleteMember = USE_MOCK ? handleDeleteMemberTest : handleDeleteMemberAPI;
-  const handleGetProjectInvitations = USE_MOCK ?  (id) => handleGetProjectInvitationsTest(id) : (id) => handleGetProjectInvitationsTest(id);
+  const handleGetProjectInvitations = USE_MOCK ?  (id) => handleGetProjectInvitationsTest(id) : (id) => handleGetProjectInvitationsApi(id);
   // ==================== [초기 데이터 로드] ====================
   // 테스트 모드: location.state에서 데이터 가져오기
   useEffect(() => {

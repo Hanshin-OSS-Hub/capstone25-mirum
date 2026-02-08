@@ -53,7 +53,8 @@ function ProjectMemberModal(props) {
           <div style={ { height: "300px", maxHeight: "300px", overflowY: "auto", marginTop: "16px", display: "flex", flexDirection: "column", gap: "12px" } }>
           {
             Array.isArray(members) && filteredMembers.map(member => (
-              <label key={member.userId}>
+              // memberDTO에 id 값이 없어서 임시로 사용
+              <label key={member.username}>
               <div  style={ { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px", border: "1px solid #e5e7eb", borderRadius: "8px" } }>
                 <div style={ { display: "flex", alignItems: "center", gap: "12px" } }>
                   <div style={ { width: "40px", height: "40px", borderRadius: "50%", background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", color: "#fff" } }>

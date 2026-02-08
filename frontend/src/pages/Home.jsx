@@ -54,7 +54,7 @@ function Home() {
           .catch((error) => {
             alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
           })
-    })
+    }, [])
 
     /**
      * [READ] 프로젝트 목록 조회 API
@@ -264,7 +264,7 @@ function Home() {
     // ==================== [핸들러 선택] ====================
     // 환경변수에 따라 API 또는 테스트 함수 사용
     const handleGetReceivedInvitations = USE_MOCK ? getInvitationsTest : handleGetInvitationsApi;
-    const handleGetSentInvitations = USE_MOCK ? handleGetProjectInvitationsApi2 : handleGetProjectInvitationsApi2;
+    // const handleGetSentInvitations = USE_MOCK ? handleGetProjectInvitationsApi2 : handleGetProjectInvitationsApi2;
     const handleAcceptInvitation = USE_MOCK ? acceptInvitationTest : handleAcceptInvitationApi;
     const handleRejectInvitation = USE_MOCK ? rejectInvitationTest : handleRejectInvitationApi;
 
@@ -278,7 +278,7 @@ function Home() {
             // 실제 API 모드
             handleGetProjectList();
             handleGetReceivedInvitations();
-            handleGetSentInvitations();
+            // handleGetSentInvitations();
         }
     }, []);
 
@@ -428,9 +428,9 @@ function Home() {
                                                     onClick={() => {
                                                         const projectId = p.projectId;
                                                         if (USE_MOCK) {
-                                                            navigate(`/project/${projectId}`, { state: { p } });
+                                                            navigate(`/api/project/${projectId}`, { state: { p } });
                                                         } else {
-                                                            navigate(`/project/${projectId}`);
+                                                            navigate(`/api/project/${projectId}`);
                                                         }
                                                     }}
                                                 >
