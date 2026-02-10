@@ -2,6 +2,7 @@ package backend.service;
 
 import backend.dto.project.MemberRoleDTO;
 import backend.dto.project.ProjectMemberDTO;
+import backend.entity.Project.Project;
 import backend.entity.Project.ProjectMember;
 import backend.entity.Project.ProjectMemberRoleType;
 import backend.repository.ProjectInviteRepository;
@@ -25,9 +26,9 @@ public class ProjectMemberService {
 
     // 소속 맴버 리스트
     public List<ProjectMemberDTO> getMembers(Long projectId) {
-        if (!projectRepository.existsById(projectId)){
-            throw new EntityNotFoundException();
-        }
+        Project p = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
+        if (p.isDeleted()) throw new EntityNotFoundException();
+
         List<ProjectMember> members = projectMemberRepository.findAllByProjectId(projectId);
 
         return members.stream().map(m -> ProjectMemberDTO.builder()
@@ -59,6 +60,15 @@ public class ProjectMemberService {
         if (isNotLeader(requesterName, projectId) && !(username.equals(requesterName))) throw new AccessDeniedException("권한 없음");
         projectMemberRepository.deleteProjectMemberByProjectIdAndUsername(projectId, username);
         projectInviteRepository.deleteByProjectIdAndUserUsername(projectId, username);
+
+        // 인원 수 0명이면 프로젝트 삭제
+        long actualMemberCount = projectMemberRepository.countByProjectId(projectId);
+
+        if (actualMemberCount <= 0) {
+            Project p = projectRepository.findById(projectId)
+                    .orElseThrow(() -> new EntityNotFoundException("Project not found"));
+            p.deleteProject(requesterName);
+        }
     }
 
     // 관리자 권한 확인

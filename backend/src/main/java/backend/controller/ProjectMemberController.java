@@ -2,7 +2,6 @@ package backend.controller;
 
 import backend.dto.project.MemberRoleDTO;
 import backend.dto.project.ProjectMemberDTO;
-import backend.dto.project.ProjectMemberDeleteDTO;
 import backend.global.response.ApiResponse;
 import backend.service.ProjectMemberService;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +42,9 @@ public class ProjectMemberController {
     public ResponseEntity<ApiResponse<Void>> deleteProjectMember(
             @PathVariable Long projectId,
             @AuthenticationPrincipal String username,
-            @RequestBody ProjectMemberDeleteDTO targetUsername
+            @RequestParam String targetName
             ) {
-        projectMemberService.deleteMember(username, projectId, targetUsername.getUsername());
+        projectMemberService.deleteMember(username, projectId, targetName);
         return ResponseEntity.ok()
                 .body(ApiResponse.response(null));
     }

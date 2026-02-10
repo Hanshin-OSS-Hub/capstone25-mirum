@@ -17,6 +17,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +39,7 @@ public class ProjectService {
                 .projectName(projectName)
                 .projectMembers(new ArrayList<>())
                 .description(description)
+                .isDeleted(false)
                 .build();
         Project savedProject = projectRepository.save(project);
 
@@ -54,7 +56,9 @@ public class ProjectService {
     }
 
     //R
-    public ProjectResponseDTO getProjectInfo(Long projectId) {
+    public ProjectResponseDTO getProjectInfo(Long projectId, String username) {
+        if (!projectMemberRepository.existsByProjectIdAndUserUsername(projectId, username)) throw new AccessDeniedException("해당 프로젝트에 접근 권한이 없습니다.");
+
         Project project = projectRepository.findByIdWithMember(projectId).orElseThrow(EntityNotFoundException::new);
         List<ProjectMember> projectMembers = project.getProjectMembers();
 
@@ -70,6 +74,7 @@ public class ProjectService {
 
         //DTO에 값 넣고 반환e
         return ProjectResponseDTO.builder()
+                .projectId(projectId)
                 .creationDate(project.getCreatedDate())
                 .description(project.getDescription())
                 .projectName(project.getProjectName())
@@ -104,12 +109,34 @@ public class ProjectService {
         project.updateProjectInfo(projectUpdateDTO);
     }
 
+    // 복구
+    @Transactional
+    public void restoreProject(Long projectId, String username){
+        Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
+        if (!project.isDeleted()) throw new IllegalArgumentException("삭제된 프로젝트를 선택해 주세요");
+        if (!project.getDeleteUsername().equals(username)) throw new AccessDeniedException("복구 권한이 없습니다");
+        project.restoreProject();
+
+        if (project.getProjectMembers().isEmpty()) {
+            User user = userRepository.findByUsername(username).orElseThrow(EntityNotFoundException::new);
+            ProjectMember projectMember = ProjectMember.builder()
+                    .user(user)
+                    .project(project)
+                    .role(ProjectMemberRoleType.LEADER)
+                    .build();
+            projectMemberRepository.save(projectMember);
+
+            project.getProjectMembers().add(projectMember);
+        }
+    }
+
     //D
     @Transactional
     public void deleteProject(Long projectId, String username){
         if (isNotLeader(username, projectId)) throw new AccessDeniedException("권한 없음");
-
-        projectRepository.deleteById(projectId);
+        Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
+        project.deleteProject(username);
+        //projectRepository.deleteById(projectId);
     }
 
     //권한 검증

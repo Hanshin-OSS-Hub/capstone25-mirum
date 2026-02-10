@@ -31,7 +31,7 @@ export default function Signup({ isOpen, onClose, onSignupSuccess }) {
     }
 
     try {
-      const res = await fetch("http://localhost:8080/user", {
+      const res = await fetch("http://localhost:8080/api/user", {
         // 🔹 회원가입 엔드포인트 주소는 백엔드랑 맞춰서 필요하면 수정
         method: "POST",
         headers: { "Content-Type": "application/json" },

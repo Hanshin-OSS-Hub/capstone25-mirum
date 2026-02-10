@@ -47,6 +47,7 @@ public class ProjectInviteService {
             }
             existingInvite.setStatus(InviteStatus.INVITED);
             existingInvite.setInviterName(inviteRequestDTO.getInviterName());
+            existingInvite.setResponseDate(null);
             savedInvite = existingInvite;
         } else {
             User user = userRepository.findByUsername(invitee).orElseThrow(EntityNotFoundException::new);

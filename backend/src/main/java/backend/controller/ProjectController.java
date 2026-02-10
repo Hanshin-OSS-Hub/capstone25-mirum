@@ -32,8 +32,8 @@ public class ProjectController {
     // 프로젝트 정보
     // 프로젝트 정보 반환
     @GetMapping("/project/{projectId}")
-    public ResponseEntity<ApiResponse<ProjectResponseDTO>> getProject(@PathVariable Long projectId) {
-        return ResponseEntity.ok(ApiResponse.response(projectService.getProjectInfo(projectId)));
+    public ResponseEntity<ApiResponse<ProjectResponseDTO>> getProject(@PathVariable Long projectId, @AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(ApiResponse.response(projectService.getProjectInfo(projectId, username)));
     }
 
     // 프로젝트 정보 수정
@@ -49,6 +49,13 @@ public class ProjectController {
     @DeleteMapping("/project/{projectId}")
     public ResponseEntity<ApiResponse<Void>>  deleteProject(@AuthenticationPrincipal String username, @PathVariable Long projectId) {
         projectService.deleteProject(projectId, username);
+        return ResponseEntity.ok(ApiResponse.response(null));
+    }
+
+    // 프로젝트 복구
+    @PostMapping("/project/restore/{projectId}")
+    public ResponseEntity<ApiResponse<Void>> restoreProject(@PathVariable Long projectId, @AuthenticationPrincipal String username){
+        projectService.restoreProject(projectId, username);
         return ResponseEntity.ok(ApiResponse.response(null));
     }
 

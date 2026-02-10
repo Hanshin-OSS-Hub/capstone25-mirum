@@ -26,6 +26,11 @@ public class Project {
     @CreatedDate
     private LocalDateTime createdDate;
 
+    // 삭제 관련
+    private boolean isDeleted;
+    private LocalDateTime deletedDate;
+    private String deleteUsername;
+
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
     private List<ProjectMember> projectMembers =  new ArrayList<>();
 
@@ -38,5 +43,17 @@ public class Project {
     public void updateProjectInfo(ProjectUpdateDTO projectUpdateDTO){
         this.projectName = projectUpdateDTO.getProjectName();
         this.description = projectUpdateDTO.getDescription();
+    }
+
+    public void deleteProject(String username){
+        this.isDeleted = true;
+        this.deletedDate = LocalDateTime.now();
+        this.deleteUsername = username;
+    }
+
+    public void restoreProject(){
+        this.isDeleted = false;
+        this.deletedDate = null;
+        this.deleteUsername = null;
     }
 }

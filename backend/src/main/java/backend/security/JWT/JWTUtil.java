@@ -4,27 +4,25 @@ package backend.security.JWT;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+@Component
 public class JWTUtil {
 
-    private static final SecretKey secretKey;
-    private static final Long accessTokenExpiresIn;
-    private static final Long refreshTokenExpiresIn;
+    private static SecretKey secretKey;
+    private static final Long accessTokenExpiresIn = 3600L * 1000;
+    private static final Long refreshTokenExpiresIn = 604800L * 1000;
 
-    static  {
-        //이거 바꿔야함
-        String secretKeyString = "letitgoletitgocantholditbackanymoreletitgoletitgoturnawayandslamthedooridontcarewhattheyregoingtosay";
-
-        secretKey = new SecretKeySpec(secretKeyString.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
-
-        accessTokenExpiresIn = 3600L * 1000; // 1시간
-        refreshTokenExpiresIn = 604800L * 1000; // 7일
-    }
+    @Value("${spring.jwt.secret}")
+    public void setSecretKey(String secret) {
+        secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
+    };
 
     // JWT 클레임 username 파싱
     public static String getUsername(String token) {
