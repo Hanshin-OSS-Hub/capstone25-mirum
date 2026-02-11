@@ -1,3 +1,4 @@
+/*
 # S3 Endpoint
 # ECR은 내부적으로 S3를 사용하므로 S3 Endpoint를 생성해야 ECR과 통신 가능
 resource "aws_vpc_endpoint" "s3" {
@@ -71,3 +72,5 @@ resource "aws_vpc_endpoint" "secretsmanager" {
   
   security_group_ids = [aws_security_group.for_endpoint.id]
 }
+
+*/

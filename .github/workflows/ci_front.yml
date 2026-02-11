@@ -35,7 +35,9 @@ jobs:
             ${{ runner.os }}-npm-
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
         working-directory: ./frontend
 
       - name: Build React application
