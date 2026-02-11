@@ -23,7 +23,8 @@ jobs:
 
             - name: Build Frontend
               run: |
-                npm ci
+                rm -rf node_modules package-lock.json
+                npm install
                 npm run build
               working-directory: ./frontend
 
