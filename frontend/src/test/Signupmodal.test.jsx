@@ -82,7 +82,7 @@
 //         fireEvent.click(signUpButton);
 
 //         await waitFor(() => {
-//             expect(global.fetch).toHaveBeenCalledWith("http://localhost:8080/api/user", {
+//             expect(global.fetch).toHaveBeenCalledWith("/api/user", {
 //                 method: "POST",
 //                 headers: { "Content-Type": "application/json" },
 //                 body: JSON.stringify({ username: 'newuser', password: 'password123', email: "mirum@hs.ac.kr", nickname: "미룬이" }),

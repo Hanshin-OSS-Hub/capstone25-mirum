@@ -96,7 +96,7 @@ function Project() {
    * - 네트워크 요청 횟수 감소로 성능 향상
    */
   const handleGetProjectDetailsAPI = useCallback(() => {
-      api.get(`http://localhost:8080/api/project/${id}`)
+      api.get(`/api/project/${id}`)
       .then((data) => {
           setProject(data);
           setError("");
@@ -149,7 +149,7 @@ function Project() {
    */
   const handleUpdateProjectAPI = (data) => {
     // 백엔드 엔드포인트는 /project이고, projectId는 body에 포함되어야 함
-    api.put(`http://localhost:8080/api/project`, {
+    api.put(`/api/project`, {
       ...data,
       projectId: Number(id) // id를 숫자로 변환하여 포함
     })
@@ -190,7 +190,7 @@ function Project() {
    */
   const handleDeleteProjectAPI = () => {
     if (window.confirm("정말로 이 프로젝트를 삭제하시겠습니까?")) {
-      api.delete(`http://localhost:8080/api/project/${id}`)
+      api.delete(`/api/project/${id}`)
       .then(() => {
         alert("프로젝트가 삭제되었습니다.");
         navigate("/dashboard");
@@ -230,7 +230,7 @@ function Project() {
    * - 초대 상태 확인 및 취소 기능 구현 가능
    */
   const handleInviteMemberAPI = (userInput) => {
-    api.post(`http://localhost:8080/api/invitations`, {
+    api.post(`/api/invitations`, {
       "projectId": Number(id),
       "invitedName": userInput
     })
