@@ -3,10 +3,6 @@ import { useAuth } from "../hooks/useAuth";
 import './modal.css';
 import { api } from '../../../api/client';
 
-// 환경 변수로 테스트/API 모드 선택
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-const BASE_URL = import.meta.env.VITE_API_URL;
-
 function Login(props) {
 
     const { login } = useAuth();
@@ -53,7 +49,7 @@ function Login(props) {
      * 서버 응답 예시: { "accessToken": "...", "refreshToken": "..." }
      */
 
-    const handleSubmitAPI = async (event) =>  {
+    const handleSubmit = async (event) =>  {
         event.preventDefault();
         setError("");
 
@@ -62,30 +58,12 @@ function Login(props) {
             return;
         }
 
-        fetch(`${BASE_URL}/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username: userName, password: password }),
-            // credentials: "include",
-            // mode: "cors",
-            // cache: "no-cache",
-            // redirect: "follow",
-            // referrerPolicy: "no-referrer",
-        })
-        .then(async (response) => {
-            if (!response.ok) {
-                throw new Error("로그인에 실패하였습니다.");
-            }
+        try {
+            const tokenData = await api.post('login', {
+                username: userName,
+                password: password 
+            });
 
-            // 백엔드 응답: ApiResponse 형태
-            // { success: true, message: "성공", data: { accessToken, refreshToken } }
-            const result = await response.json();
-            
-            // ApiResponse 구조에서 data 추출
-            const tokenData = result?.data || result;
-            
             if (!tokenData || !tokenData.accessToken || !tokenData.refreshToken) {
                 throw new Error("토큰 정보를 받아오지 못했습니다.");
             }
@@ -100,13 +78,11 @@ function Login(props) {
             try {
                 const userProfile = await api.get("user");
                 // 백엔드 응답: { username, social, nickname, email }
-                nickname = userProfile.nickname || null;
-                email = userProfile.email || null;
+                nickname = userProfile?.nickname || null;
+                email = userProfile?.email || null;
             } catch (profileError) {
                 console.error("사용자 프로필 조회 실패:", profileError);
-                //
-                // 프로필 조회 실패해도 로그인은 유지 (username만 저장된 상태)
-                //
+                // 프로필 조회 실패해도 로그인은 유지
             }
 
             // 3. 모든 정보를 한 번에 login() 함수로 저장
@@ -120,44 +96,11 @@ function Login(props) {
 
             if (props.onLoginSuccess)
                 props.onLoginSuccess();
-        })
-        .catch((error) => {
+
+        } catch (error) {
             alert(error.message || "알 수 없는 오류가 발생했습니다.");
-        });
-    }
-
-    const handleSubmitTest = (event) =>  {
-        event.preventDefault();
-        setError("");
-
-        if (!userName || !password) {
-            setError("아이디와 비밀번호를 입력해주세요.");
-            return;
         }
-
-        // --- 데모용 코드 ---
-        const fakeUserData = {
-            // 토큰 발급
-            accessToken: "demo-access-token-123",
-            refreshToken: "demo-refresh-token-456",
-            // 사용자 정보
-            // id: 1,  // 테스트용 고유 ID
-            role: "user",
-            username: userName,
-            nickname: "미룸 데모 유저",
-            email: "demo@example.com",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        };
-        
-        // ✅ login() 함수 호출 → localStorage 저장 + context 업데이트
-        login(fakeUserData);
-        
-        if (props.onLoginSuccess)
-            props.onLoginSuccess();
     }
-
-    const handleSubmit = USE_MOCK ? handleSubmitTest : handleSubmitAPI;
 
     return (
         <>

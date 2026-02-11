@@ -428,9 +428,9 @@ function Home() {
                                                     onClick={() => {
                                                         const projectId = p.projectId;
                                                         if (USE_MOCK) {
-                                                            navigate(`/api/project/${projectId}`, { state: { p } });
+                                                            navigate(`/project/${projectId}`, { state: { p } });
                                                         } else {
-                                                            navigate(`/api/project/${projectId}`);
+                                                            navigate(`/project/${projectId}`);
                                                         }
                                                     }}
                                                 >

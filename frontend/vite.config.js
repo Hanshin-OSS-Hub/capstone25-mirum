@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     historyApiFallback: true,
     proxy: {
-      '^/(user|login|auth|project|projects|posts|member|invitations)': {
+      '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
