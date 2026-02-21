@@ -19,7 +19,7 @@ function Home() {
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const [receivedInvitations, setReceivedInvitations] = useState([]);
+    // const [receivedInvitations, setReceivedInvitations] = useState([]);
     const [sentInvitations, setSentInvitations] = useState([]);
     const [projects, setProjects] = useState(() => {
         if (USE_MOCK) {
@@ -45,16 +45,6 @@ function Home() {
     //         navigate(location.pathname, { replace: true, state: null });
     //     }
     // }, [location, navigate]);
-
-    const handleGetProjectInvitationsApi2 = useCallback(() => {
-      api.get(`invitations/sent`)
-          .then((data) => {
-            setSentInvitations(data);
-          })
-          .catch((error) => {
-            alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
-          })
-    }, [])
 
     /**
      * [READ] 프로젝트 목록 조회 API
@@ -86,201 +76,110 @@ function Home() {
             alert(error.message || '프로젝트 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
         });
     };
-    
-    
-    /**
-     * [READ] 초대 목록 조회 API
-     * 
-     * 현재 상태:
-     * @returns {Array} 서버가 기본 초대 정보만 반환
-     * 서버 응답 예시:
-     * [
-     *   {
-     *     "projectName": "프로젝트 이름",
-     *     "inviterName": "초대한 사용자명",
-     *     "inviteeName": "초대받은 사용자명",
-     *     "status": "INVITED" // INVITED, ACCEPTED, DECLINED
-     *   },
-     *   ...
-     * ]
-     * 문제점: 초대를 식별하기 위해 projectName + inviterName 조합 사용 필요, API 호출 시 ID가 없음
-     * 
-     * 개선된 상태 (권장):
-     * @returns {Array} 서버가 고유 ID와 projectId 포함하여 반환
-     * 서버 응답 예시:
-     * [
-     *   {
-     *     "id": "inv-uuid-1234",                    // 초대 고유 ID (UUID)
-     *     "projectName": "프로젝트 이름",
-     *     "inviterName": "초대한 사용자명",
-     *     "inviteeName": "초대받은 사용자명",
-     *     "status": "INVITED",                      // INVITED, ACCEPTED, DECLINED
-     *     "createdAt": "2024-01-15T10:30:00Z"       // 초대 생성 시각
-     *     "projectId": "proj-uuid-5678",            // (선택사항) 프로젝트 고유 ID (UUID) 특정 프로젝트의 초대만 필터링하고 싶을 때 / 초대 수락 시 곧바로 그 프로젝트로 이동하고 싶을 때
-     *   },
-     *   ...
-     * ]
-     * 장점: 
-     * - 초대를 명확하게 식별 가능 (단순 id 사용)
-     * - API 호출 시 POST /invitations/{id}/accept 형태로 깔끔함
-     * - projectId로 어느 프로젝트의 초대인지 명확함
-     * - 프론트엔드에서 composite key 불필요
-     */
-
-    const handleGetInvitationsApi = async () => {
-        api.get('invitations/received')
-        .then(response => {
-            setReceivedInvitations(response);
-        })
-        .catch(error => {
-            alert(error.message || '초대 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
-        });
-    };
-
-
-
-
-    /**
-     * [CREATE] 초대 수락 API
-     * 
-     * @param {string} invitationId - 수락할 초대의 ID
-     * @returns {Promise<void>} POST /invitations/{id}/accept API 호출, 성공 시 invitations 상태 업데이트 및 프로젝트 목록 갱신
-     * @description 초대를 수락하면 해당 초대는 제거되고 프로젝트 목록에 추가됨
-     */
-    const handleAcceptInvitationApi = async (invitationId) => {
-        return api.post(`/invitations/${invitationId}/accept`)
-        .then(() => {
-            setReceivedInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
-            alert('프로젝트 초대를 수락했습니다.');
-            // 초대 수락 후 프로젝트 목록 갱신
-            handleGetProjectList();
-        })
-        .catch(error => {
-            alert(error.message || '초대 수락에 실패했습니다. 다시 시도해주세요.');
-        });
-    };
-
-    /**
-     * [DELETE] 초대 거절 API
-     * 
-     * @param {string} invitationId - 거절할 초대의 ID
-     * @returns {Promise<void>} POST /invitations/{id}/reject API 호출, 성공 시 invitations 상태에서 제거
-     * @description 초대를 거절하면 해당 초대는 목록에서 제거됨
-     */
-    const handleRejectInvitationApi = async (invitationId) => {
-        return api.put(`/invitations/${invitationId}/decline`)
-        .then(() => {
-            setReceivedInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
-            alert('프로젝트 초대를 거절했습니다.');
-        })
-        .catch(error => {
-            alert(error.message || '초대 거절에 실패했습니다. 다시 시도해주세요.');
-        });
-    };
 
     // ==================== [테스트용 함수들] ====================
 
-    // [READ] 초대 목록 조회 (테스트용)
-    // 전체 초대 이력을 저장하되, 렌더링 시에는 INVITED 상태만 표시
-    const getInvitationsTest = () => {
-        const mockInvitations = [
-            {
-                "inviteId": 101,
-                "projectName": "프로젝트 A",
-                "inviterName": "inviter_user",
-                "inviteeName": "me",
-                "status": "INVITED"
-            },
-            {
-                "inviteId": 102,
-                "projectName": "프로젝트 B",
-                "inviterName": "another_user",
-                "inviteeName": "me",
-                "status": "INVITED"
-            },
-            {
-                "inviteId": 103,
-                "projectName": "프로젝트 C",
-                "inviterName": "team_lead",
-                "inviteeName": "me",
-                "status": "INVITED"
-            }
-        ];
-        setReceivedInvitations(mockInvitations);
-    };
+    // // [READ] 초대 목록 조회 (테스트용)
+    // // 전체 초대 이력을 저장하되, 렌더링 시에는 INVITED 상태만 표시
+    // const getInvitationsTest = () => {
+    //     const mockInvitations = [
+    //         {
+    //             "inviteId": 101,
+    //             "projectName": "프로젝트 A",
+    //             "inviterName": "inviter_user",
+    //             "invitedName": "me",
+    //             "status": "INVITED"
+    //         },
+    //         {
+    //             "inviteId": 102,
+    //             "projectName": "프로젝트 B",
+    //             "inviterName": "another_user",
+    //             "invitedName": "me",
+    //             "status": "INVITED"
+    //         },
+    //         {
+    //             "inviteId": 103,
+    //             "projectName": "프로젝트 C",
+    //             "inviterName": "team_lead",
+    //             "invitedName": "me",
+    //             "status": "INVITED"
+    //         }
+    //     ];
+    //     setReceivedInvitations(mockInvitations);
+    // };
 
-    // [CREATE] 초대 수락 (테스트용)
-    // status를 INVITED → ACCEPTED로 변경 (목록에서 자동으로 필터링됨)
-    const acceptInvitationTest = (invitationId) => {
-        const invitation = receivedInvitations.find(inv => inv.inviteId === invitationId);
-        if (!invitation) return;
+    // // [CREATE] 초대 수락 (테스트용)
+    // // status를 INVITED → ACCEPTED로 변경 (목록에서 자동으로 필터링됨)
+    // const acceptInvitationTest = (invitationId) => {
+    //     const invitation = receivedInvitations.find(inv => inv.inviteId === invitationId);
+    //     if (!invitation) return;
+    //
+    //     setReceivedInvitations(prev =>
+    //         prev.map(inv =>
+    //             inv.inviteId === invitationId
+    //                 ? { ...inv, status: "ACCEPTED" }
+    //                 : inv
+    //         )
+    //     );
+    //
+    //     const newProject = {
+    //         id: Math.floor(Math.random() * 1000) + 1, // 임의의 프로젝트 ID 생성
+    //         projectName: invitation.projectName,
+    //         description: "초대받아 참가하게 된 프로젝트입니다.",
+    //         progress: 0,
+    //         // 생성한 유저를 리더로 추가 (임의로 userId 1 사용)
+    //         members: [
+    //             { userId: 1, username: "qwer", role: "LEADER", name: "미룸 데모 유저", profileImg: null, email: "demo@mirum.com" }
+    //         ],
+    //         created_at: new Date().toISOString(),
+    //         updated_at: new Date().toISOString(),
+    //     };
+    //
+    //     const savedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+    //     const updatedProjects = [...savedProjects, newProject];
+    //     localStorage.setItem("projects", JSON.stringify(updatedProjects));
+    //     setProjects(updatedProjects);
+    //     alert(`(테스트 모드) "${invitation.projectName}" 프로젝트 초대를 수락했습니다.`);
+    //     alert('(테스트 모드) 프로젝트 목록이 갱신되었습니다.');
+    // };
 
-        setReceivedInvitations(prev =>
-            prev.map(inv => 
-                inv.inviteId === invitationId
-                    ? { ...inv, status: "ACCEPTED" }
-                    : inv
-            )
-        );
-
-        const newProject = {
-            id: Math.floor(Math.random() * 1000) + 1, // 임의의 프로젝트 ID 생성
-            projectName: invitation.projectName,
-            description: "초대받아 참가하게 된 프로젝트입니다.",
-            progress: 0,
-            // 생성한 유저를 리더로 추가 (임의로 userId 1 사용)
-            members: [
-                { userId: 1, username: "qwer", role: "LEADER", name: "미룸 데모 유저", profileImg: null, email: "demo@mirum.com" }
-            ], 
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-        };
-
-        const savedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const updatedProjects = [...savedProjects, newProject];
-        localStorage.setItem("projects", JSON.stringify(updatedProjects));
-        setProjects(updatedProjects);
-        alert(`(테스트 모드) "${invitation.projectName}" 프로젝트 초대를 수락했습니다.`);
-        alert('(테스트 모드) 프로젝트 목록이 갱신되었습니다.');
-    };
-
-    // [DELETE] 초대 거절 (테스트용)
-    // status를 INVITED → DECLINED로 변경 (목록에서 자동으로 필터링됨)
-    const rejectInvitationTest = (invitationId) => {
-        const invitation = receivedInvitations.find(inv => inv.inviteId === invitationId);
-
-        setReceivedInvitations(prev =>
-            prev.map(inv => 
-                inv.inviteId === invitationId
-                    ? { ...inv, status: "DECLINED" }
-                    : inv
-            )
-        );
-        if(invitation) {
-            alert(`(테스트 모드) "${invitation.projectName}" 프로젝트 초대를 거절했습니다.`);
-        }
-    };
+    // // [DELETE] 초대 거절 (테스트용)
+    // // status를 INVITED → DECLINED로 변경 (목록에서 자동으로 필터링됨)
+    // const rejectInvitationTest = (invitationId) => {
+    //     const invitation = receivedInvitations.find(inv => inv.inviteId === invitationId);
+    //
+    //     setReceivedInvitations(prev =>
+    //         prev.map(inv =>
+    //             inv.inviteId === invitationId
+    //                 ? { ...inv, status: "DECLINED" }
+    //                 : inv
+    //         )
+    //     );
+    //     if(invitation) {
+    //         alert(`(테스트 모드) "${invitation.projectName}" 프로젝트 초대를 거절했습니다.`);
+    //     }
+    // };
 
     // ==================== [핸들러 선택] ====================
     // 환경변수에 따라 API 또는 테스트 함수 사용
-    const handleGetReceivedInvitations = USE_MOCK ? getInvitationsTest : handleGetInvitationsApi;
+    // const handleGetReceivedInvitations = USE_MOCK ? getInvitationsTest : handleGetInvitationsApi;
     // const handleGetSentInvitations = USE_MOCK ? handleGetProjectInvitationsApi2 : handleGetProjectInvitationsApi2;
-    const handleAcceptInvitation = USE_MOCK ? acceptInvitationTest : handleAcceptInvitationApi;
-    const handleRejectInvitation = USE_MOCK ? rejectInvitationTest : handleRejectInvitationApi;
+    // const handleAcceptInvitation = USE_MOCK ? acceptInvitationTest : handleAcceptInvitationApi;
+    // const handleRejectInvitation = USE_MOCK ? rejectInvitationTest : handleRejectInvitationApi;
 
 
-    useEffect(() => {
-        if (USE_MOCK) {
-            // 테스트 모드: 모의 초대 데이터 로드
-            localStorage.clear();
-            getInvitationsTest();
-        } else {
-            // 실제 API 모드
-            handleGetProjectList();
-            handleGetReceivedInvitations();
-            // handleGetSentInvitations();
-        }
-    }, []);
+    // useEffect(() => {
+    //     if (USE_MOCK) {
+    //         // 테스트 모드: 모의 초대 데이터 로드
+    //         localStorage.clear();
+    //         getInvitationsTest();
+    //     } else {
+    //         // 실제 API 모드
+    //         handleGetProjectList();
+    //         handleGetReceivedInvitations();
+    //         // handleGetSentInvitations();
+    //     }
+    // }, []);
 
     // 로그인 상태면 대시보드로 리다이렉트
     useEffect(() => {
@@ -332,11 +231,11 @@ function Home() {
 
                     {isInvitationModalOpen && (
                         <ProjectInvitationModal 
-                            receivedInvitations={receivedInvitations}
-                            sentInvitations={sentInvitations}
+                            // receivedInvitations={receivedInvitations}
+                            // sentInvitations={sentInvitations}
                             onClose={() => setIsInvitationModalOpen(false)}
-                            onAccept={handleAcceptInvitation}
-                            onReject={handleRejectInvitation}
+                            // onAccept={handleAcceptInvitation}
+                            // onReject={handleRejectInvitation}
                         />
                     )}
 
