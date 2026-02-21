@@ -59,10 +59,20 @@ function Login(props) {
         }
 
         try {
-            const tokenData = await api.post('login', {
-                username: userName,
-                password: password 
+            const response = await fetch(`/api/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: userName,
+                    password: password
+                })
             });
+
+            if (!response.ok) { // 2. 에러 체크 (필수)
+                throw new Error("로그인 실패");
+            }
+
+            const tokenData = (await response.json()).data;
 
             if (!tokenData || !tokenData.accessToken || !tokenData.refreshToken) {
                 throw new Error("토큰 정보를 받아오지 못했습니다.");
