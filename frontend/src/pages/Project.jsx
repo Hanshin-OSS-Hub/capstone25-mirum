@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HiOutlineCog6Tooth, HiOutlineUserPlus } from "react-icons/hi2";
-import { api, client } from "../api/client";
+import { api } from "../api/client";
 import { useAuth } from "../features/auth/hooks/useAuth.js";
+import { useGetMemberList } from "../features/members/api/useGetMemberList.js";
+import { useGetInvitees } from "../features/invitations/api/useGetInvitees.js";
+import { useInviteMember } from "../features/members/api/useInviteMember.js";
 import { useLocation } from "react-router-dom";
 import ProjectUpdateModal from "../features/projects/components/ProjectUpdateModal.jsx";
-import ProjectMemberModal from "../features/invitations/components/ProjectMemberModal.jsx";
+import ProjectMemberModal from "../features/members/components/MemberManagementModal.jsx";
 import "./Project.css";
 
 // 환경 변수로 테스트/API 모드 선택
@@ -30,21 +33,32 @@ function ProjectConfigMenu(props) {
 function Project() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { id } = useParams();                    // /api/project/:id 에서 id 읽기
+  const { id } = useParams(); // /api/project/:id 에서 id 읽기
 
   const [isConfigMenuOpen, setIsConfigMenuOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
-  // const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [projectError, setProjectError] = useState(""); // 프로젝트 관련 에러 상태로 이름 변경
 
-  const [pendingInvites, setPendingInvites] = useState([]);
-  const [members, setMembers] = useState([]);
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
 
   const location = useLocation();
   const myUsername = user?.username || "";
+
+  // useGetMemberList 훅 호출 및 데이터 구조 분해 (projectId와 myUsername 전달)
+  // TanStack Query는 컴포넌트가 마운트될 때 자동으로 실행됩니다.
+  // useEffect에서 별도로 호출할 필요가 없습니다.
+
+  // [Hooks]
+  // 멤버 목록 조회 (기존 members State 대체)
+  // members = [] 기본값을 주어 데이터가 로딩 중일 때도 배열 메서드(.find, .map)가 에러나지 않게 방어
+  const { data: members = [], isLoading: isMembersLoading, error: membersError } = useGetMemberList(id, myUsername);
+  // 초대 목록 조회 (기존 pendingInvites State 대체)
+  const { data: pendingInvites = [], isLoading: isPendingInvitesLoading, error: pendingInvitesError } = useGetInvitees(id);
+  // 초대 발송 (기존 handleInviteMemberAPI 함수 대체)
+  const { mutate: inviteMember } = useInviteMember();
+
   const myMember = members.find(m => m.username === myUsername);
   const isLeader = myMember?.role?.toUpperCase() === "LEADER";
 
@@ -98,8 +112,8 @@ function Project() {
   const handleGetProjectDetailsAPI = useCallback(() => {
       api.get(`project/${id}`)
       .then((data) => {
-          setProject(data);
-          setError("");
+          setProject(data); // 프로젝트 정보 설정
+          setProjectError(""); // 프로젝트 에러 초기화
       })
       .catch((error) => {
         setProject(null);
@@ -152,7 +166,7 @@ function Project() {
     api.put(`project`, {
       ...data,
       projectId: Number(id) // id를 숫자로 변환하여 포함
-    })
+    }) // projectId를 Number로 변환하여 전달
     .then(() => {
         alert("프로젝트 정보를 업데이트했습니다.");
         setIsUpdateModalOpen(false);
@@ -201,87 +215,24 @@ function Project() {
     }     
   };
 
-  /**
-   * [CREATE] 멤버 초대(추가) API
-   *
-   * 현재 상태:
-   * @param {string} userInput - 초대할 사용자의 username 또는 email
-   * @returns {void} 서버가 초대 성공 시 빈 응답 또는 성공 메시지 반환
-   * 서버 응답 예시:
-   * - 201 Created (빈 응답)
-   * - 또는 { "success": true, "message": "초대가 전송되었습니다." }
-   * 문제점: 초대된 멤버 정보를 받을 수 없어 즉시 UI 업데이트 불가, 초대 ID 없어 추적 어려움
-   *
-   * 개선된 상태 (권장):
-   * @param {string} userInput - 초대할 사용자의 username 또는 email
-   * @returns {Object} 서버가 생성된 초대 정보를 반환
-   * 서버 응답 예시:
-   * {
-   *   "invitationId": "inv-uuid-1234",     // 초대 고유 ID (UUID)
-   *   "projectId": "proj-uuid-5678",        // 프로젝트 고유 ID
-   *   "inviterUsername": "johndoe",        // 초대한 사용자명
-   *   "inviteeUsername": "janedoe",         // 초대받은 사용자명
-   *   "status": "INVITED",                  // 초대 상태
-   *   "createdAt": "2024-01-15T10:30:00Z"  // 초대 생성 시각
-   * }
-   * 장점:
-   * - 초대 정보를 받아 즉시 UI에 반영 가능
-   * - 초대 ID로 추적 및 관리 용이
-   * - 초대 상태 확인 및 취소 기능 구현 가능
-   */
-  const handleInviteMemberAPI = (userInput) => {
-    api.post(`invitations`, {
-      "projectId": Number(id),
-      "invitedName": userInput
-    })
-    .then(() => {
-      alert(`${userInput}님을 초대했습니다.`);
-      handleGetProjectMembers(); // 멤버 정보 갱신
-    })
-    .catch((error) => {
-      alert(error.message || "초대에 실패했습니다.");
-    });
-  };
+  // const handleInviteMemberAPI = (userInput) => {
+  //   api.post(`invitations`, {
+  //     "projectId": Number(id),
+  //     "invitedName": userInput
+  //   })
+  //       .then(() => {
+  //         alert(`${userInput}님을 초대했습니다.`);
+  //         // handleGetProjectMembers(); // Tanstack Query가 자동으로 갱신하므로 필요 없음
+  //       })
+  //       .catch((error) => {
+  //         alert(error.message || "초대에 실패했습니다.");
+  //         console.log(error);
+  //       });
+  // };
 
   const handleInviteMemberTest = (userInput) => {
     alert(`테스트: ${userInput}님을 초대했습니다.`);
   }
-
-  /**
-   * [READ] 프로젝트 멤버 목록 조회 API
-   *
-   * 현재 상태:
-   * @returns {Array} 서버가 기본 멤버 정보만 반환
-   * 서버 응답 예시:
-   * [
-   *   {
-   *     "nickname": "<string>",           // 닉네임
-   *     "role": "<string>",               // "LEADER" 또는 "MEMBER"
-   *   },
-   *   ...
-   * ]
-   * 문제점: 일부 필드가 누락될 경우 프론트엔드에서 추가 가공/조인 필요, username만으로는 식별/표시가 제한적임
-   *
-   * 개선된 상태 (권장):
-   * @returns {Array} 서버가 모든 멤버 관련 정보를 포함하여 반환
-   * 서버 응답 예시:
-   * [
-   *   {
-   *     "userId": "user-uuid-1234",       // 멤버 고유 ID (UUID)
-   *     "username": "johndoe",            // 유일한 사용자명
-   *     "name": "홍길동",                  // 실명 또는 닉네임
-   *     "profileImg": "https://...",      // 프로필 이미지 URL
-   *     "role": "LEADER",                 // "LEADER", "MEMBER" 등
-   *     "email": "john@example.com"       // (선택) 이메일
-   *   },
-   *   ...
-   * ]
-   * 장점:
-   * - 프론트엔드에서 members.map(...)만으로 바로 렌더링 가능
-   * - username, name, profileImg 등 모든 정보가 있어 추가 가공 불필요
-   * - 멤버 식별 및 표시가 명확함
-   */
-
 
       // // [READ] 멤버 정보 요청 (테스트용)
   // const membersWithUserInfo = members.map(member => {
@@ -295,166 +246,97 @@ function Project() {
   //   }
   // })
 
-  const handleGetProjectInvitationsApi = useCallback((projectId) => {
-    api.get(`invitations/sent/${projectId}`)
-        .then((data) => {
-          setPendingInvites(data);
-        })
-        .catch((error) => {
-          alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
-        })
-      }, [])
+  // const handleGetProjectInvitationsApi = useCallback((projectId) => {
+  //   api.get(`invitations/sent/${projectId}`)
+  //       .then((data) => {
+  //         setPendingInvites(data);
+  //       })
+  //       .catch((error) => {
+  //         alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
+  //       })
+  // }, [])
 
-  const handleGetProjectInvitationsTest = (id) => {
-    const demodata = [
-        {
-          inviteId: "inv-uuid-1001",
-          projectId: id,
-          inviterName: "leader1",
-          inviteeName: "alice",
-          status: "INVITED",
-        },
-        {
-          inviteId: "inv-uuid-1002",
-          projectId: id,
-          inviterName: "leader1",
-          inviteeName: "bob",
-          status: "INVITED",
-        },
-        {
-          inviteId: "inv-uuid-1003",
-          projectId: id,
-          inviterName: "leader1",
-          inviteeName: "carol",
-          status: "ACCEPTED",
-        },
-        {
-          inviteId: "inv-uuid-1004",
-          projectId: id,
-          inviterName: "leader1",
-          inviteeName: "dave",
-          status: "DECLINED",
-        },
-        {
-          inviteId: "inv-uuid-1005",
-          projectId: id,
-          inviterName: "leader2",
-          inviteeName: "eve",
-          status: "INVITED",
-        },
-      ];
-
-    setPendingInvites(demodata);
-  }
-
-  // [READ] 멤버 정보 api 요청
-  const handleGetProjectMembersAPI = useCallback(() => {
-    api.get(`member/${id}`)
-    .then((data) => {
-        setMembers(data);
-    })
-    .catch((error) => {
-        alert(error.message || "멤버 정보를 불러오는데 실패했습니다.");
-    });
-  }, [id]);
+  // const handleGetProjectInvitationsTest = (id) => {
+  //   const demodata = [
+  //       {
+  //         inviteId: "inv-uuid-1001",
+  //         projectId: id,
+  //         inviterName: "leader1",
+  //         inviteeName: "alice",
+  //         status: "INVITED",
+  //       },
+  //       {
+  //         inviteId: "inv-uuid-1002",
+  //         projectId: id,
+  //         inviterName: "leader1",
+  //         inviteeName: "bob",
+  //         status: "INVITED",
+  //       },
+  //       {
+  //         inviteId: "inv-uuid-1003",
+  //         projectId: id,
+  //         inviterName: "leader1",
+  //         inviteeName: "carol",
+  //         status: "ACCEPTED",
+  //       },
+  //       {
+  //         inviteId: "inv-uuid-1004",
+  //         projectId: id,
+  //         inviterName: "leader1",
+  //         inviteeName: "dave",
+  //         status: "DECLINED",
+  //       },
+  //       {
+  //         inviteId: "inv-uuid-1005",
+  //         projectId: id,
+  //         inviterName: "leader2",
+  //         inviteeName: "eve",
+  //         status: "INVITED",
+  //       },
+  //     ];
+  //
+  //   setPendingInvites(demodata);
+  // }
 
   //사용자가 leader인 경우에만 멤버 권한 수정/탈퇴 가능
 
-  /**
-   * [UPDATE] 멤버 권한 수정 API
-   *
-   * 현재 상태:
-   * @param {string} targetUsername - 권한을 변경할 멤버의 username
-   * @param {string} role - 변경할 권한 ("LEADER" 또는 "MEMBER")
-   * @returns {void} 서버가 권한 변경 성공 시 빈 응답 또는 성공 메시지 반환
-   * 서버 응답 예시:
-   * - 200 OK (빈 응답)
-   * - 또는 { "success": true, "message": "멤버 권한을 변경했습니다." }
-   * 문제점: 변경된 멤버 정보를 받을 수 없어 즉시 UI 업데이트를 위해 별도 조회 API 호출 필요
-   *
-   * 개선된 상태 (권장):
-   * @param {string} targetUsername - 권한을 변경할 멤버의 username
-   * @param {string} role - 변경할 권한 ("LEADER" 또는 "MEMBER")
-   * @returns {Object} 서버가 변경된 멤버 정보를 반환
-   * 서버 응답 예시:
-   * {
-   *   "username": "janedoe",               // 멤버 사용자명
-   *   "role": "LEADER",                    // 변경된 권한
-   *   "updatedAt": "2024-01-15T10:30:00Z" // 변경 시각
-   * }
-   * 장점:
-   * - 변경된 멤버 정보를 받아 즉시 UI 업데이트 가능
-   * - 추가 조회 API 호출 불필요로 성능 향상
-   * - 변경 시각 기록으로 감사 추적 가능
-   */
-  const handleChangeMemberAuthAPI = (targetUsername, role) => {
-    api.put(`member/${id}/role`, {
-      "username": targetUsername,
-      "role": role
-    })
-    .then(() => {
-      alert("멤버 권한을 변경했습니다.");
-      handleGetProjectMembers(); // 멤버 정보 갱신
-    })
-    .catch((error) => {
-      console.error('멤버 권한 변경 실패:', error);
-      alert(error.message || "멤버 권한 변경에 실패했습니다.");
-    });
-  }
 
-  /**
-   * [DELETE] 멤버 탈퇴/방출 API
-   *
-   * @param member
-   *
-   * 현재 상태:
-   * @returns {void} 서버가 탈퇴/방출 성공 시 빈 응답 또는 성공 메시지 반환
-   * 서버 응답 예시:
-   * - 200 OK (빈 응답)
-   * - 또는 { "success": true, "message": "멤버를 탈퇴/방출했습니다." }
-   * 문제점: 탈퇴된 멤버 정보를 받을 수 없어 즉시 UI 업데이트를 위해 별도 조회 API 호출 필요
-   *
-   * 개선된 상태 (권장):
-   * @returns {Object} 서버가 탈퇴/방출된 멤버 정보를 반환
-   * 서버 응답 예시:
-   * {
-   *   "username": "janedoe",               // 탈퇴/방출된 멤버 사용자명
-   *   "projectId": "proj-uuid-5678",       // 프로젝트 고유 ID
-   *   "deletedAt": "2024-01-15T10:30:00Z", // 탈퇴/방출 시각
-   *   "reason": "MEMBER_LEAVE"             // 탈퇴 사유 (MEMBER_LEAVE, LEADER_REMOVE 등)
-   * }
-   * 장점:
-   * - 탈퇴/방출된 멤버 정보를 받아 즉시 UI 업데이트 가능
-   * - 추가 조회 API 호출 불필요로 성능 향상
-   * - 탈퇴 시각 및 사유 기록으로 감사 추적 가능
-   * - 자신이 탈퇴한 경우 프로젝트 페이지에서 자동 리디렉션 처리 용이
-   */
-  const handleDeleteMemberAPI = (member) => {
-    let deleteConfirmation = false;
-    member.username === myUsername
-      ? (window.confirm("정말로 탈퇴하시겠습니까?") ? deleteConfirmation = true : null)
-      : (
-        window.confirm(`정말로 ${member.nickname} 님을 방출하시겠습니까?`) ? deleteConfirmation = true : null
-      );
+  // const handleChangeMemberAuthAPI = (targetUsername, role) => {
+  //   api.put(`member/${id}/role`, {
+  //     "username": targetUsername,
+  //     "role": role
+  //   })
+  //   .then(() => {
+  //     alert("멤버 권한을 변경했습니다.");
+  //     handleGetProjectMembers(); // 멤버 정보 갱신
+  //   })
+  //   .catch((error) => {
+  //     console.error('멤버 권한 변경 실패:', error);
+  //     alert(error.message || "멤버 권한 변경에 실패했습니다.");
+  //   });
+  // }
 
-    if (deleteConfirmation) {
-      client(`member/${id}?targetName=${member.username}`, {
-        method: "DELETE"
-      })
-      .then(() => {
-        alert("멤버를 탈퇴/방출했습니다.");
-        handleGetProjectMembers(); // 멤버 정보 갱신
-        
-        // 자신이 탈퇴한 경우 대시보드로 이동
-        if (member.username === myUsername) {
-          navigate("/dashboard");
-        }
-      })
-      .catch((error) => {
-        alert(error.message || "멤버 탈퇴/방출에 실패했습니다.");
-      });
-    }
-  }
+
+  // const handleDeleteMemberAPI = (member) => {
+  //   let deleteConfirmation = false;
+  //   member.username === myUsername
+  //     ? (window.confirm("정말로 탈퇴하시겠습니까?") ? deleteConfirmation = true : null)
+  //     : (
+  //       window.confirm(`정말로 ${member.nickname} 님을 방출하시겠습니까?`) ? deleteConfirmation = true : null
+  //     );
+  //
+  //   if (deleteConfirmation) {
+  //     deleteMember({
+  //       projectId: id,
+  //       targetName: member.username
+  //     });
+  //
+  //     // 자신이 탈퇴한 경우 대시보드로 이동
+  //     if (member.username === myUsername) {
+  //       navigate("/dashboard");
+  //     }
+  //   }
+  // }
 
   const handleDeleteMemberTest = (username) => {
     alert(`테스트 모드: ${username} 제거`);
@@ -504,25 +386,22 @@ function Project() {
   // 환경변수에 따라 API 또는 테스트 함수 사용
   const handleUpdateProject = USE_MOCK ? updateProjectDetailsInfoTest : handleUpdateProjectAPI;
   const handleDeleteProject = USE_MOCK ? deleteProjectTest : handleDeleteProjectAPI;
-  const handleInviteMember = USE_MOCK ? handleInviteMemberTest : handleInviteMemberAPI;
-  const handleGetProjectMembers = USE_MOCK ? (() => {}) : handleGetProjectMembersAPI;
-  const handleChangeMemberAuth = USE_MOCK ? (() => alert("테스트 모드: 멤버 권한 변경")) : handleChangeMemberAuthAPI;
-  const handleDeleteMember = USE_MOCK ? handleDeleteMemberTest : handleDeleteMemberAPI;
-  const handleGetProjectInvitations = USE_MOCK ?  (id) => handleGetProjectInvitationsTest(id) : (id) => handleGetProjectInvitationsApi(id);
+  // const handleInviteMember = USE_MOCK ? handleInviteMemberTest : handleInviteMemberAPI;
+  // const handleChangeMemberAuth = USE_MOCK ? (() => alert("테스트 모드: 멤버 권한 변경")) : handleChangeMemberAuthAPI;
+  // const handleDeleteMember = USE_MOCK ? handleDeleteMemberTest : handleDeleteMemberAPI;
+  // const handleGetProjectInvitations = USE_MOCK ?  (id) => handleGetProjectInvitationsTest(id) : (id) => handleGetProjectInvitationsApi(id); // Tanstack Query로 대체
   // ==================== [초기 데이터 로드] ====================
   // 테스트 모드: location.state에서 데이터 가져오기
   useEffect(() => {
     // alert(`현재 모드: ${USE_MOCK ? "테스트용(Mock)" : "API"}`);
     if (USE_MOCK) {
       setProject(location.state?.project);
-      setMembers(location.state?.project.members || []);
+      // Mock 모드일 때 members 처리는 별도 로직이 필요할 수 있음 (현재는 API 모드 집중)
     } else {
       // API 모드: 서버에서 데이터 가져오기
-      handleGetProjectDetailsAPI();
-      handleGetProjectMembersAPI();
-      if (id) {
-        handleGetProjectInvitations(id);
-      }
+      handleGetProjectDetailsAPI(); 
+      // handleGetProjectMembersAPI(); <-- 삭제! Tanstack Query가 알아서 함
+      // handleGetProjectInvitations(id); <-- 삭제! Tanstack Query가 알아서 함
     }
   }, []); // handleGetProjectDetailsAPI, handleGetProjectMembersAPI 제거 (무한 루프 방지)
   
@@ -572,7 +451,7 @@ function Project() {
           <ProjectUpdateModal
             id={id}
             project={project}
-            error={error}
+            error={projectError} // 프로젝트 관련 에러 전달
             onClose={() => setIsUpdateModalOpen(false)}
             onUpdate={(data) => handleUpdateProject(data)}
           />
@@ -580,13 +459,13 @@ function Project() {
         {isMemberModalOpen && project && (
           <ProjectMemberModal
             projectId={id}
-            members={members}
+            members={members || []}
             myUsername={myUsername}
-            pendingInvites={pendingInvites}
+            pendingInvites={pendingInvites || []}
             onClose={() => setIsMemberModalOpen(false)}
-            onInvite={(userInput) => handleInviteMember(userInput)}
-            onModify={(username, role) => handleChangeMemberAuth(username, role)}
-            onEject={(username) => handleDeleteMember(username)}
+            // onInvite={(userInput) => handleInviteMember(userInput)}
+            // onModify={(username, role) => handleChangeMemberAuth(username, role)}
+            // onEject={(username) => handleDeleteMember(username)}
           />
         )}
         <div className="pj-header-row">
