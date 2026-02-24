@@ -2,8 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
 
 /**
+ *
+ */
+/**
  * [CREATE] 프로젝트 초대 API
- * @typedef {import('@/types/member').UnifiedMember } UnifiedMember
+ * @typedef {import('@/features/members/types/unifiedUser.js').UnifiedMember } UnifiedMember
  * @typedef {import('@/types/common').ApiResponse<UnifiedMember[]> } UserListResponse
  * @returns {import('@tanstack/react-query').DefinedUseMutationResult<UserListResponse, DefaultError, {readonly projectId?: *, readonly invitedName?: *}, unknown> }
  */
@@ -34,3 +37,19 @@ export const useInviteMember = () => {
     }
   });
 }
+
+// [Project.jsx]
+// const handleInviteMemberAPI = (userInput) => {
+//   api.post(`invitations`, {
+//     "projectId": Number(id),
+//     "invitedName": userInput
+//   })
+//       .then(() => {
+//         alert(`${userInput}님을 초대했습니다.`);
+//         // handleGetProjectMembers(); // Tanstack Query가 자동으로 갱신하므로 필요 없음
+//       })
+//       .catch((error) => {
+//         alert(error.message || "초대에 실패했습니다.");
+//         console.log(error);
+//       });
+// };

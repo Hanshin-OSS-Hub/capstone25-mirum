@@ -29,3 +29,19 @@ export const useUpdateMemberRole = () => {
     }
   })
 }
+
+// [Project.jsx]
+// const handleChangeMemberAuthAPI = (targetUsername, role) => {
+//   api.put(`member/${id}/role`, {
+//     "username": targetUsername,
+//     "role": role
+//   })
+//   .then(() => {
+//     alert("멤버 권한을 변경했습니다.");
+//     handleGetProjectMembers(); // 멤버 정보 갱신
+//   })
+//   .catch((error) => {
+//     console.error('멤버 권한 변경 실패:', error);
+//     alert(error.message || "멤버 권한 변경에 실패했습니다.");
+//   });
+// }

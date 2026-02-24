@@ -30,3 +30,25 @@ export const useDeleteMember = () => {
     }
   })
 }
+
+// [Project.jsx]
+// const handleDeleteMemberAPI = (member) => {
+//   let deleteConfirmation = false;
+//   member.username === myUsername
+//     ? (window.confirm("정말로 탈퇴하시겠습니까?") ? deleteConfirmation = true : null)
+//     : (
+//       window.confirm(`정말로 ${member.nickname} 님을 방출하시겠습니까?`) ? deleteConfirmation = true : null
+//     );
+//
+//   if (deleteConfirmation) {
+//     deleteMember({
+//       projectId: id,
+//       targetName: member.username
+//     });
+//
+//     // 자신이 탈퇴한 경우 대시보드로 이동
+//     if (member.username === myUsername) {
+//       navigate("/dashboard");
+//     }
+//   }
+// }

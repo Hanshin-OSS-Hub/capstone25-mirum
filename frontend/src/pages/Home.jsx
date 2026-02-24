@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/hooks/useAuth";
+import { useGetProjectList } from '../features/projects/api/useGetProjectList';
 import { HiOutlineBell } from "react-icons/hi2";
-import { api } from '../api/client';
 import CreateProjectModal from '../features/projects/components/CreateProject';
 import ProjectInvitationModal from '../features/invitations/components/ProjectInvitationModal';
 import ProfileModal from '../features/auth/components/ProfileModal';
@@ -10,7 +10,7 @@ import ProfileModal from '../features/auth/components/ProfileModal';
 // 환경 변수로 테스트/API 모드 선택
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
-function Home() {
+export default function Home() {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
 
@@ -18,16 +18,16 @@ function Home() {
     const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-
+    const {data: projects, isError, error} = useGetProjectList();
     // const [receivedInvitations, setReceivedInvitations] = useState([]);
-    const [sentInvitations, setSentInvitations] = useState([]);
-    const [projects, setProjects] = useState(() => {
-        if (USE_MOCK) {
-            const saved = localStorage.getItem("projects");
-            return saved ? JSON.parse(saved) : [];
-        }
-        return [];
-    });
+    // const [sentInvitations, setSentInvitations] = useState([]);
+    // const [projects, setProjects] = useState(() => {
+    //     if (USE_MOCK) {
+    //         const saved = localStorage.getItem("projects");
+    //         return saved ? JSON.parse(saved) : [];
+    //     }
+    //     return [];
+    // });
 
     // const location = useLocation();
 
@@ -45,37 +45,6 @@ function Home() {
     //         navigate(location.pathname, { replace: true, state: null });
     //     }
     // }, [location, navigate]);
-
-    /**
-     * [READ] 프로젝트 목록 조회 API
-     * 
-     * @returns {Promise<void>} GET /projects API 호출 후 프로젝트 목록을 setProjects로 업데이트
-     * @description 서버에서 프로젝트 목록을 가져와 상태를 업데이트. 실패 시 alert 표시
-     * 
-     * 서버 응답 예시:
-     * [
-     *   {
-     *     "id": "uuid-or-projectId",    // 프로젝트 고유 ID (지금은 서버에서 제공하지 않음)
-     *     "projectName": "프로젝트 이름",
-     *     "description": "프로젝트 설명",
-     *     "taskProgress": 65,           // 진행률 (0-100)
-     *     "memberCount": 3,             // 멤버 수
-     *     "creationDate": "2024-01-15T00:00:00Z"  // ISO 8601 날짜
-     *   },
-     *   ...
-     * ]
-     */
-
-    const handleGetProjectList = async () => {
-        api.get('projects')
-        .then(response => {
-            setProjects(response);
-            localStorage.setItem("projects", JSON.stringify(response));
-        })
-        .catch(error => {
-            alert(error.message || '프로젝트 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
-        });
-    };
 
     // ==================== [테스트용 함수들] ====================
 
@@ -219,8 +188,8 @@ function Home() {
                         >
                             <HiOutlineBell size={20} />
                         </button>
-                        <button 
-                            className="profile-btn" 
+                        <button
+                            className="profile-btn"
                             onClick={() => {
                                 setIsInvitationModalOpen(false);
                                 setIsProfileModalOpen(!isProfileModalOpen);}}
@@ -230,7 +199,7 @@ function Home() {
                     </div>
 
                     {isInvitationModalOpen && (
-                        <ProjectInvitationModal 
+                        <ProjectInvitationModal
                             // receivedInvitations={receivedInvitations}
                             // sentInvitations={sentInvitations}
                             onClose={() => setIsInvitationModalOpen(false)}
@@ -241,8 +210,8 @@ function Home() {
 
 
                     {isProfileModalOpen && (
-                        <ProfileModal 
-                            onClose={() => setIsProfileModalOpen(false)} 
+                        <ProfileModal
+                            onClose={() => setIsProfileModalOpen(false)}
                         />
                     )}
                 </header>
@@ -260,17 +229,17 @@ function Home() {
                         <CreateProjectModal
                             isOpen={isCreateProjectModalOpen}
                             onClose={() => setIsCreateProjectModalOpen(false)}
-                            onCreateProjectSuccess={(data) => {
-                                setIsCreateProjectModalOpen(false);
-                                alert("프로젝트 생성 완료!");
-                                handleGetProjectList();
-                                // setter 함수의 이전 값을 prev로 꺼내서 갱신하는 로직인데 왜 prev가 undefined였을까..?
-                                setProjects((projects) => {
-                                    const newProjects = [...projects, data];
-                                    localStorage.setItem("projects", JSON.stringify(newProjects));
-                                    return newProjects;
-                                });
-                            }}
+                            // onCreateProjectSuccess={(data) => {
+                            //     setIsCreateProjectModalOpen(false);
+                            //     alert("프로젝트 생성 완료!");
+                            //     handleGetProjectList();
+                            //     // setter 함수의 이전 값을 prev로 꺼내서 갱신하는 로직인데 왜 prev가 undefined였을까..?
+                            //     setProjects((projects) => {
+                            //         const newProjects = [...projects, data];
+                            //         localStorage.setItem("projects", JSON.stringify(newProjects));
+                            //         return newProjects;
+                            //     });
+                            // }}
                         />
 
                         {
@@ -350,7 +319,7 @@ function Home() {
                                                     <div className="full" style={{ width: `${p?.taskProgress}%`, height: 100, backgroundColor: p.progress > 80 ? '#c900fbed' : (p.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
                                                     </div>
 
-                                                    <div className="card-footer">                                                
+                                                    <div className="card-footer">
                                                     <span>👤 {USE_MOCK ? p.members.length : p.memberCount || 0}명</span>
                                                     <span>📅 {USE_MOCK ? p.created_at.slice(0, 10) : p.creationDate?.slice(0, 10) || "-"}</span>
                                                     </div>
@@ -481,5 +450,3 @@ function Home() {
 //       </div>
 //       )
 // }
-
-export default Home;

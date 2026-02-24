@@ -5,9 +5,9 @@ import { api } from '@/api/client.js';
  * [READ] 프로젝트 멤버 목록 조회 API
  * @param {string | number} projectId
  * @param {string} myUsername
- * @typedef {import('@/types/member').UnifiedUser} UnifiedUser
+ * @typedef {import('@/features/members/types/unifiedUser.js').UnifiedUser} UnifiedUser
  * @typedef {import('@/types/common').ApiResponse<UnifiedUser[]>} UserListResponse
- * @returns {import('@tanstack/react-query').DefinedUseQueryResult<import('@/types/member').UnifiedUser[], import('@tanstack/react-query').DefaultError> }
+ * @returns {import('@tanstack/react-query').DefinedUseQueryResult<import('@/features/members/types/unifiedUser.js').UnifiedUser[], import('@tanstack/react-query').DefaultError> }
  */
 
 export const useGetMemberList = (projectId, myUsername) => {

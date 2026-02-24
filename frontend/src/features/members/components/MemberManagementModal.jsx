@@ -4,11 +4,11 @@ import { HiOutlineUserPlus } from "react-icons/hi2";
 import { useUpdateMemberRole } from "../api/useUpdateMemberRole.js";
 import { useDeleteMember } from "../api/useDeleteMember.js";
 import { useInviteMember } from "../api/useInviteMember.js";
-import { UserType } from '@/types/member';
+import { UserType } from '@/features/members/types/unifiedUser.js';
 
 /**
  * @param {Object} props
- * @param {import('@/types/member').UnifiedUser[]} props.members - 멤버 목록 (타입 힌트 적용!)
+ * @param {import('@/features/members/types/unifiedUser.js').UnifiedUser[]} props.members - 멤버 목록 (타입 힌트 적용!)
  */
 
 function MemberManagementModal(props) {

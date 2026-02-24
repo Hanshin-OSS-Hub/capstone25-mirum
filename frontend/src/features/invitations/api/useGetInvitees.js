@@ -4,9 +4,9 @@ import { api } from '@/api/client.js';
 /**
  * [READ] 초대 받은 유저 목록 조회 API
  * @param {string|number} projectId
- * @typedef {import('@/types/member').UnifiedUser} UnifiedUser
+ * @typedef {import('@/features/members/types/unifiedUser.js').UnifiedUser} UnifiedUser
  * @typedef {import('@/types/common').ApiResponse<UnifiedUser[]>} UserListResponse
- * @returns {import('@tanstack/react-query').DefinedUseQueryResult<import('@/types/member').UnifiedUser[], import('@tanstack/react-query').DefaultError>}
+ * @returns {import('@tanstack/react-query').DefinedUseQueryResult<import('@/features/members/types/unifiedUser.js').UnifiedUser[], import('@tanstack/react-query').DefaultError>}
  * */
 
 export const useGetInvitees = (projectId) => {
@@ -34,3 +34,14 @@ export const useGetInvitees = (projectId) => {
     }
   });
 }
+
+// [Project.jsx]
+// const handleGetProjectInvitationsApi = useCallback((projectId) => {
+//   api.get(`invitations/sent/${projectId}`)
+//       .then((data) => {
+//         setPendingInvites(data);
+//       })
+//       .catch((error) => {
+//         alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
+//       })
+// }, [])

@@ -2,18 +2,19 @@
  * API 요청을 위한 중앙 클라이언트.
  * - 자동으로 Authorization 헤더에 AccessToken을 추가합니다.
  * - API 요청이 401 에러로 실패 시, RefreshToken으로 AccessToken을 자동 재발급하고 원래 요청을 재시도합니다.
- *
- * --- 다른 파일에서 사용하는 방법 ---
- * import { api } from './src/api/client.js';
- *
- * async function getUserProfile() {
- *   try {
- *     const userData = await api.get("/me"); // 헤더를 신경 쓸 필요가 없습니다!
- *     console.log(userData);
- *   } catch (error) {
- *     console.error(error);
- *   }
- * }
+ */
+
+/**
+ * @template T
+ * @typedef {import('@/types/common').ApiResponse<T>} ApiResponse
+ */
+
+/**
+ * API 요청 클라이언트
+ * @template T
+ * @param {string} endpoint - API 엔드포인트
+ * @param {RequestInit} [options] - fetch 옵션
+ * @returns {Promise<T>} - 응답 데이터 (ApiResponse의 data 부분)
  */
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -80,8 +81,8 @@ export function client(endpoint, options={}) {
           return Promise.reject(refreshError);
 
         isSessionExpired = true;
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        // localStorage.removeItem("accessToken");
+        // localStorage.removeItem("refreshToken");
 
         window.dispatchEvent(new CustomEvent("openLoginModal"))
 
@@ -112,7 +113,7 @@ export function client(endpoint, options={}) {
         if (result.success) {
           return result.data;
         } else {
-          throw new Error(result.message || "API 요청 실패");
+          throw new Error(result.detail || "API 요청 실패");
         }
         // 표준 포맷이 아니면(외부 API 등) 그냥 원본 반환 (유연성 확보)
       } else {
@@ -127,8 +128,23 @@ export function client(endpoint, options={}) {
 }
 
 export const api = {
+  /**
+   * GET 요청
+   * @template T
+   * @param {string} endpoint
+   * @param {RequestInit} [options]
+   * @returns {Promise<T>}
+   */
   get: (endpoint, options = {}) => client(endpoint, { method: "GET", ...options }),
 
+  /**
+   * POST 요청
+   * @template T
+   * @param {string} endpoint
+   * @param {any} body
+   * @param {RequestInit} [options]
+   * @returns {Promise<T>}
+   */
   post: (endpoint, body, options = {}) => {
     const isFormData = body instanceof FormData;
     const processedBody = isFormData ? body : JSON.stringify(body);
@@ -144,6 +160,14 @@ export const api = {
     })
   },
 
+  /**
+   * PUT 요청
+   * @template T
+   * @param {string} endpoint
+   * @param {any} body
+   * @param {RequestInit} [options]
+   * @returns {Promise<T>}
+   */
   put: (endpoint, body, options = {}) => {
     const isFormData = body instanceof FormData;
     const processedBody = isFormData ? body : JSON.stringify(body);
@@ -159,8 +183,23 @@ export const api = {
     })
   },
 
+  /**
+   * DELETE 요청
+   * @template T
+   * @param {string} endpoint
+   * @param {RequestInit} [options]
+   * @returns {Promise<T>}
+   */
   delete: (endpoint, options = {}) => client(endpoint, { method: "DELETE", ...options }),
 
+  /**
+   * PATCH 요청
+   * @template T
+   * @param {string} endpoint
+   * @param {any} body
+   * @param {RequestInit} [options]
+   * @returns {Promise<T>}
+   */
   patch: (endpoint, body, options = {}) => {
     const isFormData = body instanceof FormData;
     const processedBody = isFormData ? body : JSON.stringify(body);

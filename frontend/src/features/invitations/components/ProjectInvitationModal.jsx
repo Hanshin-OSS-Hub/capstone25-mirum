@@ -12,7 +12,7 @@ import { InvitationsList } from "@/features/invitations/components/InvitationsLi
  * @param {Function} props.onClose - 모달 여닫힘 상태 제어
  */
 
-function ProjectInvitationModal(props) {
+export default function ProjectInvitationModal(props) {
   const [activeTab, setActiveTab] = useState('received');
   const [loadingId, setLoadingId] = useState(null);
 
@@ -67,5 +67,3 @@ function ProjectInvitationModal(props) {
     </>
   );
 }
-
-export default ProjectInvitationModal;
