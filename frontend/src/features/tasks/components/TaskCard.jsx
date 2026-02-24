@@ -1,27 +1,26 @@
 export default function TaskCard({ task, onClick }) {
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPriorityText = (priority) => {
-    switch (priority) {
-      case 'high': return '높음';
-      case 'medium': return '보통';
-      case 'low': return '낮음';
-      default: return '보통';
-    }
-  };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'completed': return 'ri-check-line text-green-600';
-      case 'in-progress': return 'ri-time-line text-blue-600';
+      case 'in-progress': return 'ri-time-line text-orange-600';
       default: return 'ri-circle-line text-gray-400';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'completed': return '완료';
+      case 'in-progress': return '진행중';
+      default: return '대기';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in-progress': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -50,8 +49,8 @@ export default function TaskCard({ task, onClick }) {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
             <i className={`${getStatusIcon(task.status)} text-lg`}></i>
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(task.priority)}`}>
-            {getPriorityText(task.priority)}
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(task.status)}`}>
+            {getStatusText(task.status)}
           </span>
           </div>
           {task.dueDate && (
