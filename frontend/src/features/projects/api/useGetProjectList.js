@@ -12,6 +12,8 @@ import { api } from "@/api/client.js";
  * @property {number} memberCount
  * @property {number} taskProgress
  * * 업데이트 날짜 필요할 듯?
+ * @property {Date} creationDate
+ * @property {Date} updateDate
  */
 
 /**
@@ -36,8 +38,8 @@ export const useGetProjectList = () => {
           ///////////////////
           // 필드명 통일 필요 //
           ///////////////////
-          const dateA = new Date(a.updatedAt);
-          const dateB = new Date(b.updatedAt);
+          const dateA = new Date(a.updateDate);
+          const dateB = new Date(b.updateDate);
           return dateB - dateA;
         }
       )}

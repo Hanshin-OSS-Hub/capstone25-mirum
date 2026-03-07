@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { useGetProjectList } from '../features/projects/api/useGetProjectList';
-import { HiOutlineBell } from "react-icons/hi2";
+import { useGetDeletedProject } from "@/features/projects/api/useGetDeletedProject.js";
+import { useRestoreProject } from "@/features/projects/api/useRestoreProject.js";
+import {HiOutlineBell, HiOutlineTrash} from "react-icons/hi2";
 import CreateProjectModal from '../features/projects/components/CreateProject';
 import ProjectInvitationModal from '../features/invitations/components/ProjectInvitationModal';
 import ProfileModal from '../features/auth/components/ProfileModal';
+import {HiOutlineRefresh} from "react-icons/hi";
 
 // 환경 변수로 테스트/API 모드 선택
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -19,8 +22,17 @@ export default function Home() {
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const {data: projects, isError, error} = useGetProjectList();
+    const {data: deletedProjects, isError: deleted_isError, error: deleted_error} = useGetDeletedProject();
     // const [receivedInvitations, setReceivedInvitations] = useState([]);
     // const [sentInvitations, setSentInvitations] = useState([]);
+
+    const { mutate: restoreProject } = useRestoreProject();
+
+    const handleRestore = (projectId) => {
+      if (window.confirm("이 프로젝트를 복구하시겠습니까?")) {
+        restoreProject(projectId);
+      }
+    };
     // const [projects, setProjects] = useState(() => {
     //     if (USE_MOCK) {
     //         const saved = localStorage.getItem("projects");
@@ -194,7 +206,8 @@ export default function Home() {
                                 setIsInvitationModalOpen(false);
                                 setIsProfileModalOpen(!isProfileModalOpen);}}
                         >
-                            {user?.nickname.charAt(0) || "?"}
+                            {/* 26.03.03 localStorage에 nickname이 저장되지 않아 흰 화면 뜸 */}
+                            {user?.nickname?.charAt(0) || "?"}
                         </button>
                     </div>
 
@@ -320,53 +333,118 @@ export default function Home() {
                                                     </div>
 
                                                     <div className="card-footer">
-                                                    <span>👤 {USE_MOCK ? p.members.length : p.memberCount || 0}명</span>
-                                                    <span>📅 {USE_MOCK ? p.created_at.slice(0, 10) : p.creationDate?.slice(0, 10) || "-"}</span>
+                                                    <span>👤 {p.memberCount || 0}명</span>
+                                                    <span>📅 {p.creationDate?.slice(0, 10) || "-"}</span>
                                                     </div>
                                                 </div>
                                             )
                                         })
                                     }
+                                    </div>
+                                </section>
+                                {/* 휴지통 섹션 (삭제된 프로젝트가 있을 때만 표시) */}
+                                {
+                                  deletedProjects?.length > 0 && (
+                                  <section className="project-section deleted-section" style={{ marginTop: "40px", opacity: 0.8 }}>
+                                    <div className="section-header">
+                                      <h2 style={{ color: "#6b7280", display: "flex", alignItems: "center", gap: "8px" }}>
+                                        <HiOutlineTrash /> 휴지통 <span style={{ fontSize: "14px", fontWeight: "normal" }}>({deletedProjects.length})</span>
+                                      </h2>
+                                    </div>
 
-                                        {/* 프로젝트 카드 1 */}
-                                        {/* <div className="card project-card">
-                                            <div className="project-header">
-                                                <div className="project-text">
-                                                    <h3>마케팅 전략</h3>
-                                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                                </div>
+                                  <div className="project-grid">
+                                    {deletedProjects.map((p) => (
+                                        <div
+                                            key={p.projectId}
+                                            className="card project-card deleted-card"
+                                            style={{
+                                              backgroundColor: "#f9fafb", // 회색 배경
+                                              border: "1px dashed #d1d5db", // 점선 테두리
+                                              cursor: "default" // 클릭 이동 방지
+                                            }}
+                                        >
+                                          <div className="project-header">
+                                            <div className="project-text">
+                                              <h2 style={{ color: "#4b5563", textDecoration: "line-through" }}>{p.projectName}</h2>
+                                              <p className="project-desc" style={{ color: "#9ca3af" }}>
+                                                {p.description?.length > 30 ? p.description.slice(0, 20) + "..." : p.description}
+                                              </p>
+                                            </div>
+                                          </div>
 
-                                                <div className="project-icon">📂</div>
-                                            </div>
+                                          {/* 프로그레스 바 대신 복구 버튼 배치 */}
+                                          <div style={{ marginTop: "16px", display: "flex", justifyContent: "center" }}>
+                                            <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleRestore(p.projectId);
+                                                }}
+                                                style={{
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  gap: "6px",
+                                                  padding: "8px 16px",
+                                                  backgroundColor: "#fff",
+                                                  border: "1px solid #2563eb",
+                                                  color: "#2563eb",
+                                                  borderRadius: "6px",
+                                                  cursor: "pointer",
+                                                  fontWeight: "bold",
+                                                  fontSize: "14px",
+                                                  transition: "all 0.2s"
+                                                }}
+                                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#eff6ff"}
+                                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
+                                            >
+                                              <HiOutlineRefresh /> 복구하기
+                                            </button>
+                                          </div>
 
-                                            <div className="progress-bar">
-                                                <div className="fill" style={{ width: '65%' }}></div>
-                                            </div>
-
-                                            <div className="card-footer">
-                                                <span>👤 3명</span>
-                                                <span>📅 2시간 전</span>
-                                            </div>
-                                        </div> */}
-
-                                        {/* 프로젝트 카드 2 */}
-                                        {/* <div className="card project-card">
-                                            <div style = { { "display" : "flex", "gap": "24px"} }>
-                                                <h3>마케팅 과제</h3>
-                                                <div className="project-icon">📂</div>
-                                            </div>
-                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                            <div className="progress-bar">
-                                                <div className="fill" style={{width: '30%'}}></div>
-                                            </div>
-                                            <div className="card-footer">
-                                                <span>👤 2명</span>
-                                                <span>📅 1일 전</span>
-                                            </div>
-                                        </div>        */}
-
+                                          <div className="card-footer" style={{ marginTop: "12px", color: "#9ca3af" }}>
+                                            <span>삭제일: {p.updateDate?.slice(0, 10) || "-"}</span>
+                                          </div>
                                         </div>
-                                    </section>
+                                    ))}
+                                    </div>
+                                  </section>
+                                  )
+                                }
+                                {/* 프로젝트 카드 1 */}
+                                {/* <div className="card project-card">
+                                    <div className="project-header">
+                                        <div className="project-text">
+                                            <h3>마케팅 전략</h3>
+                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                        </div>
+
+                                        <div className="project-icon">📂</div>
+                                    </div>
+
+                                    <div className="progress-bar">
+                                        <div className="fill" style={{ width: '65%' }}></div>
+                                    </div>
+
+                                    <div className="card-footer">
+                                        <span>👤 3명</span>
+                                        <span>📅 2시간 전</span>
+                                    </div>
+                                </div> */}
+
+                                {/* 프로젝트 카드 2 */}
+                                {/* <div className="card project-card">
+                                    <div style = { { "display" : "flex", "gap": "24px"} }>
+                                        <h3>마케팅 과제</h3>
+                                        <div className="project-icon">📂</div>
+                                    </div>
+                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
+                                    <div className="progress-bar">
+                                        <div className="fill" style={{width: '30%'}}></div>
+                                    </div>
+                                    <div className="card-footer">
+                                        <span>👤 2명</span>
+                                        <span>📅 1일 전</span>
+                                    </div>
+                                </div>        */}
                                 </>
                             )
                         }
