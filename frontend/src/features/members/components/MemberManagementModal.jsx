@@ -33,11 +33,9 @@ function MemberManagementModal(props) {
 
     const invitationList = pendingInvites.map((i) => ({
       id: i.inviteId,
-      ////////////////////
-      // 필드명 통일 필요 //
-      ///////////////////
-      username: i.inviteeName,
-      nickname: i.inviteeName,
+      // 필드명 수정: inviteeName -> invitedName (Mock 데이터 기준)
+      username: i.invitedName,
+      nickname: i.invitedName,
       type: UserType.INVITED,
       inviteId: i.inviteId,
       inviterName: i.inviterName,

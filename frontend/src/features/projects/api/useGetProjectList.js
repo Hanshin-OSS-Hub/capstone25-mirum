@@ -28,6 +28,7 @@ export const useGetProjectList = () => {
     queryFn: async () => {
       return await api.get('/projects');
     },
+    refetchInterval: 2000,
     initialData: [],
     select: (data) => {
       if (!Array.isArray(data)) {

@@ -16,6 +16,7 @@ export const useAcceptInvitation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({queryKey: ['invitations', 'received']});
+      await queryClient.invalidateQueries({queryKey: ['projects']});
       alert('프로젝트 초대를 수락했습니다.');
     },
     onError: (error) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetInvitations } from "@/features/invitations/api/useGetInvitations.js";
+import { useGetInviteList } from "@/features/invitations/api/useGetInviteList.js";
 import { useAcceptInvitation} from "@/features/invitations/api/useAcceptInvitation.js";
 import { useDeclineInvitation } from "@/features/invitations/api/useDeclineInvitation.js";
 import { InvitationsList } from "@/features/invitations/components/InvitationsList.jsx";
@@ -16,7 +16,7 @@ export default function ProjectInvitationModal(props) {
   const [activeTab, setActiveTab] = useState('received');
   const [loadingId, setLoadingId] = useState(null);
 
-  const { data: receivedInvitations, isLoading: isReceivedInvitationsLoading, error: receivedInvitationsError } = useGetInvitations();
+  const { data: receivedInvitations, isLoading: isReceivedInvitationsLoading, error: receivedInvitationsError } = useGetInviteList();
   const { mutate: accept } = useAcceptInvitation();
   const { mutate: decline } = useDeclineInvitation();
 

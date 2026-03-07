@@ -7,9 +7,9 @@ import {api} from "@/api/client.js";
  * @returns {import('@tanstack/react-query').UseQueryResult<InvitationsResponse, DefaultError>, InvitationsResponse[]}
  */
 
-export const useGetInvitations = () => {
+export const useGetInviteList = () => {
   return useQuery({
-    queryKey: ['invitations'],
+    queryKey: ['invitations', 'received'],
     queryFn: async () => {
       return await api.get('/invitations/received');
     },

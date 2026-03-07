@@ -17,6 +17,7 @@ export const useGetMemberList = (projectId, myUsername) => {
       /** @type {UserListResponse} */
       return await api.get(`/member/${projectId}`);
     },
+    refetchInterval: 2000,
     // projectId가 있을 때만 쿼리 실행 (방어 코드)
     enabled: !!projectId,
     // 초기 데이터가 없을 때 빈 배열 보장 (방어 코드)
