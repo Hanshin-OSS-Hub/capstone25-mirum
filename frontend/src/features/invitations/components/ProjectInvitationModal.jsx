@@ -38,31 +38,51 @@ export default function ProjectInvitationModal(props) {
           background: 'white',
           borderRadius: '12px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          width: '400px',
+          width: '320px', // 원래 크기로 축소 (400px -> 320px)
           maxHeight: '500px',
           overflowY: 'auto',
           padding: '20px',
           zIndex: 999,
         }}
       >
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <button onClick={() => setActiveTab('received')} style={{ fontWeight: activeTab === 'received' ? 'bold' : 'normal' }}>받은 초대</button>
-          <button onClick={() => setActiveTab('sent')} style={{ fontWeight: activeTab === 'sent' ? 'bold' : 'normal' }}>보낸 초대</button>
-        </div>
-        {activeTab === 'received' ? (
-            // 기존 받은 초대 목록 렌더링
-            <InvitationsList invitations={receivedInvitations}
-                             loadingId = {loadingId}
-                             setLoadingId = {setLoadingId}
-                             onAccept={handleAccept}
-                             onReject={handleReject}
-            />
-        ) : (
-            <></>
-            // api 수정으로 삭제 예정
-            // 보낸 초대 목록 렌더링
-            // <SentProjectInvitationsList invitations={props.sentInvitations} />
-        )}
+        {/*<div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>*/}
+        {/*  <button */}
+        {/*    onClick={() => setActiveTab('received')} */}
+        {/*    style={{ */}
+        {/*      fontWeight: activeTab === 'received' ? 'bold' : 'normal',*/}
+        {/*      borderBottom: activeTab === 'received' ? '2px solid #2563eb' : 'none',*/}
+        {/*      paddingBottom: '4px',*/}
+        {/*      cursor: 'pointer',*/}
+        {/*      background: 'none',*/}
+        {/*      border: 'none',*/}
+        {/*      color: activeTab === 'received' ? '#2563eb' : '#6b7280'*/}
+        {/*    }}*/}
+        {/*  >*/}
+        {/*    받은 초대*/}
+        {/*  </button>*/}
+        {/*  <button */}
+        {/*    onClick={() => setActiveTab('sent')} */}
+        {/*    style={{ */}
+        {/*      fontWeight: activeTab === 'sent' ? 'bold' : 'normal',*/}
+        {/*      borderBottom: activeTab === 'sent' ? '2px solid #2563eb' : 'none',*/}
+        {/*      paddingBottom: '4px',*/}
+        {/*      cursor: 'pointer',*/}
+        {/*      background: 'none',*/}
+        {/*      border: 'none',*/}
+        {/*      color: activeTab === 'sent' ? '#2563eb' : '#6b7280'*/}
+        {/*    }}*/}
+        {/*  >*/}
+        {/*    보낸 초대*/}
+        {/*  </button>*/}
+        {/*</div>*/}
+
+        <InvitationsList
+            invitations={receivedInvitations}
+            loadingId={loadingId}
+            setLoadingId={setLoadingId}
+            onAccept={handleAccept}
+            onReject={handleReject}
+        />
       </div>
     </>
   );
