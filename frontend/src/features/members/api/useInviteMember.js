@@ -7,7 +7,7 @@ import { api } from '@/api/client.js';
 /**
  * [CREATE] 프로젝트 초대 API
  * @typedef {import('@/features/members/types/unifiedUser.js').UnifiedMember } UnifiedMember
- * @typedef {import('@/types/common').ApiResponse<UnifiedMember[]> } UserListResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse<UnifiedMember[]> } UserListResponse
  * @returns {import('@tanstack/react-query').DefinedUseMutationResult<UserListResponse, DefaultError, {readonly projectId?: *, readonly invitedName?: *}, unknown> }
  */
 

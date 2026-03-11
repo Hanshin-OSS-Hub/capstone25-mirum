@@ -5,7 +5,7 @@ import { api } from '@/api/client.js';
  * [READ] 초대 받은 유저 목록 조회 API
  * @param {string|number} projectId
  * @typedef {import('@/features/members/types/unifiedUser.js').UnifiedUser} UnifiedUser
- * @typedef {import('@/types/common').ApiResponse<UnifiedUser[]>} UserListResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse<UnifiedUser[]>} UserListResponse
  * @returns {import('@tanstack/react-query').DefinedUseQueryResult<import('@/features/members/types/unifiedUser.js').UnifiedUser[], import('@tanstack/react-query').DefaultError>}
  * */
 

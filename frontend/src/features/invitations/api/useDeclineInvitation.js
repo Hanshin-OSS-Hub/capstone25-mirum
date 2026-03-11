@@ -3,7 +3,7 @@ import { api } from "@/api/client.js";
 
 /**
  * [UPDATE] 프로젝트 초대 거절 API
- * @typedef {import('@/types/common').ApiResponse<null>} AcceptResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse<null>} AcceptResponse
  * @returns {import('@tanstack/react-query').UseMutationResult<AcceptResponse, import('@tanstack/react-query').DefaultError, number, unknown>}
  */
 

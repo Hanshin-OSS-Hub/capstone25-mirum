@@ -3,7 +3,7 @@ import { api } from "@/api/client.js";
 
 /**
  * [DELETE] 프로젝트 삭제 API
- * @typedef {import('@/types/common').ApiResponse<null>} ProjectDeleteResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse<null>} ProjectDeleteResponse
  * @returns {import('@tanstack/react-query').UseMutationResult<ProjectDeleteResponse, DefaultError, {readonly projectId?: *}, unknown>}
  */
 

@@ -3,7 +3,7 @@ import {api} from "@/api/client.js";
 
 /**
  * [READ] 나(로그인 사용자)에게 온 초대 목록 조회 API
- * @typedef {import('@/types/common').ApiResponse} InvitationsResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse} InvitationsResponse
  * @returns {import('@tanstack/react-query').UseQueryResult<InvitationsResponse, DefaultError>, InvitationsResponse[]}
  */
 

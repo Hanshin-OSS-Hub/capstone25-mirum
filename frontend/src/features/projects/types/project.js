@@ -5,7 +5,7 @@ export const ProjectStatus = {
 };
 
 /**
- * @typedef {import('@/types/member').ProjectMemberDTO} ProjectMember
+ * @typedef {import('@/features/members/types/member.js').ProjectMemberDTO} ProjectMember
  *
  * @typedef {Object} Project
  * @property {number} projectId - 프로젝트 고유 ID

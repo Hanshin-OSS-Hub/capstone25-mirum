@@ -5,7 +5,7 @@ import { api } from "@/api/client.js";
  * 프로젝트 상세 정보 DTO (서버 응답 형식)
  * @see ProjectResponseDTO.java
  * @see ../../../../../backend/src/main/java/backend/dto/project/ProjectResponseDTO.java
- * @typedef {import('@/types/project').Project} ProjectDetailDTO
+ * @typedef {import('@/features/projects/types/project.js').Project} ProjectDetailDTO
  */
 
 /**

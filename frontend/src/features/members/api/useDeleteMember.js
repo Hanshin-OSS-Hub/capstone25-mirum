@@ -3,7 +3,7 @@ import { api } from '@/api/client.js'
 
 /**
  * [DELETE] 멤버 탈퇴/방출 API
- * @typedef {import('@/types/common').ApiResponse<null> } EjectResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse<null> } EjectResponse
  * @returns {import('@tanstack/react-query').UseMutationResult<EjectResponse, DefaultError, {readonly projectId?: *, readonly targetName?: *}, unknown>}
  */
 

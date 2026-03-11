@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useUpdateProject } from "@/features/projects/api/useUpdateProject.js";
 
 /**
- * @typedef {import('@/types/project').Project} Project
+ * @typedef {import('@/features/projects/types/project.js').Project} Project
  * @param {Object} props
  * @param {Project} props.project
  * @constructor

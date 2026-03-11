@@ -3,7 +3,7 @@ import { api } from "@/api/client.js";
 
 /**
  * [UPDATE] 멤버 권한 수정 API
- * @typedef {import('@/types/common').ApiResponse<null> } UpdateRoleResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse<null> } UpdateRoleResponse
  * @returns {import('@tanstack/react-query').UseMutationResult<UpdateRoleResponse, DefaultError, {readonly projectId?: *, readonly username?: *, readonly role?: *}, unknown>}
  */
 

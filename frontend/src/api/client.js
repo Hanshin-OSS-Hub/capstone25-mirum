@@ -6,7 +6,7 @@
 
 /**
  * @template T
- * @typedef {import('@/types/common').ApiResponse<T>} ApiResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse<T>} ApiResponse
  */
 
 /**

@@ -6,7 +6,7 @@ import { api } from '@/api/client.js';
  * @param {string | number} projectId
  * @param {string} myUsername
  * @typedef {import('@/features/members/types/unifiedUser.js').UnifiedUser} UnifiedUser
- * @typedef {import('@/types/common').ApiResponse<UnifiedUser[]>} UserListResponse
+ * @typedef {import('@/api/types/common.js').ApiResponse<UnifiedUser[]>} UserListResponse
  * @returns {import('@tanstack/react-query').DefinedUseQueryResult<import('@/features/members/types/unifiedUser.js').UnifiedUser[], import('@tanstack/react-query').DefaultError> }
  */
 
