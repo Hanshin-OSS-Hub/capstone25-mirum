@@ -78,6 +78,6 @@ mirum-frontend/
 
 ## 📝 개발 문서 (Documentation)
 더 자세한 기술적 내용과 개발 과정은 아래 문서에서 확인할 수 있습니다.
-- [DOC_MSW.md](./wiki/DOC_MSW.md): Mock API 구현 상세 및 테스트 시나리오.
-- [DOC_TANSTACK_QUERY.md](./wiki/DOC_TANSTACK_QUERY.md): 서버 상태 관리 전략.
-- [DOC_JSDOC_TYPE_SYSTEM.md](./wiki/DOC_JSDOC_TYPE_SYSTEM.md): JSDoc 타입 시스템 도입 가이드.
+- [DOC_MSW.md](https://github.com/Hanshin-OSS-Hub/capstone25-mirum/wiki/DOC_MSW): Mock API 구현 상세 및 테스트 시나리오.
+- [DOC_TANSTACK_QUERY.md](https://github.com/Hanshin-OSS-Hub/capstone25-mirum/wiki/DOC_TANSTACK_QUERY.md): 서버 상태 관리 전략.
+- [DOC_JSDOC_TYPE_SYSTEM.md](https://github.com/Hanshin-OSS-Hub/capstone25-mirum/wiki/DOC_JSDOC_TYPE_SYSTEM.md): JSDoc 타입 시스템 도입 가이드.

@@ -66,6 +66,8 @@ export default function Task() {
   const openTask = (task) => setSelectedTask(task);
   const closeTask = () => setSelectedTask(null);
 
+  const openCreateTask = () => setIsCreateOpen(true);
+
   const tasksByMember = useMemo(() => {
     const map = {};
     teamMembers.forEach((m) => (map[m.name] = []));
@@ -117,7 +119,7 @@ export default function Task() {
                 캘린더
               </button>
               <button
-                  onClick={() => setIsCreateOpen(true)}
+                  onClick={openCreateTask}
                   className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-sm cursor-pointer"
               >
                 새 작업
@@ -169,8 +171,25 @@ export default function Task() {
 
                     <div className="px-6 py-6">
                       {list.length === 0 ? (
-                          <div className="h-28 flex items-center justify-center text-gray-400">
-                            아직 할당된 작업이 없습니다.
+                          <div className="h-44 flex flex-col items-center justify-center text-center">
+                            {/* 아이콘 */}
+                            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                              <i className="ri-checkbox-line text-xl text-gray-400"></i>
+                            </div>
+
+                            {/* 문구 */}
+                            <p className="text-gray-400 text-base">
+                              아직 할당된 작업이 없습니다.
+                            </p>
+
+                            {/* 새 작업 추가 */}
+                            <button
+                                type="button"
+                                onClick={openCreateTask}
+                                className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
+                            >
+                              새 작업 추가
+                            </button>
                           </div>
                       ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -205,7 +224,7 @@ export default function Task() {
                 onClose={closeTask}
                 onUpdate={handleUpdateTask}
                 teamMembers={teamMembers}
-                currentUserName={currentUserName}   // ✅ 이게 핵심
+                currentUserName={currentUserName}
             />
         )}
       </div>
