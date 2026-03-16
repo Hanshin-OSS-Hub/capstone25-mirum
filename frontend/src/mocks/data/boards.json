@@ -1,0 +1,54 @@
+[
+  {
+    "boardId": 101,
+    "projectId": 1,
+    "name": "칸반",
+    "type": "KANBAN",
+    "description": "웹 개발 프로젝트의 메인 작업 흐름을 관리합니다.",
+    "config": {
+      "columns": ["TODO", "IN_PROGRESS", "DONE"],
+      "swimlane": "MEMBER"
+    },
+    "createdAt": "2025-03-15T10:00:00",
+    "updatedAt": "2025-03-15T10:00:00"
+  },
+  {
+    "boardId": 102,
+    "projectId": 1,
+    "name": "서브 보드 (기획)",
+    "type": "KANBAN",
+    "description": "기획 단계 전용 보드",
+    "config": {
+      "columns": ["IDEA", "REVIEW", "CONFIRMED"],
+      "swimlane": "STATUS"
+    },
+    "createdAt": "2025-03-16T11:00:00",
+    "updatedAt": "2025-03-16T11:00:00"
+  },
+  {
+    "boardId": 201,
+    "projectId": 2,
+    "name": "마케팅 캠페인",
+    "type": "KANBAN",
+    "description": "SNS 및 블로그 마케팅 일정 관리",
+    "config": {
+      "columns": ["PLANNING", "CREATING", "PUBLISHED"],
+      "swimlane": "MEMBER"
+    },
+    "createdAt": "2025-04-01T14:30:00",
+    "updatedAt": "2025-04-01T14:30:00"
+  },
+  {
+    "boardId": 301,
+    "projectId": 3,
+    "name": "앱 개발 스프린트",
+    "type": "KANBAN",
+    "description": "앱 개발을 위한 스프린트 보드",
+    "config": {
+      "columns": ["BACKLOG", "TODO", "DOING", "TEST", "DONE"],
+      "swimlane": "MEMBER"
+    },
+    "createdAt": "2025-03-30T09:15:00",
+    "updatedAt": "2025-03-30T09:15:00"
+  }
+]
