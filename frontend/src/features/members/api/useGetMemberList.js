@@ -34,6 +34,6 @@ export const useGetMemberList = (projectId, myUsername) => {
         // 나머지 가나다순 정렬
         return a.nickname.localeCompare(b.nickname);
       });
-    }
-  })
-}
+    },
+  });
+};
