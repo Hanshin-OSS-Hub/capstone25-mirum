@@ -1,5 +1,6 @@
 package backend.dto.taskcard;
 
+import backend.entity.taskcard.TaskStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +14,7 @@ public class TaskSummaryDTO {
     private Long taskId;          // 작업 카드 고유 ID
     private String title;         // 작업 카드 제목
     private String description;   // 작업 설명
-    private String status;        // TODO, IN_PROGRESS, DONE, DELETED
+    private TaskStatus status;        // TODO, IN_PROGRESS, DONE, DELETED
     private List<String> tags;    // "tag1,tag2" -> ["tag1", "tag2"]
 
     // 날짜 정보
@@ -23,6 +24,6 @@ public class TaskSummaryDTO {
 
     // 담당자 정보
     private Long assigneeId; //담당자 id
-    private String assigneeName; //담당자 name
+    private Long assigneeName; //담당자 name
 }
 

@@ -17,8 +17,6 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long taskId;
 
-    @Column(nullable = false)
-    private Long boardId;
 
     @Column(nullable = false)
     private Long projectId;
@@ -30,7 +28,8 @@ public class Task {
     private String description;
 
     @Column(nullable = false, length = 30)
-    private String status; // TODO, IN_PROGRESS, DONE, DELETED
+    @Enumerated(EnumType.STRING)
+    private TaskStatus status; // TODO, IN_PROGRESS, DONE, DELETED
 
     // tags를 "tag1,tag2" 문자열로 저장 (가장 단순)
     @Column(length = 1000)
@@ -40,18 +39,18 @@ public class Task {
     @Column(columnDefinition = "TEXT")
     private String notes; // 마크다운
 
-    private Long assigneeId;
+    private Long assigneeId; //담당자(Id)
 
     private LocalDate createdAt;
     private LocalDate updatedAt;
     private LocalDate dueDate;
+//    private TaskDeleteReason taskDeleteReason;
 
     protected Task() {}
 
-    public Task(Long boardId, Long projectId, String title, String description, String status,
+    public Task(Long boardId, Long projectId, String title, String description, TaskStatus status,
                 String tagsCsv, String notes, Long assigneeId, LocalDate dueDate,
                 LocalDate createdAt, LocalDate updatedAt) {
-        this.boardId = boardId;
         this.projectId = projectId;
         this.title = title;
         this.description = description;
@@ -66,7 +65,7 @@ public class Task {
 
 
     // ===== update methods =====
-    public void updateBasic(String title, String description, String status, String tagsCsv, String notes,
+    public void updateBasic(String title, String description, TaskStatus status, String tagsCsv, String notes,
                             Long assigneeId, LocalDate dueDate, LocalDate updatedAt) {
         if (title != null) this.title = title;
         if (description != null) this.description = description;

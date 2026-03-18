@@ -28,8 +28,8 @@ public class User {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username", unique = true, nullable = false, updatable = false)
-    private String username;
+    @Column(name = "login_id", unique = true, nullable = false, updatable = false)
+    private String login_id;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -52,8 +52,9 @@ public class User {
     //admin? or user?
     private UserRoleType roleType;
 
-    @Column(name = "nickname")
-    private String nickname;
+    @Column(name = "username")
+    //닉네임 설정
+    private String username;
 
     @Column(name = "email")
     private String email;
@@ -77,7 +78,7 @@ public class User {
     public void updateUser(UserRequestDTO dto) {
         //Setter는 최대한 지양
         this.email = dto.getEmail();
-        this.nickname = dto.getNickname();
+        this.username = dto.getUsername();
     }
 
 }

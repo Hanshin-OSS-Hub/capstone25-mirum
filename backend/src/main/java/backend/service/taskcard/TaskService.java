@@ -5,18 +5,23 @@ import backend.dto.taskcard.TaskDetailDTO;
 import backend.dto.taskcard.TaskRequestDTO;
 import backend.dto.taskcard.TaskSummaryDTO;
 import backend.dto.taskcard.TaskUpdateRequestDTO;
+import backend.entity.taskcard.TaskStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TaskService {
 
-    Long createTask(TaskRequestDTO req, String username);
+    Long createTask(TaskRequestDTO req, Long ProjectId);
 
-    TaskDetailDTO getTask(Long taskId, String username);
+    TaskDetailDTO getTask(Long projectId, Long taskId);
 
-    Page<TaskSummaryDTO> listTasks(Long boardId, Pageable pageable, String username);
+    //DELETED 제외 모든 task조회
+    Page<TaskSummaryDTO> listTasks(Long ProjectId, Pageable pageable);
 
-    TaskDetailDTO updateTask(Long taskId, TaskUpdateRequestDTO req, String username);
+    //특정 status 기준 조회(DELETED 포함)
+    Page<TaskSummaryDTO> listTasksByStatus(Long ProjectId, TaskStatus status, Pageable pageable);
 
-    void deleteTask(Long taskId, String username);
+    TaskDetailDTO updateTask(Long projectId, Long taskId, TaskUpdateRequestDTO req);
+
+    void deleteTask(Long ProjectId, Long taskId);
 }

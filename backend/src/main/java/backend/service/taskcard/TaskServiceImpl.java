@@ -1,11 +1,14 @@
 package backend.service.taskcard;
 
 
+import backend.entity.User;
 import backend.entity.taskcard.Task;
 import backend.dto.taskcard.TaskDetailDTO;
 import backend.dto.taskcard.TaskRequestDTO;
 import backend.dto.taskcard.TaskSummaryDTO;
 import backend.dto.taskcard.TaskUpdateRequestDTO;
+import backend.entity.taskcard.TaskStatus;
+import backend.repository.UserRepository;
 import backend.repository.taskcard.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,16 +23,20 @@ import java.time.LocalDate;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
-    public Long createTask(TaskRequestDTO req, String username) {
+    public Long createTask(TaskRequestDTO req, Long ProjectId) {
         validateCreateRequest(req);
 
         // TODO: 권한 체크(예: username이 projectId 멤버인지)
         // TODO: boardId가 projectId에 속하는지 검증
 
-        String status = (req.getStatus() == null || req.getStatus().isBlank()) ? "TODO" : req.getStatus();
+        TaskStatus status =
+                (req.getStatus() == null)
+                        ? TaskStatus.TODO
+                        : req.getStatus();
 
         LocalDate now = LocalDate.now();
 
@@ -53,9 +60,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public TaskDetailDTO getTask(Long taskId, String username) {
-        Task task = taskRepository.findById(taskId)
-                .filter(t -> !"DELETED".equals(t.getStatus()))
+    public TaskDetailDTO getTask(Long projectId, Long taskId) {
+        Task task = taskRepository.findByProjectIdAndTaskIdAndStatusNot(projectId, taskId, TaskStatus.DELETED)
+                .filter(t -> t.getProjectId().equals(projectId))
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
 
 
@@ -64,22 +71,29 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<TaskSummaryDTO> listTasks(Long boardId, Pageable pageable, String username) {
-        // TODO: 권한 체크(username이 board/project 접근 가능한지)
+    //DELETED 제외 모든 task조회
+    public Page<TaskSummaryDTO> listTasks(Long projectId, Pageable pageable) {
 
-        return taskRepository.findByBoardId(boardId, "DELETED", pageable)
+        return taskRepository.findAllByProjectIdAndStatusNot(projectId, TaskStatus.DELETED, pageable)
+                .map(this::toSummaryDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    //특정 status 기준 조회(DELETED 포함)
+    public Page<TaskSummaryDTO> listTasksByStatus(Long projectId, TaskStatus status, Pageable pageable) {
+
+        return taskRepository.findByProjectIdAndStatus(projectId, status, pageable)
                 .map(this::toSummaryDTO);
     }
 
     @Override
     @Transactional
-    public TaskDetailDTO updateTask(Long taskId, TaskUpdateRequestDTO req, String username) {
-        Task task = taskRepository.findById(taskId)
-                .filter(t -> !"DELETED".equals(t.getStatus()))
-                .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
+    public TaskDetailDTO updateTask(Long projectId,Long taskId, TaskUpdateRequestDTO req) {
 
-        // TODO: 권한 체크(수정 권한)
-        // TODO: (요구사항에 따라) req.boardId/projectId 변경 허용 여부 결정
+        Task task = taskRepository.findByProjectIdAndTaskIdAndStatusNot(
+                projectId, taskId, TaskStatus.DELETED
+        ).orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
 
         String tagsCsv = (req.getTags() == null) ? null : Task.toCsv(req.getTags());
 
@@ -99,20 +113,37 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public void deleteTask(Long taskId, String username) {
-        Task task = taskRepository.findById(taskId)
-                .filter(t -> !"DELETED".equals(t.getStatus()))        // TODO: 권한 체크(삭제 권한)
+    public void deleteTask(Long projectId, Long taskId) {
+        Task task = taskRepository.findByProjectIdAndTaskIdAndStatusNot(
+                        projectId, taskId, TaskStatus.DELETED
+                )
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
 
-
-
-        // soft delete
         task.updateBasic(
-                null, null, "DELETED",
+                null,
+                null,
+                TaskStatus.DELETED,
+                null,
+                null,
+                null,
+                null,
+                LocalDate.now()
+        );
+    }
+
+    //Delete 매서드 분리
+    public void softDeleteTask(Long taskId, String username) {
+        Task task = taskRepository.findById(taskId)
+                .filter(t -> t.getStatus() != TaskStatus.DELETED)        // TODO: 권한 체크(삭제 권한)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
+
+        task.updateBasic(
+                null, null, TaskStatus.DELETED,
                 null, null, null, null,
                 LocalDate.now()
         );
     }
+
 
     private void validateCreateRequest(TaskRequestDTO req) {
         if (req.getBoardId() == null) throw new IllegalArgumentException("boardId is required");
@@ -122,7 +153,6 @@ public class TaskServiceImpl implements TaskService {
 
     private TaskDetailDTO toDetailDTO(Task task) {
         TaskDetailDTO dto = new TaskDetailDTO();
-        dto.setBoardId(task.getBoardId());
         dto.setTaskId(task.getTaskId());
         dto.setTitle(task.getTitle());
         dto.setDescription(task.getDescription());
@@ -133,8 +163,20 @@ public class TaskServiceImpl implements TaskService {
         dto.setUpdatedAt(task.getUpdatedAt());
         dto.setDueDate(task.getDueDate());
         dto.setAssigneeId(task.getAssigneeId());
-        dto.setAssigneeName(null);
+        if (task.getAssigneeId() != null) {
+            User user = userRepository.findById(task.getAssigneeId())
+                    .orElse(null);
+
+            if (user != null) {
+                dto.setAssigneeName(user.getUsername());
+            } else {
+                dto.setAssigneeName("알 수 없음");
+            }
+        } else {
+            dto.setAssigneeName("미배정");
+        }
         dto.setAssigneeProfileImage(null);
+
 
         return dto;
     }
@@ -151,8 +193,14 @@ public class TaskServiceImpl implements TaskService {
         dto.setDueDate(task.getDueDate());
 
         dto.setAssigneeId(task.getAssigneeId());
-        dto.setAssigneeName(null); // TODO: User 조회해서 채우기
+        dto.setAssigneeName(task.getAssigneeId()); // TODO: User 조회해서 채우기
 
+        if (task.getAssigneeId() != null) {
+            Long assigneeName = Long.valueOf(userRepository.findById(task.getAssigneeId())
+                    .map(User::getUsername)
+                    .orElse("알 수 없음"));
+            dto.setAssigneeName(assigneeName);
+        } else dto.setAssigneeName(Long.valueOf("미배정"));
         return dto;
     }
 }
