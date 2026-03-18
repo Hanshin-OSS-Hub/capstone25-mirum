@@ -1,33 +1,95 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { taskStatus } from '@/features/tasks/types/task.js';
+import { useCreateTask } from '@/features/tasks/api/useCreateTask.js';
 
-export default function CreateTaskModal({ isOpen, onClose, onSubmit, teamMembers }) {
-  const [taskData, setTaskData] = useState({
+export default function CreateTaskModal(props) {
+  const {
+    projectId,
+    isOpen,
+    onClose,
+    defaultAssigneeName,
+    members = [],
+    boardId,
+  } = props;
+
+  const { mutate: createTask } = useCreateTask();
+
+  const sortedMembers = useMemo(() => {
+    const myMember = members.find((m) => m.username === defaultAssigneeName);
+    const others = members.filter((m) => m.username !== defaultAssigneeName);
+    return myMember ? [myMember, ...others] : others;
+  }, [members, defaultAssigneeName]);
+
+  const todayISO = new Date().toISOString().split('T')[0];
+
+  const initialTaskData = {
     title: '',
     description: '',
-    assignee: teamMembers[0]?.name || '',
-    dueDate: '',
-    tags: []
-  });
+    status: taskStatus.todo,
+    tags: [],
+    assignee: '',
+    startDate: todayISO,
+    dueDate: todayISO,
+  };
+
+  const [taskData, setTaskData] = useState(initialTaskData);
   const [newTag, setNewTag] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTaskData({
+        ...initialTaskData,
+        assignee: defaultAssigneeName,
+      });
+      setNewTag('');
+    }
+  }, [defaultAssigneeName, isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (taskData.title.trim()) {
-      onSubmit(taskData);
-      handleClose();
-    }
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!taskData.title.trim()) return;
+
+    const selectedMember = sortedMembers.find((m) => m.username === taskData.assignee);
+
+    const normalizedStartDate = taskData.startDate || todayISO;
+    const normalizedDueDate =
+        taskData.dueDate && taskData.dueDate >= normalizedStartDate
+            ? taskData.dueDate
+            : normalizedStartDate;
+
+    const requestData = {
+      ...taskData,
+      title: taskData.title.trim(),
+      startDate: normalizedStartDate,
+      dueDate: normalizedDueDate,
+      projectId: Number(projectId),
+      boardId: Number(boardId),
+      assigneeId: selectedMember ? selectedMember.id : null,
+    };
+
+    createTask(requestData, {
+      onSuccess: () => {
+        handleClose();
+      },
+    });
   };
 
   const handleClose = () => {
-    setTaskData({
-      title: '',
-      description: '',
-      assignee: teamMembers[0]?.name || '',
-      dueDate: '',
-      tags: []
-    });
+    setTaskData(initialTaskData);
     setNewTag('');
     onClose();
   };
@@ -35,190 +97,237 @@ export default function CreateTaskModal({ isOpen, onClose, onSubmit, teamMembers
   const addTag = () => {
     const trimmed = newTag.trim();
     if (trimmed && !taskData.tags.includes(trimmed)) {
-      setTaskData({ ...taskData, tags: [...taskData.tags, trimmed] });
+      setTaskData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, trimmed],
+      }));
       setNewTag('');
     }
   };
 
   const removeTag = (tagToRemove) => {
-    setTaskData({
-      ...taskData,
-      tags: taskData.tags.filter((tag) => tag !== tagToRemove)
-    });
+    setTaskData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
   };
 
   const inputBase =
-      "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 " +
-      "focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500";
+      'w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 ' +
+      'focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500';
 
   return (
       <div className="fixed inset-0 z-50">
-        {/* Backdrop */}
         <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={handleClose}
-        ></div>
+        />
 
-        {/* Centered Modal */}
-        <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100">
+        <div className="relative flex min-h-screen items-center justify-center px-4 py-4">
+          <div className="flex h-[min(92vh,820px)] w-full max-w-[920px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl ring-1 ring-black/5">
+            {/* 헤더 */}
+            <div className="flex items-start justify-between border-b border-gray-100 px-8 py-5">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">새 작업 만들기</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 className="text-[18px] font-bold text-gray-900">새 작업 만들기</h2>
+                <p className="mt-1 text-sm text-gray-500">
                   팀원에게 할 일을 배정하고 진행을 관리하세요.
                 </p>
               </div>
+
               <button
                   onClick={handleClose}
-                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
+                  className="cursor-pointer rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                   aria-label="close"
               >
                 <i className="ri-close-line text-xl"></i>
               </button>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-2">
-                  작업 제목 <span className="text-red-500">*</span>
-                </label>
-                <input
-                    type="text"
-                    value={taskData.title}
-                    onChange={(e) => setTaskData({ ...taskData, title: e.target.value })}
-                    placeholder="예) 로그인 UI 마무리"
-                    className={inputBase}
-                    required
-                />
-                <p className="text-xs text-gray-400 mt-2">
-                  짧고 명확하게 쓰면 팀원이 더 빨리 이해해요.
-                </p>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-2">설명</label>
-                <textarea
-                    value={taskData.description}
-                    onChange={(e) => setTaskData({ ...taskData, description: e.target.value })}
-                    placeholder="작업에 대한 설명을 입력하세요"
-                    rows={3}
-                    className={`${inputBase} resize-none`}
-                />
-              </div>
-
-              {/* Assignee & Due Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Assignee */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">담당자</label>
-                  <select
-                      value={taskData.assignee}
-                      onChange={(e) => setTaskData({ ...taskData, assignee: e.target.value })}
-                      className={inputBase}
-                  >
-                    {teamMembers.map((member) => (
-                        <option key={member.id} value={member.name}>
-                          {member.name} ({member.role})
-                        </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Due Date */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">마감일</label>
-                  <input
-                      type="date"
-                      value={taskData.dueDate}
-                      onChange={(e) => setTaskData({ ...taskData, dueDate: e.target.value })}
-                      className={inputBase}
-                  />
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-2">태그</label>
-
-                {/* Add Tag Input */}
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
+            {/* 본문 */}
+            <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1 overflow-y-auto px-8 py-5">
+                <div className="space-y-5">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-800">
+                      작업 제목 <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="text"
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        placeholder="예) 디자인, UI/UX"
-                        className={`${inputBase} pr-10`}
+                        value={taskData.title}
+                        onChange={(event) =>
+                            setTaskData({ ...taskData, title: event.target.value })
+                        }
+                        placeholder="예) 로그인 UI 마무리"
+                        className={inputBase}
+                        required
                     />
-                    <button
-                        type="button"
-                        onClick={addTag}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-                        aria-label="add tag"
-                    >
-                      <i className="ri-add-line text-lg"></i>
-                    </button>
                   </div>
 
-                  <button
-                      type="button"
-                      onClick={addTag}
-                      className="px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-sm cursor-pointer"
-                  >
-                    추가
-                  </button>
-                </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-800">설명</label>
+                    <textarea
+                        value={taskData.description}
+                        onChange={(event) =>
+                            setTaskData({ ...taskData, description: event.target.value })
+                        }
+                        placeholder="작업에 대한 설명을 입력하세요"
+                        rows={4}
+                        className={`${inputBase} min-h-[110px] resize-none`}
+                    />
+                  </div>
 
-                {/* Tags List */}
-                {taskData.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {taskData.tags.map((tag) => (
-                          <span
-                              key={tag}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm bg-blue-50 text-blue-700 ring-1 ring-blue-100"
-                          >
-                      <i className="ri-hashtag text-base"></i>
-                            {tag}
-                            <button
-                                type="button"
-                                onClick={() => removeTag(tag)}
-                                className="ml-1 p-1 rounded-full text-blue-600 hover:text-blue-800 hover:bg-blue-100 cursor-pointer"
-                                aria-label="remove tag"
-                            >
-                        <i className="ri-close-line text-sm"></i>
-                      </button>
-                    </span>
-                      ))}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800">담당자</label>
+                      <select
+                          value={taskData.assignee}
+                          onChange={(event) =>
+                              setTaskData({ ...taskData, assignee: event.target.value })
+                          }
+                          className={inputBase}
+                      >
+                        {sortedMembers.map((member) => (
+                            <option key={member.username} value={member.username}>
+                              {member.nickname} ({member.role})
+                            </option>
+                        ))}
+                      </select>
                     </div>
-                )}
 
-                {taskData.tags.length === 0 && (
-                    <p className="text-xs text-gray-400 mt-3">
-                      태그를 추가하면 필터링/탐색이 쉬워져요.
-                    </p>
-                )}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800">상태</label>
+                      <select
+                          value={taskData.status}
+                          onChange={(event) =>
+                              setTaskData({ ...taskData, status: event.target.value })
+                          }
+                          className={inputBase}
+                      >
+                        <option value={taskStatus.todo}>대기</option>
+                        <option value={taskStatus.inProgress}>진행중</option>
+                        <option value={taskStatus.done}>완료</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800">시작일</label>
+                      <input
+                          type="date"
+                          value={taskData.startDate}
+                          onChange={(event) => {
+                            const nextStartDate = event.target.value;
+                            setTaskData((prev) => ({
+                              ...prev,
+                              startDate: nextStartDate,
+                              dueDate:
+                                  prev.dueDate && prev.dueDate >= nextStartDate
+                                      ? prev.dueDate
+                                      : nextStartDate,
+                            }));
+                          }}
+                          className={inputBase}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800">마감일</label>
+                      <input
+                          type="date"
+                          min={taskData.startDate}
+                          value={taskData.dueDate}
+                          onChange={(event) =>
+                              setTaskData({ ...taskData, dueDate: event.target.value })
+                          }
+                          className={inputBase}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-800">태그</label>
+
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                            type="text"
+                            value={newTag}
+                            onChange={(event) => setNewTag(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter') {
+                                event.preventDefault();
+                                addTag();
+                              }
+                            }}
+                            placeholder="예) 디자인, UI/UX"
+                            className={`${inputBase} pr-10`}
+                        />
+                        <button
+                            type="button"
+                            onClick={addTag}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                            aria-label="add tag"
+                        >
+                          <i className="ri-add-line text-lg"></i>
+                        </button>
+                      </div>
+
+                      <button
+                          type="button"
+                          onClick={addTag}
+                          className="cursor-pointer rounded-xl bg-blue-600 px-5 py-2.5 text-white shadow-sm hover:bg-blue-700"
+                      >
+                        추가
+                      </button>
+                    </div>
+
+                    {taskData.tags.length > 0 ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {taskData.tags.map((tag) => (
+                              <span
+                                  key={tag}
+                                  className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-sm text-blue-700 ring-1 ring-blue-100"
+                              >
+                          <i className="ri-hashtag text-base"></i>
+                                {tag}
+                                <button
+                                    type="button"
+                                    onClick={() => removeTag(tag)}
+                                    className="ml-1 cursor-pointer rounded-full p-1 text-blue-600 hover:bg-blue-100 hover:text-blue-800"
+                                    aria-label="remove tag"
+                                >
+                            <i className="ri-close-line text-sm"></i>
+                          </button>
+                        </span>
+                          ))}
+                        </div>
+                    ) : (
+                        <p className="mt-3 text-xs text-gray-400">
+                          태그를 추가하면 필터링/탐색이 쉬워요.
+                        </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-5 border-t border-gray-100">
-                <button
-                    type="button"
-                    onClick={handleClose}
-                    className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer"
-                >
-                  취소
-                </button>
-                <button
-                    type="submit"
-                    className="flex-1 px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-sm cursor-pointer"
-                >
-                  생성
-                </button>
+              {/* 하단 버튼 고정 */}
+              <div className="border-t border-gray-100 bg-white px-8 py-4">
+                <div className="flex gap-3">
+                  <button
+                      type="button"
+                      onClick={handleClose}
+                      className="flex-1 cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-700 hover:bg-gray-50"
+                  >
+                    취소
+                  </button>
+                  <button
+                      type="submit"
+                      className="flex-1 cursor-pointer rounded-xl bg-blue-600 px-4 py-3 text-white shadow-sm hover:bg-blue-700"
+                  >
+                    생성
+                  </button>
+                </div>
               </div>
             </form>
           </div>
