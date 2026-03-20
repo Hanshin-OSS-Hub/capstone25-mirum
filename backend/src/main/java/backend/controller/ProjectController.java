@@ -52,6 +52,12 @@ public class ProjectController {
         return ResponseEntity.ok(ApiResponse.response(null));
     }
 
+    // 소프트 삭제한 프로젝트 검색
+    @GetMapping("/project/deleted")
+    public ResponseEntity<ApiResponse<List<ProjectsDTO>>> getDeletedProject(@AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(ApiResponse.response(projectService.getDeletedProject(username)));
+    }
+
     // 프로젝트 복구
     @PostMapping("/project/restore/{projectId}")
     public ResponseEntity<ApiResponse<Void>> restoreProject(@PathVariable Long projectId, @AuthenticationPrincipal String username){

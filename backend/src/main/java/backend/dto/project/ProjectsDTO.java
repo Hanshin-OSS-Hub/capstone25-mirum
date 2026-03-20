@@ -3,6 +3,8 @@ package backend.dto.project;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class ProjectsDTO {
@@ -11,4 +13,5 @@ public class ProjectsDTO {
     private String description;
     private Long memberCount;
     private int taskProgress;
+    private LocalDateTime updateDate;
 }

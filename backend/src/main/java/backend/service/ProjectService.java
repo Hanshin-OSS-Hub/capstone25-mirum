@@ -93,6 +93,7 @@ public class ProjectService {
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
+                        .updateDate()
                         // 이거 바꿔야 함
                         .taskProgress(50)
                         .build()
@@ -137,6 +138,23 @@ public class ProjectService {
         Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
         project.deleteProject(username);
         //projectRepository.deleteById(projectId);
+    }
+
+    // 소프트 삭제된 프로젝트 검색
+    public List<ProjectsDTO> getDeletedProject(String username) {
+        List<Project> projects = projectRepository.findAllDeletedProjectByUsername(username);
+
+        return projects.stream()
+                .map(p -> ProjectsDTO.builder()
+                        .projectId(p.getId())
+                        .projectName(p.getProjectName())
+                        .description(p.getDescription())
+                        .memberCount((long) p.getMemberCount())
+                        .updateDate(p.getDeletedDate())
+                        // 이거 바꿔야 함
+                        .taskProgress(50)
+                        .build()
+                ).toList();
     }
 
     //권한 검증
