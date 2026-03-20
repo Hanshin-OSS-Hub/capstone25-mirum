@@ -93,7 +93,8 @@ public class ProjectService {
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
-                        .updateDate()
+                        //이거도 바꿔야함
+                        .updateDate(null)
                         // 이거 바꿔야 함
                         .taskProgress(50)
                         .build()
