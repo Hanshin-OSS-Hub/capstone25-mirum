@@ -54,7 +54,7 @@ public class ProjectController {
     }
 
     // 소프트 삭제한 프로젝트 검색
-    @GetMapping("/project/deleted")
+    @GetMapping("/projects/deleted")
     public ResponseEntity<ApiResponse<List<DeletedProjectsResponseDTO>>> getDeletedProject(@AuthenticationPrincipal String username) {
         return ResponseEntity.ok(ApiResponse.response(projectService.getDeletedProject(username)));
     }
