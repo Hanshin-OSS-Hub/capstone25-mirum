@@ -103,7 +103,7 @@ public class ProjectInviteService {
         return invite.stream().map(i -> InviteResponseDTO.builder()
                     .inviteId(i.getId())
                     .projectName(i.getProject().getProjectName())
-                    .inviteeName(i.getUser().getUsername())
+                    .inviteeName(i.getUser().getNickname())
                     .status(i.getStatus())
                     .inviterName(i.getInviterName())
                     .build()
@@ -117,7 +117,7 @@ public class ProjectInviteService {
         return invite.stream().map(i -> InviteResponseDTO.builder()
                 .inviteId(i.getId())
                 .projectName(i.getProject().getProjectName())
-                .inviteeName(i.getUser().getUsername())
+                .inviteeName(i.getUser().getNickname())
                 .status(i.getStatus())
                 .inviterName(i.getInviterName())
                 .build()
@@ -127,6 +127,6 @@ public class ProjectInviteService {
     //본인 확인
     private boolean isNotMyInvitation(Long id, String username) {
         ProjectInvite invite = projectInviteRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        return !invite.getUser().getUsername().equals(username);
+        return !invite.getUser().getNickname().equals(username);
     }
 }

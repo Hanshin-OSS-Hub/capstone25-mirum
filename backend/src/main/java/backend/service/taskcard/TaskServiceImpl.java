@@ -1,6 +1,9 @@
 package backend.service.taskcard;
 
 
+import backend.entity.Project.Project;
+import backend.entity.Project.ProjectMember;
+import backend.entity.Project.ProjectMemberRoleType;
 import backend.entity.User;
 import backend.entity.taskcard.Task;
 import backend.dto.taskcard.TaskDetailDTO;
@@ -8,6 +11,8 @@ import backend.dto.taskcard.TaskRequestDTO;
 import backend.dto.taskcard.TaskSummaryDTO;
 import backend.dto.taskcard.TaskUpdateRequestDTO;
 import backend.entity.taskcard.TaskStatus;
+import backend.repository.ProjectMemberRepository;
+import backend.repository.ProjectRepository;
 import backend.repository.UserRepository;
 import backend.repository.taskcard.TaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static java.time.LocalTime.now;
 
 @Service
 @RequiredArgsConstructor
@@ -24,14 +33,13 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final ProjectMemberRepository projectMemberRepository;
 
     @Override
     @Transactional
     public Long createTask(TaskRequestDTO req, Long ProjectId) {
-        validateCreateRequest(req);
 
-        // TODO: 권한 체크(예: username이 projectId 멤버인지)
-        // TODO: boardId가 projectId에 속하는지 검증
+        validateCreateRequest(req);
 
         TaskStatus status =
                 (req.getStatus() == null)
@@ -41,7 +49,6 @@ public class TaskServiceImpl implements TaskService {
         LocalDate now = LocalDate.now();
 
         Task task = new Task(
-                req.getBoardId(),
                 req.getProjectId(),
                 req.getTitle(),
                 req.getDescription(),
@@ -50,8 +57,8 @@ public class TaskServiceImpl implements TaskService {
                 req.getNotes(),
                 req.getAssigneeId(),
                 req.getDueDate(),
-                now,
-                now
+                LocalDateTime.now(),
+                LocalDateTime.now()
         );
 
         Task saved = taskRepository.save(task);
@@ -72,24 +79,28 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     //DELETED 제외 모든 task조회
-    public Page<TaskSummaryDTO> listTasks(Long projectId, Pageable pageable) {
+    public List<TaskSummaryDTO> listTasks(Long projectId) {
 
-        return taskRepository.findAllByProjectIdAndStatusNot(projectId, TaskStatus.DELETED, pageable)
-                .map(this::toSummaryDTO);
+        return taskRepository.findAllByProjectIdAndStatusNot(projectId, TaskStatus.DELETED)
+                .stream()
+                .map(this::toSummaryDTO)
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     //특정 status 기준 조회(DELETED 포함)
-    public Page<TaskSummaryDTO> listTasksByStatus(Long projectId, TaskStatus status, Pageable pageable) {
+    public List<TaskSummaryDTO> listTasksByStatus(Long projectId, TaskStatus status) {
 
-        return taskRepository.findByProjectIdAndStatus(projectId, status, pageable)
-                .map(this::toSummaryDTO);
+        return taskRepository.findByProjectIdAndStatus(projectId, status)
+                .stream()
+                .map(this::toSummaryDTO)
+                .toList();
     }
 
     @Override
     @Transactional
-    public TaskDetailDTO updateTask(Long projectId,Long taskId, TaskUpdateRequestDTO req) {
+    public TaskDetailDTO updateTask(Long projectId, Long taskId, TaskUpdateRequestDTO req) {
 
         Task task = taskRepository.findByProjectIdAndTaskIdAndStatusNot(
                 projectId, taskId, TaskStatus.DELETED
@@ -105,7 +116,7 @@ public class TaskServiceImpl implements TaskService {
                 req.getNotes(),
                 req.getAssigneeId(),
                 req.getDueDate(),
-                LocalDate.now()
+                LocalDateTime.now()
         );
 
         return toDetailDTO(task);
@@ -115,8 +126,7 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public void deleteTask(Long projectId, Long taskId) {
         Task task = taskRepository.findByProjectIdAndTaskIdAndStatusNot(
-                        projectId, taskId, TaskStatus.DELETED
-                )
+                        projectId, taskId, TaskStatus.DELETED)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
 
         task.updateBasic(
@@ -127,8 +137,40 @@ public class TaskServiceImpl implements TaskService {
                 null,
                 null,
                 null,
-                LocalDate.now()
+                LocalDateTime.now()
         );
+    }
+
+    @Override
+    public void restoreTask(Long projectId, Long taskId) {
+        Task task = taskRepository.findByProjectIdAndTaskIdAndStatus(
+                projectId, taskId, TaskStatus.DELETED)
+                .orElseThrow(() -> new IllegalArgumentException("Deleted task not found: " + taskId));
+
+        task.restoreTask(TaskStatus.TODO, LocalDateTime.now());
+
+
+    }
+
+    @Override
+    @Transactional
+    public void changeAssigneeToLeader(Long projectId, Long removedMemberId) {
+
+        ProjectMember leader = projectMemberRepository
+                .findByProjectIdAndRole(projectId, ProjectMemberRoleType.LEADER)
+                .orElseThrow(() -> new IllegalArgumentException("Leader not found"));
+
+        Long leaderId = leader.getUser().getId();
+
+        // 2. 해당 멤버가 담당자인 task 조회
+        List<Task> tasks = taskRepository.findAllByProjectIdAndAssigneeIdAndStatusNot(
+                projectId, removedMemberId, TaskStatus.DELETED
+        );
+
+        // 3. 담당자 전부 리더로 변경
+        for (Task task : tasks) {
+            task.changeAssignee(leaderId, LocalDateTime.now());
+        }
     }
 
     //Delete 매서드 분리
@@ -140,13 +182,12 @@ public class TaskServiceImpl implements TaskService {
         task.updateBasic(
                 null, null, TaskStatus.DELETED,
                 null, null, null, null,
-                LocalDate.now()
+                LocalDateTime.now()
         );
     }
 
 
     private void validateCreateRequest(TaskRequestDTO req) {
-        if (req.getBoardId() == null) throw new IllegalArgumentException("boardId is required");
         if (req.getProjectId() == null) throw new IllegalArgumentException("projectId is required");
         if (req.getTitle() == null || req.getTitle().isBlank()) throw new IllegalArgumentException("title is required");
     }
@@ -159,8 +200,8 @@ public class TaskServiceImpl implements TaskService {
         dto.setStatus(task.getStatus());
         dto.setTags(Task.fromCsv(task.getTagsCsv()));
         dto.setNotes(task.getNotes());
-        dto.setCreatedAt(task.getCreatedAt());
-        dto.setUpdatedAt(task.getUpdatedAt());
+        dto.setCreatedDate(task.getCreatedDate());
+        dto.setUpdatedDate(task.getUpdatedDate());
         dto.setDueDate(task.getDueDate());
         dto.setAssigneeId(task.getAssigneeId());
         if (task.getAssigneeId() != null) {
@@ -168,7 +209,7 @@ public class TaskServiceImpl implements TaskService {
                     .orElse(null);
 
             if (user != null) {
-                dto.setAssigneeName(user.getUsername());
+                dto.setAssigneeName(user.getNickname());
             } else {
                 dto.setAssigneeName("알 수 없음");
             }
@@ -188,8 +229,8 @@ public class TaskServiceImpl implements TaskService {
         dto.setDescription(task.getDescription());
         dto.setStatus(task.getStatus());
         dto.setTags(Task.fromCsv(task.getTagsCsv()));
-        dto.setCreatedAt(task.getCreatedAt());
-        dto.setUpdatedAt(task.getUpdatedAt());
+        dto.setCreatedDate(task.getCreatedDate());
+        dto.setUpdatedDate(task.getUpdatedDate());
         dto.setDueDate(task.getDueDate());
 
         dto.setAssigneeId(task.getAssigneeId());
@@ -197,7 +238,7 @@ public class TaskServiceImpl implements TaskService {
 
         if (task.getAssigneeId() != null) {
             Long assigneeName = Long.valueOf(userRepository.findById(task.getAssigneeId())
-                    .map(User::getUsername)
+                    .map(User::getNickname)
                     .orElse("알 수 없음"));
             dto.setAssigneeName(assigneeName);
         } else dto.setAssigneeName(Long.valueOf("미배정"));

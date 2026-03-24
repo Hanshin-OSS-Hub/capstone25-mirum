@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,16 +42,16 @@ public class Task {
 
     private Long assigneeId; //담당자(Id)
 
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
-    private LocalDate dueDate;
+    private LocalDateTime createdDate;
+    private LocalDateTime updatedDate;
+    private LocalDateTime dueDate;
 //    private TaskDeleteReason taskDeleteReason;
 
     protected Task() {}
 
-    public Task(Long boardId, Long projectId, String title, String description, TaskStatus status,
-                String tagsCsv, String notes, Long assigneeId, LocalDate dueDate,
-                LocalDate createdAt, LocalDate updatedAt) {
+    public Task(Long projectId, String title, String description, TaskStatus status,
+                String tagsCsv, String notes, Long assigneeId, LocalDateTime dueDate,
+                LocalDateTime createdDate, LocalDateTime updatedDate) {
         this.projectId = projectId;
         this.title = title;
         this.description = description;
@@ -59,14 +60,14 @@ public class Task {
         this.notes = notes;
         this.assigneeId = assigneeId;
         this.dueDate = dueDate;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
     }
 
 
     // ===== update methods =====
     public void updateBasic(String title, String description, TaskStatus status, String tagsCsv, String notes,
-                            Long assigneeId, LocalDate dueDate, LocalDate updatedAt) {
+                            Long assigneeId, LocalDateTime dueDate, LocalDateTime updatedAt) {
         if (title != null) this.title = title;
         if (description != null) this.description = description;
         if (status != null) this.status = status;
@@ -75,7 +76,7 @@ public class Task {
         if (assigneeId != null) this.assigneeId = assigneeId;
         if (dueDate != null) this.dueDate = dueDate;
 
-        this.updatedAt = updatedAt;
+        this.updatedDate = updatedAt;
     }
 
     // tags 변환 헬퍼(원하면 Mapper로 빼도 됨)
@@ -97,5 +98,17 @@ public class Task {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
+    }
+    public void changeAssignee(Long assigneeId, LocalDateTime updatedDate) {
+        this.assigneeId = assigneeId;
+        this.updatedDate = updatedDate;
+    }
+
+    public void restoreTask(TaskStatus status, LocalDateTime updatedDate) {
+        if (this.status != TaskStatus.DELETED) {
+            throw new IllegalStateException("Deleted task만 복구 가능");
+        }
+        this.status = status;
+        this.updatedDate = updatedDate;
     }
 }

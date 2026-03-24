@@ -5,13 +5,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Setter
 public class TaskDetailDTO {
-    // 외래키
-    private Long boardId;
 
     // 작업 카드 기본 정보
     private Long taskId;         // 작업 카드 고유 ID
@@ -22,9 +21,9 @@ public class TaskDetailDTO {
     private String notes;        // 마크다운 전체 내용
 
     // 날짜 정보
-    private LocalDate createdAt;  // 생성일
-    private LocalDate updatedAt;  // 수정일
-    private LocalDate dueDate;    // 마감일
+    private LocalDateTime createdDate;  // 생성일
+    private LocalDateTime updatedDate;  // 수정일
+    private LocalDateTime dueDate;    // 마감일
 
     // 담당자 정보
     private Long assigneeId;

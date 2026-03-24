@@ -2,6 +2,7 @@ package backend.repository;
 
 import backend.entity.Project.Project;
 import backend.entity.Project.ProjectMember;
+import backend.entity.Project.ProjectMemberRoleType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -26,4 +27,11 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
     boolean existsByProjectIdAndUserUsername(Long projectId, String  username);
 
     long countByProjectId(Long projectId);
+
+    //LEADER 찾는 매서드
+    @Query("SELECT pm FROM ProjectMember pm JOIN FETCH pm.user WHERE pm.project.id = :projectId AND pm.role = :role")
+    Optional<ProjectMember> findLeader(@Param("projectId") Long projectId,
+                                       @Param("role") ProjectMemberRoleType role);
+
+     Optional<ProjectMember> findByProjectIdAndRole(Long projectId, ProjectMemberRoleType role);
 }

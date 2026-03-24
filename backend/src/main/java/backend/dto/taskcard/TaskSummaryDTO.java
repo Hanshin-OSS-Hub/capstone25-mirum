@@ -4,7 +4,7 @@ import backend.entity.taskcard.TaskStatus;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -18,9 +18,9 @@ public class TaskSummaryDTO {
     private List<String> tags;    // "tag1,tag2" -> ["tag1", "tag2"]
 
     // 날짜 정보
-    private LocalDate createdAt;  // 생성일
-    private LocalDate updatedAt;  // 수정일
-    private LocalDate dueDate;    // 마감일
+    private LocalDateTime createdDate;  // 생성일
+    private LocalDateTime updatedDate;  // 수정일
+    private LocalDateTime dueDate;    // 마감일
 
     // 담당자 정보
     private Long assigneeId; //담당자 id
