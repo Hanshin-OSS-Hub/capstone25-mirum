@@ -2,8 +2,6 @@ package backend.entity.taskcard;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +30,7 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private TaskStatus status; // TODO, IN_PROGRESS, DONE, DELETED
 
-    // tags를 "tag1,tag2" 문자열로 저장 (가장 단순)
+    // tags를 "tag1,tag2" 문자열로 저장
     @Column(length = 1000)
     private String tagsCsv;
 
@@ -45,7 +43,6 @@ public class Task {
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
     private LocalDateTime dueDate;
-//    private TaskDeleteReason taskDeleteReason;
 
     protected Task() {}
 

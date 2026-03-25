@@ -33,7 +33,6 @@ public class TaskCardController {
 
     @GetMapping("/{taskId}")
     public ResponseEntity<TaskDetailDTO> getTask(
-            //이것도 pathVariable로 써야 할 것 같은ep...
             @PathVariable Long projectId,
             @PathVariable Long taskId
 
