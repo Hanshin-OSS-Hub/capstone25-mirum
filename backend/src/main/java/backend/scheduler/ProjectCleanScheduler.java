@@ -19,6 +19,6 @@ public class ProjectCleanScheduler {
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
         projectRepository.deleteExpiredSoftDeletedDate(thirtyDaysAgo);
 
-        log.info("영구 삭제 작업 완료");
+        log.info("[Scheduler] 삭제 후 30일 지난 프로젝트 영구 삭제 작업 완료");
     }
 }
