@@ -1,6 +1,7 @@
 package backend.config;
 
 import backend.entity.UserRoleType;
+import backend.security.Handler.SocialSuccessHandler;
 import backend.security.JWT.JwtService;
 import backend.security.Filter.JWTFilter;
 import backend.security.Filter.LoginFilter;
@@ -34,16 +35,19 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final AuthenticationConfiguration authenticationConfiguration;
+    AuthenticationConfiguration authenticationConfiguration;
     private final AuthenticationSuccessHandler loginSuccessHandler;
     private final JwtService jwtService;
+    private final AuthenticationSuccessHandler socialSuccessHandler;
 
     public SecurityConfig(
             AuthenticationConfiguration authenticationConfiguration,
-            @Qualifier("LoginSuccessHandler") AuthenticationSuccessHandler loginSuccessHandler, JwtService jwtService
+            @Qualifier("LoginSuccessHandler") AuthenticationSuccessHandler loginSuccessHandler, JwtService jwtService,
+            @Qualifier("SocialSuccessHandler") AuthenticationSuccessHandler socialSuccessHandler
     ) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
+        this.socialSuccessHandler = socialSuccessHandler;
         this.jwtService = jwtService;
     }
 
@@ -71,7 +75,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        //여기 프론트 주소로 바꿔야 함
+
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -136,10 +140,10 @@ public class SecurityConfig {
                         })
                 );
 
-//        // OAuth2 인증용
-//        http
-//                .oauth2Login(oauth2 -> oauth2
-//                        .successHandler());
+        // OAuth2 인증용
+        http
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(socialSuccessHandler));
 
 
 
