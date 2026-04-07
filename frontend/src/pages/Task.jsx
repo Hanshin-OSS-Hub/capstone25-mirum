@@ -8,6 +8,7 @@ import { useGetMemberList } from '@/features/members/api/useGetMemberList.js';
 import { useGetProjectDetails } from '@/features/projects/api/useGetProjectDetails.js';
 import { useGetTaskList } from '@/features/tasks/api/useGetTaskList.js';
 import { useAuth } from '@/features/auth/hooks/useAuth.js';
+import { askProjectAssistant } from '@/features/ai/api/askProjectAssistant.js';
 
 import ProjectMemberModal from '@/features/members/components/MemberManagementModal.jsx';
 import ProjectAdminPanel from '@/features/projects/components/ProjectAdminPanel.jsx';
@@ -32,6 +33,12 @@ const TASK_COLOR_PALETTE = [
   '#14B8A6',
 ];
 
+const AI_EXAMPLE_QUESTIONS = [
+  '이 프로젝트 마감일 언제야?',
+  '진행중인 작업 몇 개야?',
+  '내가 맡은 작업 뭐야?',
+];
+
 export default function Task() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,6 +50,11 @@ export default function Task() {
   const [defaultAssigneeName, setDefaultAssigneeName] = useState(myUsername);
   const [selectedTask, setSelectedTask] = useState(null);
   const [topTab, setTopTab] = useState('project');
+  const [isAiOpen, setIsAiOpen] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
 
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
@@ -173,6 +185,74 @@ export default function Task() {
   const timelineTasks = useMemo(() => {
     return taskData.map(normalizeTaskForTimeline);
   }, [taskData]);
+
+  const aiContext = useMemo(() => {
+    const validDueDates = taskData
+      .map((task) => task?.dueDate)
+      .filter(Boolean)
+      .sort();
+
+    const nearestDueDate = validDueDates[0] || '';
+    const latestDueDate = validDueDates[validDueDates.length - 1] || '';
+
+    return {
+      project: {
+        projectId: id || '',
+        title: project?.projectName || '',
+        description: project?.description || '',
+        startDate: project?.creationDate || '',
+      },
+      summary: {
+        totalTaskCount: taskData.length,
+        todoCount: taskData.filter((task) => task.status === taskStatus.todo).length,
+        inProgressCount: taskData.filter((task) => task.status === taskStatus.inProgress).length,
+        doneCount: taskData.filter((task) => task.status === taskStatus.done).length,
+        nearestDueDate,
+        latestDueDate,
+      },
+      members: members.map((member) => ({
+        name: member.username || member.nickname || '',
+        role: member.role || '',
+      })),
+      tasks: taskData.map((task) => ({
+        title: task.title || '',
+        assignee: task.assignee || '',
+        status: task.status || '',
+        dueDate: task.dueDate || '',
+        tags: Array.isArray(task.tags) ? task.tags : [],
+      })),
+      requester: {
+        username: myUsername,
+      },
+    };
+  }, [id, project, members, taskData, myUsername]);
+
+  const handleAskProjectAI = async () => {
+    const trimmedQuestion = aiQuestion.trim();
+    if (!trimmedQuestion || aiLoading) return;
+
+    setAiLoading(true);
+    setAiError('');
+    setAiAnswer('');
+
+    try {
+      const answer = await askProjectAssistant(trimmedQuestion, aiContext);
+      setAiAnswer(answer);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '미룸 AI 응답을 불러오지 못했습니다.';
+      setAiError(message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  /** @param {import('react').KeyboardEvent<HTMLTextAreaElement>} event */
+  const handleAiQuestionKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleAskProjectAI();
+    }
+  };
 
   const deletedCards = useMemo(() => {
     return [];
@@ -312,6 +392,21 @@ export default function Task() {
 
           <div className="relative flex items-center gap-3">
             <button
+              type="button"
+              className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
+                isAiOpen
+                  ? 'border-blue-200 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setIsAiOpen((prev) => !prev)}
+            >
+              <span className="flex flex-col items-center justify-center text-[11px] font-semibold leading-none">
+                <span>미룸</span>
+                <span>AI</span>
+              </span>
+            </button>
+
+            <button
               className="cursor-pointer rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 transition hover:bg-gray-50"
               onClick={() => setIsMemberModalOpen(!isMemberModalOpen)}
             >
@@ -343,6 +438,59 @@ export default function Task() {
       </div>
 
       <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
+        {isAiOpen && (
+          <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">미룸 AI</h3>
+              <p className="mt-1 text-sm text-gray-600">
+                프로젝트 정보, 작업 상태, 담당자 기준으로 질문할 수 있습니다.
+              </p>
+            </div>
+
+            <div className="mb-4 flex flex-wrap gap-2">
+              {AI_EXAMPLE_QUESTIONS.map((exampleQuestion) => (
+                <button
+                  key={exampleQuestion}
+                  type="button"
+                  onClick={() => setAiQuestion(exampleQuestion)}
+                  className="cursor-pointer rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100"
+                >
+                  {exampleQuestion}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3 md:flex-row md:items-start">
+              <textarea
+                value={aiQuestion}
+                onChange={(event) => setAiQuestion(event.target.value)}
+                onKeyDown={handleAiQuestionKeyDown}
+                placeholder="예: user1이 맡은 작업 뭐야?"
+                className="min-h-[88px] w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              />
+
+              <button
+                type="button"
+                onClick={handleAskProjectAI}
+                disabled={aiLoading || !aiQuestion.trim()}
+                className="w-full cursor-pointer rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium whitespace-nowrap text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 md:w-auto md:min-w-[112px] md:shrink-0"
+              >
+                {aiLoading ? '답변 생성 중...' : '질문하기'}
+              </button>
+            </div>
+
+            {aiLoading && <p className="mt-3 text-sm text-blue-600">미룸 AI가 답변을 준비하고 있습니다...</p>}
+            {aiError && <p className="mt-3 text-sm text-red-500">{aiError}</p>}
+
+            {aiAnswer && (
+              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="mb-2 text-xs font-semibold tracking-wide text-gray-500">AI 답변</p>
+                <p className="whitespace-pre-wrap text-sm text-gray-800">{aiAnswer}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {topTab === 'project' && (
           <div className="space-y-6">
             {sortedMembers.map((member) => {
