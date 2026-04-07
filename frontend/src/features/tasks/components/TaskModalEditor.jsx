@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { taskStatus } from '@/features/tasks/types/task.js';
 import { useDeleteTask } from '@/features/tasks/api/useDeleteTask.js';
 import TaskNote from '@/features/note/components/TaskNote.jsx';
-import { IconChat, IconClose, IconSave, IconTrash } from '@/shared/assets/icons.js';
+import { IconClose, IconSave, IconTrash } from '@/shared/assets/icons.js';
 
 export default function TaskModalEditor(props) {
-  const { editedTask, setEditedTask, teamMembers, onSave, onCancel, isChatOpen, onChatToggle } =
-      props;
+  const { editedTask, setEditedTask, teamMembers, onSave, onCancel } = props;
   const { mutate: deleteTask } = useDeleteTask();
   const [newTag, setNewTag] = useState('');
 
@@ -88,20 +87,6 @@ export default function TaskModalEditor(props) {
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-2">
-            <button
-                type="button"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  onChatToggle();
-                }}
-                className={`cursor-pointer rounded-xl p-2 transition-colors ${
-                    isChatOpen ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-            >
-              <IconChat className="text-lg" />
-            </button>
-
             <button
                 onClick={(event) => {
                   event.preventDefault();
