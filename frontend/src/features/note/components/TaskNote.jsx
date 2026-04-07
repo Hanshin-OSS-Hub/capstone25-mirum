@@ -8,8 +8,18 @@ import remarkGfm from 'remark-gfm';
  * @param {string} props.notes - 마크다운 내용
  * @param {Function} props.onChange - 내용 변경 핸들러 (text) => void
  * @param {boolean} props.isReadOnly - 읽기 전용 여부
+ * @param {Function} [props.onAiSummarize] - AI 정리 실행 핸들러
+ * @param {boolean} [props.isAiLoading] - AI 정리 로딩 여부
+ * @param {string} [props.aiError] - AI 정리 에러 메시지
  */
-export default function TaskNote({ notes, onChange, isReadOnly = false }) {
+export default function TaskNote({
+  notes,
+  onChange,
+  isReadOnly = false,
+  onAiSummarize,
+  isAiLoading = false,
+  aiError = '',
+}) {
   const [isPreview, setIsPreview] = useState(true);
 
   if (isReadOnly) {
@@ -31,10 +41,20 @@ export default function TaskNote({ notes, onChange, isReadOnly = false }) {
 
   return (
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-900">메모</h3>
 
-          <div className="inline-flex rounded-xl bg-gray-100 p-1">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onAiSummarize}
+              disabled={!onAiSummarize || isAiLoading || !notes?.trim()}
+              className="cursor-pointer rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              {isAiLoading ? 'AI 정리 중...' : 'AI 정리하기'}
+            </button>
+
+            <div className="inline-flex rounded-xl bg-gray-100 p-1">
             <button
                 type="button"
                 onClick={() => setIsPreview(true)}
@@ -53,8 +73,11 @@ export default function TaskNote({ notes, onChange, isReadOnly = false }) {
             >
               편집
             </button>
+            </div>
           </div>
         </div>
+
+        {aiError ? <p className="mb-3 text-sm text-red-500">{aiError}</p> : null}
 
         {isPreview ? (
             <div className="min-h-[320px] p-5 rounded-2xl border border-gray-200 bg-white prose prose-sm max-w-none">
