@@ -1,6 +1,5 @@
 [
   {
-    "id": 0,
     "role": "USER",
     "username": "qwer",
     "password": "1234",
@@ -11,7 +10,6 @@
     "profileImg": ""
   },
   {
-    "id": 1,
     "role": "USER",
     "username": "newbie",
     "password": "1234",
@@ -22,7 +20,6 @@
     "profileImg": ""
   },
   {
-    "id": 2,
     "role": "USER",
     "username": "younghee.lee",
     "password": "password456",
@@ -33,7 +30,6 @@
     "profileImg": ""
   },
   {
-    "id": 3,
     "role": "USER",
     "username": "chulsu.kim",
     "password": "password789",
@@ -44,7 +40,6 @@
     "profileImg": ""
   },
   {
-    "id": 4,
     "role": "USER",
     "username": "jieun.choi",
     "password": "password234",
@@ -55,7 +50,6 @@
     "profileImg": ""
   },
   {
-    "id": 5,
     "role": "USER",
     "username": "gildong.hong",
     "password": "password345",
@@ -66,7 +60,6 @@
     "profileImg": ""
   },
   {
-    "id": 6,
     "role": "USER",
     "username": "kangsoo.kang",
     "password": "password456",
@@ -77,7 +70,6 @@
     "profileImg": ""
   },
   {
-    "id": 7,
     "role": "USER",
     "username": "joonseo.jo",
     "password": "password567",
@@ -88,7 +80,6 @@
     "profileImg": ""
   },
   {
-    "id": 8,
     "role": "USER",
     "username": "hannah.han",
     "password": "password678",
@@ -99,7 +90,6 @@
     "profileImg": ""
   },
   {
-    "id": 9,
     "role": "USER",
     "username": "seohee.seo",
     "password": "password789",
@@ -110,7 +100,6 @@
     "profileImg": ""
   },
   {
-    "id": 10,
     "role": "USER",
     "username": "seulgi.seo",
     "password": "password1234",

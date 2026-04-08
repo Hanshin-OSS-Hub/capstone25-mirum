@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { taskStatus } from '@/features/tasks/types/task.js';
+// import { taskStatus } from '@/features/tasks/types/task.js';
 import { useUpdateTask } from '@/features/tasks/api/useUpdateTask.js';
-import { reviewTask } from '../../ai/api/reviewTask.js';
 import TaskNote from '@/features/note/components/TaskNote.jsx';
 import TaskModalEditor from '@/features/tasks/components/TaskModalEditor.jsx';
 import { IconClose, IconEdit } from '@/shared/assets/icons.js';
+import { reviewTask } from '../../ai/api/reviewTask.js';
 
 export default function TaskModal(props) {
   const { task, onClose, members, myUserName } = props;
@@ -45,9 +45,9 @@ export default function TaskModal(props) {
 
   const getStatusText = (status) => {
     switch (status) {
-      case taskStatus.done:
+      case 'DONE':
         return '완료';
-      case taskStatus.inProgress:
+      case 'IN_PROGRESS':
         return '진행중';
       default:
         return '대기';
@@ -56,9 +56,9 @@ export default function TaskModal(props) {
 
   const getStatusDotColor = (status) => {
     switch (status) {
-      case taskStatus.done:
+      case 'DONE':
         return 'bg-green-500';
-      case taskStatus.inProgress:
+      case 'IN_PROGRESS':
         return 'bg-orange-500';
       default:
         return 'bg-gray-500';
@@ -67,9 +67,9 @@ export default function TaskModal(props) {
 
   const getStatusPill = (status) => {
     switch (status) {
-      case taskStatus.done:
+      case 'DONE':
         return 'bg-green-100 text-green-800';
-      case taskStatus.inProgress:
+      case 'IN_PROGRESS':
         return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';

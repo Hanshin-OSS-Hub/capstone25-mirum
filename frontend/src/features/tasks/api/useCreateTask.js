@@ -2,48 +2,35 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
 
 /**
- * 작업 카드 생성 요청 DTO (클라이언트 요청 형식)
- * @see TaskRequestDTO.java
- * @see ../../../../../backend/src/main/java/backend/dto/Tasks/TaskRequestDTO.java
- * @typedef {Object} TaskRequestDTO
- * @property {number} boardId - 소속 보드 ID (필수)
- * @property {number} projectId - 소속 프로젝트 ID (검증용, 필수)
- * @property {number} [assigneeId] - 담당자 ID
- * @property {string} title - 작업 제목 (필수)
- * @property {string} [description] - 작업 설명
- * @property {taskStatus} [status] - 초기 상태 (기본값: TODO)
- * @property {string} [dueDate] - 마감일 (ISO Date String, YYYY-MM-DD)
- * @property {string[]} [tags] - 태그 목록
- * @property {string} [notes] - 마크다운 노트
- */
-
-/**
- * 프로젝트 생성 응답 (서버 응답 형식)
- * @typedef {Object} CreateTaskResponse
- * @property {number} projectId
- */
-
-/**
  * [CREATE] 새 작업 카드 생성 API
- * @typedef {import('@tanstack/react-query').DefaultError} DefaultError
- * @returns {import('@tanstack/react-query').UseMutationResult<CreateTaskResponse, DefaultError, TaskRequestDTO, unknown>}
+ * @typedef {import('@/features/tasks/types/task.js').TaskData} TaskData
+ * @typedef {import('@/features/tasks/types/task.js').TaskRequestDTO} TaskRequestDTO
+ *
+ * (공통 TaskRequestDTO에서 title만 필수, 나머지는 옵셔널로 처리)
+ * @typedef {Pick<TaskRequestDTO, 'title'> & Partial<Omit<TaskRequestDTO, 'title'>>} RequestTaskCreateDTO
+ *
+ * (응답은 생성된 작업 카드의 ID만 포함)
+ * @typedef {{ taskId: number }} ResponseTaskCreate
+ * @typedef {import('@tanstack/react-query').DefaultError} Error
+ * @returns {import('@tanstack/react-query').UseMutationResult<ResponseTaskCreate, Error, { requestBody: RequestTaskCreateDTO, projectId: number }, unknown>}
  */
-
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    /** @param {TaskRequestDTO} taskRequest */
-    mutationFn: (taskRequest) => {
-      return api.post('/tasks', taskRequest);
+    /** @param {{ requestBody: RequestTaskCreateDTO, projectId: number }} params */
+    mutationFn: async ({ requestBody, projectId }) => {
+      /** @type {ResponseTaskCreate} */
+      return await api.post(`/${projectId}/tasks`, requestBody);
     },
-    // Mock API가 전체 객체를 반환하도록 수정되었으므로, 다시 data.boardId를 사용할 수 있습니다!
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({ queryKey: ['tasks', data.boardId] });
-      console.log(data);
+    onSuccess: async (data, variables) => {
+      // 성공 시 해당 프로젝트의 tasks 캐시를 무효화하여 목록 새로고침
+      await queryClient.invalidateQueries({ queryKey: ['tasks', variables.projectId] });
+      console.log('생성 완료:', data);
       alert('작업 카드가 생성되었습니다.');
     },
     onError: (error) => {
-      console.log(error);
+      console.error('생성 실패:', error);
       alert(error.message || '작업 카드 생성에 실패하였습니다.');
     },
   });

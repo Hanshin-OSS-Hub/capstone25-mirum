@@ -1,25 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { taskStatus } from '@/features/tasks/types/task.js';
+import { askProjectAssistant } from '@/features/ai/api/askProjectAssistant.js';
+// import { taskStatus } from '@/features/tasks/types/task.js';
 import { useGetBoards } from '@/features/boards/api/useGetBoards.js';
-import FilePanel from '@/features/files/components/FilePanel.jsx';
 import { useGetInvitees } from '@/features/invitations/api/useGetInvitees.js';
 import { useGetMemberList } from '@/features/members/api/useGetMemberList.js';
 import { useGetProjectDetails } from '@/features/projects/api/useGetProjectDetails.js';
 import { useGetTaskList } from '@/features/tasks/api/useGetTaskList.js';
 import { useAuth } from '@/features/auth/hooks/useAuth.js';
-import { askProjectAssistant } from '@/features/ai/api/askProjectAssistant.js';
-
+import FilePanel from '@/features/files/components/FilePanel.jsx';
 import ProjectMemberModal from '@/features/members/components/MemberManagementModal.jsx';
 import ProjectAdminPanel from '@/features/projects/components/ProjectAdminPanel.jsx';
-import ProjectTrashPanel from '../features/projects/components/ProjectTrashPanel.jsx';
 import CreateTaskModal from '@/features/tasks/components/CreateTaskModal.jsx';
 import TaskCard from '@/features/tasks/components/TaskCard.jsx';
 import TaskModal from '@/features/tasks/components/TaskModal.jsx';
 import TaskTimeline from '@/features/tasks/components/TaskTimeline.jsx';
-
 import { IconSettings, IconTrash, IconUserAdd } from '@/shared/assets/icons.js';
 import Header from '@/shared/components/Header.jsx';
+import ProjectTrashPanel from '../features/projects/components/ProjectTrashPanel.jsx';
 
 const TASK_COLOR_PALETTE = [
   '#5B8DEF',
@@ -48,7 +46,7 @@ export default function Task() {
 
   const myUsername = user?.username || '';
 
-  const [activeBoardId, setActiveBoardId] = useState(null);
+  // const [activeBoardId, setActiveBoardId] = useState(null);
   const [defaultAssigneeName, setDefaultAssigneeName] = useState(myUsername);
   const [selectedTask, setSelectedTask] = useState(null);
   const [topTab, setTopTab] = useState('project');
@@ -78,14 +76,14 @@ export default function Task() {
   const { data: project = null } = useGetProjectDetails(id);
   const { data: members = [] } = useGetMemberList(id);
   const { data: pendingInvites = [] } = useGetInvitees(id);
-  const { data: boards = [] } = useGetBoards(id);
-  const { data: tasks } = useGetTaskList(activeBoardId);
+  // const { data: boards = [] } = useGetBoards(id);
+  const { data: tasks } = useGetTaskList(Number(id));
 
-  const taskData = tasks?.allTasks || [];
+  // const tasks = tasks?.allTasks || [];
 
   const title = project?.projectName || '프로젝트 이름';
   const desc = project?.description || '프로젝트 설명';
-  const day = project?.creationDate ? project.creationDate.slice(0, 10) : '-';
+  const day = project?.createdDate ? project.createdDate.slice(0, 10) : '-';
 
   const getTaskColor = (taskId) => {
     if (!taskId) return TASK_COLOR_PALETTE[0];
@@ -94,9 +92,7 @@ export default function Task() {
 
   const normalizeTaskForTimeline = (task) => {
     const createdBase =
-      task.creationDate ||
-      task.updateDate ||
-      new Date().toISOString().split('T')[0];
+      task.createdDate || task.updatedDate || new Date().toISOString().split('T')[0];
 
     return {
       ...task,
@@ -105,7 +101,7 @@ export default function Task() {
       assignee: task.assignee || '',
       startDate: task.startDate || createdBase,
       dueDate: task.dueDate || task.startDate || createdBase,
-      creationDate: createdBase,
+      createdDate: createdBase,
       color: task.color || getTaskColor(task.taskId),
       tags: Array.isArray(task.tags) ? task.tags : [],
       notes: task.notes || '',
@@ -113,13 +109,13 @@ export default function Task() {
   };
 
   const stats = useMemo(() => {
-    const total = taskData.length;
-    const todo = taskData.filter((t) => t.status === taskStatus.todo).length;
-    const inProgress = taskData.filter((t) => t.status === taskStatus.inProgress).length;
-    const completed = taskData.filter((t) => t.status === taskStatus.done).length;
+    const total = tasks.length;
+    const todo = tasks.filter((t) => t.status === 'TODO').length;
+    const inProgress = tasks.filter((t) => t.status === 'IN_PROGRESS').length;
+    const completed = tasks.filter((t) => t.status === 'DONE').length;
 
     return { total, todo, inProgress, completed };
-  }, [taskData]);
+  }, [tasks]);
 
   const summaryCards = useMemo(
     () => [
@@ -168,11 +164,11 @@ export default function Task() {
 
   const isLeader = myProjectRole === 'leader';
 
-  useEffect(() => {
-    if (boards.length > 0 && activeBoardId === null) {
-      setActiveBoardId(boards[0].boardId);
-    }
-  }, [boards, activeBoardId]);
+  // useEffect(() => {
+  //   if (boards.length > 0 && activeBoardId === null) {
+  //     setActiveBoardId(boards[0].boardId);
+  //   }
+  // }, [boards, activeBoardId]);
 
   useEffect(() => {
     if (location.pathname.endsWith('/admin')) {
@@ -209,13 +205,13 @@ export default function Task() {
       map[m.username] = [];
     });
 
-    taskData.forEach((t) => {
+    tasks.forEach((t) => {
       if (!map[t.assignee]) map[t.assignee] = [];
       map[t.assignee].push(t);
     });
 
     return map;
-  }, [taskData, sortedMembers]);
+  }, [tasks, sortedMembers]);
 
   const timelineMembers = useMemo(() => {
     return sortedMembers.map((member) => ({
@@ -226,11 +222,11 @@ export default function Task() {
   }, [sortedMembers]);
 
   const timelineTasks = useMemo(() => {
-    return taskData.map(normalizeTaskForTimeline);
-  }, [taskData]);
+    return tasks.map(normalizeTaskForTimeline);
+  }, [tasks]);
 
   const aiContext = useMemo(() => {
-    const validDueDates = taskData
+    const validDueDates = tasks
       .map((task) => task?.dueDate)
       .filter(Boolean)
       .sort();
@@ -243,13 +239,13 @@ export default function Task() {
         projectId: id || '',
         title: project?.projectName || '',
         description: project?.description || '',
-        startDate: project?.creationDate || '',
+        startDate: project?.createdDate || '',
       },
       summary: {
-        totalTaskCount: taskData.length,
-        todoCount: taskData.filter((task) => task.status === taskStatus.todo).length,
-        inProgressCount: taskData.filter((task) => task.status === taskStatus.inProgress).length,
-        doneCount: taskData.filter((task) => task.status === taskStatus.done).length,
+        totalTaskCount: tasks.length,
+        todoCount: tasks.filter((task) => task.status === 'TODO').length,
+        inProgressCount: tasks.filter((task) => task.status === 'IN_PROGRESS').length,
+        doneCount: tasks.filter((task) => task.status === 'DONE').length,
         nearestDueDate,
         latestDueDate,
       },
@@ -257,7 +253,7 @@ export default function Task() {
         name: member.username || member.nickname || '',
         role: member.role || '',
       })),
-      tasks: taskData.map((task) => ({
+      tasks: tasks.map((task) => ({
         title: task.title || '',
         assignee: task.assignee || '',
         status: task.status || '',
@@ -268,7 +264,7 @@ export default function Task() {
         username: myUsername,
       },
     };
-  }, [id, project, members, taskData, myUsername]);
+  }, [id, project, members, tasks, myUsername]);
 
   const handleAskProjectAI = async () => {
     const trimmedQuestion = aiQuestion.trim();
@@ -282,7 +278,8 @@ export default function Task() {
       const answer = await askProjectAssistant(trimmedQuestion, aiContext);
       setAiAnswer(answer);
     } catch (error) {
-      const message = error instanceof Error ? error.message : '미룸 AI 응답을 불러오지 못했습니다.';
+      const message =
+        error instanceof Error ? error.message : '미룸 AI 응답을 불러오지 못했습니다.';
       setAiError(message);
     } finally {
       setAiLoading(false);
@@ -320,9 +317,7 @@ export default function Task() {
 
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-            <h1 className="text-xl font-bold text-gray-900">
-              프로젝트 정보를 불러올 수 없습니다.
-            </h1>
+            <h1 className="text-xl font-bold text-gray-900">프로젝트 정보를 불러올 수 없습니다.</h1>
             <button
               onClick={handleBack}
               className="mt-4 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50"
@@ -543,13 +538,15 @@ export default function Task() {
                 type="button"
                 onClick={handleAskProjectAI}
                 disabled={aiLoading || !aiQuestion.trim()}
-                className="w-full cursor-pointer rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium whitespace-nowrap text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 md:w-auto md:min-w-[112px] md:shrink-0"
+                className="w-full cursor-pointer whitespace-nowrap rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 md:w-auto md:min-w-[112px] md:shrink-0"
               >
                 {aiLoading ? '답변 생성 중...' : '질문하기'}
               </button>
             </div>
 
-            {aiLoading && <p className="mt-3 text-sm text-blue-600">미룸 AI가 답변을 준비하고 있습니다...</p>}
+            {aiLoading && (
+              <p className="mt-3 text-sm text-blue-600">미룸 AI가 답변을 준비하고 있습니다...</p>
+            )}
             {aiError && <p className="mt-3 text-sm text-red-500">{aiError}</p>}
 
             {aiAnswer && (
@@ -565,7 +562,7 @@ export default function Task() {
           <div className="space-y-6">
             {sortedMembers.map((member) => {
               const list = tasksByMember[member.username] || [];
-              const doneCount = list.filter((t) => t.status === taskStatus.done).length;
+              const doneCount = list.filter((t) => t.status === 'DONE').length;
 
               return (
                 <div
@@ -579,9 +576,7 @@ export default function Task() {
                       </div>
 
                       <div className="min-w-0">
-                        <div className="text-lg font-semibold text-gray-900">
-                          {member.username}
-                        </div>
+                        <div className="text-lg font-semibold text-gray-900">{member.username}</div>
                         <div className="truncate text-sm text-gray-500">
                           {member.nickname} · {member.role}
                         </div>
@@ -646,21 +641,18 @@ export default function Task() {
             tasks={timelineTasks}
             teamMembers={timelineMembers}
             onTaskClick={(task) => {
-              const originalTask = taskData.find((item) => item.taskId === task.id);
+              const originalTask = tasks.find((item) => item.taskId === task.id);
               if (originalTask) openTask(originalTask);
             }}
           />
         )}
 
         {topTab === 'trash' && (
-          <ProjectTrashPanel
-            deletedTasks={deletedTasks}
-            deletedFiles={deletedFiles}
-          />
+          <ProjectTrashPanel deletedTasks={deletedTasks} deletedFiles={deletedFiles} />
         )}
 
-        {topTab === 'settings' && (
-          isLeader ? (
+        {topTab === 'settings' &&
+          (isLeader ? (
             <ProjectAdminPanel
               project={project}
               projectId={id}
@@ -674,8 +666,7 @@ export default function Task() {
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-800 shadow-sm">
               관리자 페이지는 리더만 접근할 수 있습니다.
             </div>
-          )
-        )}
+          ))}
       </div>
 
       <CreateTaskModal
@@ -684,7 +675,7 @@ export default function Task() {
         onClose={() => setIsCreateTaskModalOpen(false)}
         members={members}
         defaultAssigneeName={defaultAssigneeName}
-        boardId={activeBoardId}
+        // boardId={activeBoardId}
       />
 
       {selectedTask && (

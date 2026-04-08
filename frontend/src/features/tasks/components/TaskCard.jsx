@@ -1,11 +1,11 @@
-import { taskStatus } from '@/features/tasks/types/task.js';
+// import { taskStatus } from '@/features/tasks/types/task.js';
 
 export default function TaskCard({ task, onClick }) {
   const getStatusIcon = (status) => {
     switch (status) {
-      case taskStatus.done:
+      case 'DONE':
         return 'ri-check-line text-green-600';
-      case taskStatus.inProgress:
+      case 'IN_PROGRESS':
         return 'ri-time-line text-orange-600';
       default:
         return 'ri-circle-line text-gray-400';
@@ -14,9 +14,9 @@ export default function TaskCard({ task, onClick }) {
 
   const getStatusText = (status) => {
     switch (status) {
-      case taskStatus.done:
+      case 'DONE':
         return '완료';
-      case taskStatus.inProgress:
+      case 'IN_PROGRESS':
         return '진행중';
       default:
         return '대기';
@@ -25,9 +25,9 @@ export default function TaskCard({ task, onClick }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case taskStatus.done:
+      case 'DONE':
         return 'bg-green-100 text-green-800';
-      case taskStatus.inProgress:
+      case 'IN_PROGRESS':
         return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -38,7 +38,7 @@ export default function TaskCard({ task, onClick }) {
     if (!task.dueDate) return false;
     const today = new Date();
     const dueDate = new Date(task.dueDate);
-    return dueDate < today && task.status !== taskStatus.done;
+    return dueDate < today && task.status !== 'DONE';
   };
 
   const formatDate = (dateString) => {
