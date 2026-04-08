@@ -1,0 +1,74 @@
+[
+  {
+    "projectId": 101,
+    "projectName": "AI 연구 프로젝트",
+    "description": "인공지능 모델 개발 및 실험",
+    "taskProgress": 20,
+    "memberCount": 0,
+    "creationDate": "2026-03-01T09:00:00",
+    "updateDate": "2026-03-10T11:20:00",
+    "isDeleted": true,
+    "deleteUsername": "qwer",
+    "members": []
+  },
+  {
+    "projectId": 102,
+    "projectName": "UX 개선 태스크포스",
+    "description": "웹 서비스 사용자 경험 개선",
+    "taskProgress": 45,
+    "memberCount": 0,
+    "creationDate": "2026-03-02T10:30:00",
+    "updateDate": "2026-03-02T10:30:00",
+    "isDeleted": true,
+    "deleteUsername": "qwer",
+    "members": []
+  },
+  {
+    "projectId": 103,
+    "projectName": "데이터 시각화 프로젝트",
+    "description": "대시보드 및 리포트 시각화 도구 개발",
+    "taskProgress": 70,
+    "memberCount": 0,
+    "creationDate": "2026-03-03T14:00:00",
+    "updateDate": "2026-03-15T16:50:00",
+    "isDeleted": true,
+    "deleteUsername": "qwer",
+    "members": []
+  },
+  {
+    "projectId": 104,
+    "projectName": "모바일 게임 개발",
+    "description": "신작 모바일 게임 기획 및 프로토타입 제작",
+    "taskProgress": 10,
+    "memberCount": 0,
+    "creationDate": "2026-03-04T11:15:00",
+    "updateDate": "2026-03-05T09:00:00",
+    "isDeleted": true,
+    "deleteUsername": "qwer",
+    "members": []
+  },
+  {
+    "projectId": 105,
+    "projectName": "클라우드 인프라 구축",
+    "description": "AWS 기반 인프라 설계 및 배포",
+    "taskProgress": 80,
+    "memberCount": 0,
+    "creationDate": "2026-03-05T16:00:00",
+    "updateDate": "2026-03-20T13:10:00",
+    "isDeleted": true,
+    "deleteUsername": "qwer",
+    "members": []
+  },
+  {
+    "projectId": 106,
+    "projectName": "오픈소스 커뮤니티 운영",
+    "description": "오픈소스 프로젝트 관리 및 커뮤니티 활성화",
+    "taskProgress": 55,
+    "memberCount": 0,
+    "creationDate": "2026-03-06T13:30:00",
+    "updateDate": "2026-03-06T13:30:00",
+    "isDeleted": true,
+    "deleteUsername": "qwer",
+    "members": []
+  }
+]

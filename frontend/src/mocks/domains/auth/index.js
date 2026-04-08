@@ -1,0 +1,1 @@
+export { authHandlers as default } from '../../api/auth.js';

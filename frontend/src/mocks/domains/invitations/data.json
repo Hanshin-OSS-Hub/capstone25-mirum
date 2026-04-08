@@ -1,0 +1,47 @@
+[
+  {
+    "inviteId": 1,
+    "projectId": 1,
+    "projectName": "웹 개발 프로젝트",
+    "inviterName": "qwer",
+    "invitedName": "newbie",
+    "status": "INVITED",
+    "createdAt": "2025-05-01T10:00:00"
+  },
+  {
+    "inviteId": 2,
+    "projectId": 2,
+    "projectName": "마케팅 전략 수립",
+    "inviterName": "qwer",
+    "invitedName": "newbie",
+    "status": "ACCEPTED",
+    "createdAt": "2025-04-20T14:00:00"
+  },
+  {
+    "inviteId": 3,
+    "projectId": 3,
+    "projectName": "모바일 앱 개발",
+    "inviterName": "qwer",
+    "invitedName": "newbie",
+    "status": "DECLINED",
+    "createdAt": "2025-04-25T09:30:00"
+  },
+  {
+    "inviteId": 4,
+    "projectId": 4,
+    "projectName": "콘텐츠 제작 프로젝트",
+    "inviterName": "user1",
+    "invitedName": "newbie",
+    "status": "INVITED",
+    "createdAt": "2025-05-02T11:00:00"
+  },
+  {
+    "inviteId": 5,
+    "projectId": 1,
+    "projectName": "웹 개발 프로젝트",
+    "inviterName": "qwer",
+    "invitedName": "user2",
+    "status": "INVITED",
+    "createdAt": "2025-05-01T10:05:00"
+  }
+]

@@ -1,15 +1,17 @@
-import { authHandlers } from '@/mocks/api/auth.js';
-import { boardHandlers } from '@/mocks/api/board.js';
-import { invitationHandlers } from '@/mocks/api/invitation.js';
-import { memberHandlers } from '@/mocks/api/member.js';
-import { projectHandlers } from '@/mocks/api/project.js';
-import { taskHandlers } from '@/mocks/api/task.js';
+// import { boardHandlers } from './domains/boards/index.js';
+import { fileHandlers } from './domains/files/index.js';
+import { invitationHandlers } from './domains/invitations/index.js';
+import { memberHandlers } from './domains/members/index.js';
+import { projectHandlers } from './domains/projects/index.js';
+import { taskHandlers } from './domains/tasks/index.js';
+import { userHandlers } from './domains/users/index.js';
 
 export const handlers = [
-  ...authHandlers,
+  ...userHandlers,
   ...projectHandlers,
   ...memberHandlers,
   ...invitationHandlers,
-  ...boardHandlers,
+  // ...boardHandlers,
   ...taskHandlers,
+  ...fileHandlers,
 ];
