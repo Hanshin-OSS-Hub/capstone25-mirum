@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { taskStatus } from '@/features/tasks/types/task.js';
 import { useGetBoards } from '@/features/boards/api/useGetBoards.js';
 import FilePanel from '@/features/files/components/FilePanel.jsx';
@@ -12,12 +12,13 @@ import { askProjectAssistant } from '@/features/ai/api/askProjectAssistant.js';
 
 import ProjectMemberModal from '@/features/members/components/MemberManagementModal.jsx';
 import ProjectAdminPanel from '@/features/projects/components/ProjectAdminPanel.jsx';
+import ProjectTrashPanel from '../features/projects/components/ProjectTrashPanel.jsx';
 import CreateTaskModal from '@/features/tasks/components/CreateTaskModal.jsx';
 import TaskCard from '@/features/tasks/components/TaskCard.jsx';
 import TaskModal from '@/features/tasks/components/TaskModal.jsx';
 import TaskTimeline from '@/features/tasks/components/TaskTimeline.jsx';
 
-import { IconSettings, IconUserAdd } from '@/shared/assets/icons.js';
+import { IconSettings, IconTrash, IconUserAdd } from '@/shared/assets/icons.js';
 import Header from '@/shared/components/Header.jsx';
 
 const TASK_COLOR_PALETTE = [
@@ -41,6 +42,7 @@ const AI_EXAMPLE_QUESTIONS = [
 
 export default function Task() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -65,6 +67,12 @@ export default function Task() {
 
   const handleBack = () => {
     navigate('/dashboard');
+  };
+
+  /** @param {'project' | 'timeline' | 'file'} tabKey */
+  const openMainTab = (tabKey) => {
+    setTopTab(tabKey);
+    navigate(`/project/${id}`);
   };
 
   const { data: project = null } = useGetProjectDetails(id);
@@ -153,11 +161,46 @@ export default function Task() {
     return myMember ? [myMember, ...others] : others;
   }, [members, myUsername]);
 
+  const myProjectRole = useMemo(() => {
+    const myMember = members.find((member) => member.username === myUsername);
+    return String(myMember?.role || 'member').toLowerCase();
+  }, [members, myUsername]);
+
+  const isLeader = myProjectRole === 'leader';
+
   useEffect(() => {
     if (boards.length > 0 && activeBoardId === null) {
       setActiveBoardId(boards[0].boardId);
     }
   }, [boards, activeBoardId]);
+
+  useEffect(() => {
+    if (location.pathname.endsWith('/admin')) {
+      setTopTab('settings');
+      return;
+    }
+
+    if (location.pathname.endsWith('/trash')) {
+      setTopTab('trash');
+      return;
+    }
+
+    if (topTab === 'settings' || topTab === 'trash') {
+      setTopTab('project');
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isLeader && topTab === 'settings') {
+      setTopTab('project');
+    }
+  }, [isLeader, topTab]);
+
+  useEffect(() => {
+    if (!isLeader && location.pathname.endsWith('/admin')) {
+      navigate(`/project/${id}`, { replace: true });
+    }
+  }, [isLeader, location.pathname, navigate, id]);
 
   const tasksByMember = useMemo(() => {
     const map = {};
@@ -254,9 +297,17 @@ export default function Task() {
     }
   };
 
-  const deletedCards = useMemo(() => {
-    return [];
+  const deletedTasks = useMemo(() => {
+    // TODO: 삭제된 작업 카드 조회 API 연동
+    return /** @type {{ id?: string | number; title?: string; assignee?: string; deletedAt?: string }[]} */ ([]);
   }, []);
+
+  const deletedFiles = useMemo(() => {
+    // TODO: 삭제된 파일 조회 API 연동
+    return /** @type {{ id?: string | number; filename?: string; owner?: string; deletedAt?: string }[]} */ ([]);
+  }, []);
+
+  const deletedCards = deletedTasks;
 
   if (!project) {
     return (
@@ -355,7 +406,7 @@ export default function Task() {
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => setTopTab('project')}
+              onClick={() => openMainTab('project')}
               className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
                 topTab === 'project'
                   ? 'border-blue-200 bg-blue-50 text-blue-700'
@@ -367,7 +418,7 @@ export default function Task() {
 
             <button
               type="button"
-              onClick={() => setTopTab('timeline')}
+              onClick={() => openMainTab('timeline')}
               className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
                 topTab === 'timeline'
                   ? 'border-blue-200 bg-blue-50 text-blue-700'
@@ -379,7 +430,7 @@ export default function Task() {
 
             <button
               type="button"
-              onClick={() => setTopTab('file')}
+              onClick={() => openMainTab('file')}
               className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
                 topTab === 'file'
                   ? 'border-blue-200 bg-blue-50 text-blue-700'
@@ -423,16 +474,35 @@ export default function Task() {
               />
             )}
 
-            <button
-              className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
-                topTab === 'settings'
-                  ? 'border-blue-200 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-              onClick={() => setTopTab('settings')}
-            >
-              <IconSettings /> 설정
-            </button>
+            {isLeader ? (
+              <button
+                className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
+                  topTab === 'settings'
+                    ? 'border-blue-200 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+                onClick={() => {
+                  setTopTab('settings');
+                  navigate(`/project/${id}/admin`);
+                }}
+              >
+                <IconSettings /> 설정
+              </button>
+            ) : (
+              <button
+                className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
+                  topTab === 'trash'
+                    ? 'border-gray-300 bg-gray-100 text-gray-800'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+                onClick={() => {
+                  setTopTab('trash');
+                  navigate(`/project/${id}/trash`);
+                }}
+              >
+                <IconTrash /> 휴지통
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -582,16 +652,29 @@ export default function Task() {
           />
         )}
 
-        {topTab === 'settings' && (
-          <ProjectAdminPanel
-            project={project}
-            projectId={id}
-            members={sortedMembers}
-            pendingInvites={pendingInvites}
-            deletedCards={deletedCards}
-            taskStats={stats}
-            onBack={() => setTopTab('project')}
+        {topTab === 'trash' && (
+          <ProjectTrashPanel
+            deletedTasks={deletedTasks}
+            deletedFiles={deletedFiles}
           />
+        )}
+
+        {topTab === 'settings' && (
+          isLeader ? (
+            <ProjectAdminPanel
+              project={project}
+              projectId={id}
+              members={sortedMembers}
+              pendingInvites={pendingInvites}
+              deletedCards={deletedCards}
+              taskStats={stats}
+              onBack={() => setTopTab('project')}
+            />
+          ) : (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-800 shadow-sm">
+              관리자 페이지는 리더만 접근할 수 있습니다.
+            </div>
+          )
         )}
       </div>
 

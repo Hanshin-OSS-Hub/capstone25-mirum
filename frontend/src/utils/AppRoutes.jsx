@@ -43,6 +43,8 @@ export default function AppRoutes() {
           }
         />
         <Route path="/project/:id" element={<Task />} />
+        <Route path="/project/:id/admin" element={<Task />} />
+        <Route path="/project/:id/trash" element={<Task />} />
       </Routes>
 
       {/* Modals */}
