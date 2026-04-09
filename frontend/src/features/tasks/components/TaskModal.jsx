@@ -6,11 +6,19 @@ import TaskModalEditor from '@/features/tasks/components/TaskModalEditor.jsx';
 import { IconClose, IconEdit } from '@/shared/assets/icons.js';
 import { reviewTask } from '../../ai/api/reviewTask.js';
 
+/**
+ * @typedef {Object} AttachmentItem
+ * @property {string} id
+ * @property {string} name
+ * @property {number} size
+ */
+
 export default function TaskModal(props) {
-  const { task, onClose, members, myUserName } = props;
+  const { task, onClose, members } = props;
   const [isEditMode, setIsEditMode] = useState(false);
   const [isReviewerOpen, setIsReviewerOpen] = useState(false);
   const [editedTask, setEditedTask] = useState({ ...task, notes: task.notes || '' });
+  const [attachments, setAttachments] = useState(/** @type {AttachmentItem[]} */ ([]));
 
   // region AI 리뷰 관련 상태
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -30,6 +38,7 @@ export default function TaskModal(props) {
     setReviewError('');
     setIsReviewLoading(false);
     setIsReviewerOpen(false);
+    setAttachments([]);
   }, [task]);
 
   useEffect(() => {
@@ -40,10 +49,6 @@ export default function TaskModal(props) {
       document.documentElement.style.overflow = 'auto';
     };
   }, [task]);
-
-  const isAssignee = useMemo(() => {
-    return (myUserName || '') === (task.assignee || '');
-  }, [myUserName, task.assignee]);
 
   const getStatusText = (status) => {
     switch (status) {
@@ -85,6 +90,34 @@ export default function TaskModal(props) {
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}. ${m}. ${day}.`;
+  };
+
+  /** @param {number} bytes */
+  const formatFileSize = (bytes) => {
+    if (!Number.isFinite(bytes) || bytes < 0) return '-';
+    if (bytes < 1024) return `${bytes}B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  };
+
+  /** @param {import('react').ChangeEvent<HTMLInputElement>} event */
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    const uploaded = files.map((file, index) => ({
+      id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
+      name: file.name,
+      size: file.size,
+    }));
+
+    setAttachments((prev) => [...prev, ...uploaded]);
+    event.target.value = '';
+  };
+
+  /** @param {string} fileId */
+  const handleRemoveAttachment = (fileId) => {
+    setAttachments((prev) => prev.filter((file) => file.id !== fileId));
   };
 
   const handleSave = () => {
@@ -263,17 +296,15 @@ export default function TaskModal(props) {
               AI 리뷰어
             </button>
 
-            {isAssignee ? (
-              <button
-                type="button"
-                onClick={() => setIsEditMode(true)}
-                className="cursor-pointer rounded-lg p-2 text-gray-700 hover:bg-gray-50 hover:text-gray-600"
-                aria-label="edit"
-                title="편집하기"
-              >
-                <IconEdit className="text-lg" />
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => setIsEditMode(true)}
+              className="cursor-pointer rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50 hover:text-gray-600"
+              aria-label="edit"
+              title="편집하기"
+            >
+              <IconEdit className="text-lg" />
+            </button>
 
             {/* ✅ 팀원 화면에도 나가기 버튼 추가 */}
             <button
@@ -339,6 +370,54 @@ export default function TaskModal(props) {
                 <span className="text-sm text-gray-400">태그가 없습니다</span>
               )}
             </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-gray-800">첨부파일</p>
+
+              <label
+                htmlFor="task-attachment-upload"
+                className="inline-flex cursor-pointer items-center rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-100"
+              >
+                <i className="ri-upload-2-line mr-1.5 text-base"></i>
+                파일 업로드
+              </label>
+              <input
+                id="task-attachment-upload"
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
+
+            {attachments.length === 0 ? (
+              <p className="mt-4 text-sm text-gray-400">첨부된 파일이 없습니다.</p>
+            ) : (
+              <ul className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
+                {attachments.map((file) => (
+                  <li
+                    key={file.id}
+                    className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-sm last:border-b-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-gray-800">{file.name}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAttachment(file.id)}
+                      className="shrink-0 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+                      aria-label={`${file.name} 삭제`}
+                    >
+                      X
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="my-8 border-t border-gray-100"></div>

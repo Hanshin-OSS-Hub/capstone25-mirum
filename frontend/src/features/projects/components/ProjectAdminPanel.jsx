@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useGetTasksByStatus } from '@/features/tasks/api/useGetTasksByStatus.js';
-import { usePermanentDeleteTask } from '@/features/tasks/api/usePermanentDeleteTask.js';
 import { useRestoreTask } from '@/features/tasks/api/useRestoreTask.js';
 
 const ADMIN_TABS = [
@@ -21,7 +20,6 @@ export default function ProjectAdminPanel({
   const [tab, setTab] = useState('general');
 
   const { data: deletedCards } = useGetTasksByStatus({ projectId, status: 'deleted' });
-  // const { mutate: deleteTask } = usePermanentDeleteTask();
   const { mutate: restoreTask } = useRestoreTask();
 
   const projectName = project?.projectName || project?.name || '프로젝트 이름';
@@ -37,6 +35,15 @@ export default function ProjectAdminPanel({
       role: member.role || 'member',
     }));
   }, [members]);
+
+  const handleRestoreCard = (taskId) => {
+    if (!taskId) return;
+    restoreTask({ projectId: Number(projectId), taskId: Number(taskId) });
+  };
+
+  const handlePermanentDeleteCard = () => {
+    alert('영구 삭제 API는 백엔드 연동 후 연결 예정입니다.');
+  };
 
   // const leaderCount = normalizedMembers.filter((member) => member.role === 'leader').length;
   // const memberCount = normalizedMembers.length;
@@ -110,7 +117,7 @@ export default function ProjectAdminPanel({
               <SectionHeader
                 eyebrow="GENERAL"
                 title="프로젝트 정보"
-                description="프로젝트의 기본 정보와 현재 상태를 확인할 수 있어요."
+                description="설정에 필요한 핵심 정보만 간단히 확인할 수 있어요."
               />
 
               {/*<div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">*/}
@@ -122,9 +129,7 @@ export default function ProjectAdminPanel({
 
               <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <InfoField label="프로젝트 이름" value={projectName} />
-                <InfoField label="프로젝트 ID" value={projectId || '-'} />
                 <InfoField label="생성일" value={createdDate} />
-                <InfoField label="초대 대기 인원" value={`${pendingInvites.length}명`} />
               </div>
 
               <div className="mt-4">
@@ -184,12 +189,6 @@ export default function ProjectAdminPanel({
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Export
-                  </button>
-                  <button
-                    type="button"
                     className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                   >
                     Invite member
@@ -201,7 +200,7 @@ export default function ProjectAdminPanel({
                 <div className="grid grid-cols-[minmax(0,1.6fr)_140px_120px] border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
                   <div>Members</div>
                   <div>Role</div>
-                  <div>Status</div>
+                  <div>Action</div>
                 </div>
 
                 {normalizedMembers.length === 0 ? (
@@ -231,7 +230,14 @@ export default function ProjectAdminPanel({
                         <RoleBadge role={member.role} />
                       </div>
 
-                      <div className="text-sm text-gray-500">Active</div>
+                      <div>
+                        <button
+                          type="button"
+                          className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                        >
+                          방출
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -304,10 +310,10 @@ export default function ProjectAdminPanel({
               />
 
               <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200">
-                <div className="grid grid-cols-[minmax(0,1.4fr)_160px_140px] border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+                <div className="grid grid-cols-[minmax(0,1.4fr)_160px_220px] border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
                   <div>Task</div>
                   <div>Assignee</div>
-                  <div>Status</div>
+                  <div>Action</div>
                 </div>
 
                 {deletedCards.length === 0 ? (
@@ -318,7 +324,7 @@ export default function ProjectAdminPanel({
                   deletedCards.map((card) => (
                     <div
                       key={card.taskId}
-                      className="grid grid-cols-[minmax(0,1.4fr)_160px_140px] items-center gap-4 border-b border-gray-100 px-5 py-4 last:border-b-0"
+                      className="grid grid-cols-[minmax(0,1.4fr)_160px_220px] items-center gap-4 border-b border-gray-100 px-5 py-4 last:border-b-0"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-base font-semibold text-gray-900">
@@ -331,7 +337,22 @@ export default function ProjectAdminPanel({
 
                       <div className="text-sm text-gray-700">{card.assigneeName || '미지정'}</div>
 
-                      <div className="text-sm font-medium text-red-500">Deleted</div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreCard(card.taskId)}
+                          className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                        >
+                          복구
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePermanentDeleteCard}
+                          className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                        >
+                          영구 삭제
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -346,10 +367,10 @@ export default function ProjectAdminPanel({
               />
 
               <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200">
-                <div className="grid grid-cols-[minmax(0,1.4fr)_160px_140px] border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+                <div className="grid grid-cols-[minmax(0,1.4fr)_160px_220px] border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
                   <div>Task</div>
                   <div>Assignee</div>
-                  <div>Status</div>
+                  <div>Action</div>
                 </div>
 
                 {deletedCards.length === 0 ? (
@@ -360,7 +381,7 @@ export default function ProjectAdminPanel({
                   deletedCards.map((card, index) => (
                     <div
                       key={card.id ?? index}
-                      className="grid grid-cols-[minmax(0,1.4fr)_160px_140px] items-center gap-4 border-b border-gray-100 px-5 py-4 last:border-b-0"
+                      className="grid grid-cols-[minmax(0,1.4fr)_160px_220px] items-center gap-4 border-b border-gray-100 px-5 py-4 last:border-b-0"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-base font-semibold text-gray-900">
@@ -373,7 +394,22 @@ export default function ProjectAdminPanel({
 
                       <div className="text-sm text-gray-700">{card.assignee || '미지정'}</div>
 
-                      <div className="text-sm font-medium text-red-500">Deleted</div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreCard(card.taskId ?? card.id)}
+                          className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                        >
+                          복구
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePermanentDeleteCard}
+                          className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                        >
+                          영구 삭제
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
