@@ -103,7 +103,7 @@ export default function TaskCard({ task, onClick }) {
 
       {/* Task Footer (항상 카드 맨 아래) */}
       <div className="mt-auto flex items-center justify-between pt-2 text-xs text-gray-500">
-        <span>업데이트: {formatDate(task.updatedAt)}</span>
+        <span>업데이트: {formatDate(task.updatedDate)}</span>
         <div className="flex items-center space-x-1">
           <i className="ri-more-line text-gray-400"></i>
         </div>

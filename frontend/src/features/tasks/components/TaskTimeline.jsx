@@ -1,6 +1,19 @@
-import { useMemo, useState } from 'react';
-
-// import { taskStatus } from '@/features/tasks/types/task.js';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  addDays,
+  clampDate,
+  differenceInDays,
+  endOfMonth,
+  formatISO,
+  formatMonthLabel,
+  formatShortDate,
+  getDaysInMonth,
+  parseDate,
+  startOfMonth,
+} from '@/features/tasks/utils/timeline-date.js';
+import { buildLanes } from '@/features/tasks/utils/timeline-layout.js';
+import { getTaskVisual } from '@/features/tasks/utils/timeline-style.js';
+import { IconChevronLeft, IconChevronRight } from '@/shared/assets/icons.js';
 
 const DAY_WIDTH = 44;
 const NAME_COL_WIDTH = 190;
@@ -8,160 +21,50 @@ const BAR_HEIGHT = 38;
 const BAR_GAP = 10;
 const ROW_BASE_HEIGHT = 82;
 
-function parseDate(dateString) {
-  if (!dateString) return null;
-  return new Date(`${dateString}T00:00:00`);
-}
+export default function TaskTimeline({ tasks = [], members: members = [], onTaskClick }) {
+  const [currentMonth, setCurrentMonth] = useState(() => new Date());
+  const [autoAligned, setAutoAligned] = useState(false);
+  // // tasks가 로드된 뒤, 최초 한 번 현재 월을 task의 날짜에 맞춰 보정
+  // // (예: mock 데이터가 과거/미래에 있어도 해당 달로 자동 스크롤)
+  // if (tasks.length > 0) {
+  //   const datedTask = tasks.find((task) => task.startDate || task.dueDate || task.createdAt);
+  //   const baseDate =
+  //     datedTask && parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdAt);
+  //   if (baseDate && !Number.isNaN(baseDate.getTime())) {
+  //     const baseMonth = startOfMonth(baseDate);
+  //     if (
+  //       currentMonth.getFullYear() === new Date().getFullYear() &&
+  //       currentMonth.getMonth() === new Date().getMonth()
+  //     ) {
+  //       // 초기값이 아직 오늘 기준인 경우에만 보정 적용
+  //       // (사용자가 화살표로 월을 이동한 뒤에는 유지)
+  //
+  //       setCurrentMonth(baseMonth);
+  //     }
+  //   }
+  // }
 
-function formatISO(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+  useEffect(() => {
+    if (autoAligned) return;
+    if (tasks.length === 0) return;
 
-function startOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-function endOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-}
-
-function addDays(date, days) {
-  const copied = new Date(date);
-  copied.setDate(copied.getDate() + days);
-  return copied;
-}
-
-function getDaysInMonth(date) {
-  return endOfMonth(date).getDate();
-}
-
-function clampDate(date, min, max) {
-  if (date < min) return min;
-  if (date > max) return max;
-  return date;
-}
-
-function differenceInDays(a, b) {
-  const oneDay = 1000 * 60 * 60 * 24;
-  const utcA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-  const utcB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-  return Math.floor((utcA - utcB) / oneDay);
-}
-
-function intersectsMonth(taskStart, taskEnd, monthStart, monthEnd) {
-  return taskStart <= monthEnd && taskEnd >= monthStart;
-}
-
-function hexToRgb(hex) {
-  const clean = hex.replace('#', '');
-  const full =
-    clean.length === 3
-      ? clean
-          .split('')
-          .map((char) => char + char)
-          .join('')
-      : clean;
-
-  const bigint = parseInt(full, 16);
-  return {
-    r: (bigint >> 16) & 255,
-    g: (bigint >> 8) & 255,
-    b: bigint & 255,
-  };
-}
-
-function rgba(hex, alpha) {
-  const { r, g, b } = hexToRgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-function getTaskVisual(task) {
-  const base = task.color || '#4F46E5';
-
-  switch (task.status) {
-    case 'DONE':
-      return {
-        background: `linear-gradient(135deg, ${rgba(base, 0.95)}, ${rgba(base, 0.82)})`,
-        border: rgba(base, 1),
-        text: '#ffffff',
-        shadow: `0 10px 24px ${rgba(base, 0.25)}`,
-      };
-
-    case 'IN_PROGRESS':
-      return {
-        background: `linear-gradient(135deg, ${rgba(base, 0.26)}, ${rgba(base, 0.48)})`,
-        border: rgba(base, 0.76),
-        text: '#1f2937',
-        shadow: `0 8px 18px ${rgba(base, 0.12)}`,
-      };
-
-    default:
-      return {
-        background: `linear-gradient(135deg, ${rgba(base, 0.14)}, ${rgba(base, 0.24)})`,
-        border: rgba(base, 0.42),
-        text: '#374151',
-        shadow: 'none',
-      };
-  }
-}
-
-function formatMonthLabel(date) {
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
-}
-
-function formatShortDate(date) {
-  return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-function buildLanes(tasks, monthStart, monthEnd) {
-  const sorted = [...tasks]
-    .map((task) => {
-      const rawStart = parseDate(task.startDate || task.createdAt);
-      const rawEnd = parseDate(task.dueDate || task.startDate || task.createdAt);
-
-      if (!rawStart || !rawEnd) return null;
-
-      const taskStart = rawStart <= rawEnd ? rawStart : rawEnd;
-      const taskEnd = rawStart <= rawEnd ? rawEnd : rawStart;
-
-      return {
-        ...task,
-        _taskStart: taskStart,
-        _taskEnd: taskEnd,
-      };
-    })
-    .filter(Boolean)
-    .filter((task) => intersectsMonth(task._taskStart, task._taskEnd, monthStart, monthEnd))
-    .sort((a, b) => a._taskStart - b._taskStart || a._taskEnd - b._taskEnd);
-
-  const lanes = [];
-
-  sorted.forEach((task) => {
-    let laneIndex = 0;
-
-    while (laneIndex < lanes.length) {
-      const lastTask = lanes[laneIndex][lanes[laneIndex].length - 1];
-      if (task._taskStart > lastTask._taskEnd) break;
-      laneIndex += 1;
-    }
-
-    if (!lanes[laneIndex]) lanes[laneIndex] = [];
-    lanes[laneIndex].push(task);
-  });
-
-  return lanes;
-}
-
-export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick }) {
-  const [currentMonth, setCurrentMonth] = useState(() => {
     const datedTask = tasks.find((task) => task.startDate || task.dueDate || task.createdDate);
-    return datedTask
-      ? parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdDate) || new Date()
-      : new Date();
-  });
+    const baseDate =
+      datedTask && parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdDate);
+
+    if (!baseDate || Number.isNaN(baseDate.getTime())) return;
+
+    const baseMonth = startOfMonth(baseDate);
+    const today = new Date();
+    const isStillTodayMonth =
+      currentMonth.getFullYear() === today.getFullYear() &&
+      currentMonth.getMonth() === today.getMonth();
+
+    if (!isStillTodayMonth) return;
+
+    setCurrentMonth(baseMonth);
+    setAutoAligned(true);
+  }, [tasks, currentMonth, autoAligned]);
 
   const monthStart = useMemo(() => startOfMonth(currentMonth), [currentMonth]);
   const monthEnd = useMemo(() => endOfMonth(currentMonth), [currentMonth]);
@@ -179,9 +82,15 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
   const todayOffset = isCurrentMonth ? differenceInDays(today, monthStart) : -1;
 
   const rows = useMemo(() => {
-    return teamMembers.map((member) => {
-      const memberTasks = tasks.filter((task) => task.assignee === member.name);
+    console.log('[TaskTimeline] tasks:', tasks);
+    console.log('[TaskTimeline] members:', members);
+
+    return members.map((member) => {
+      const memberTasks = tasks.filter((task) => task.assigneeId === member.username);
+      console.log('[TaskTimeline] member:', member);
+      console.log('[TaskTimeline] memberTasks:', memberTasks);
       const lanes = buildLanes(memberTasks, monthStart, monthEnd);
+      console.log('[TaskTimeline] lanes for', member.username, ':', lanes);
 
       const laneBars = lanes.flatMap((lane, laneIndex) =>
         lane.map((task) => {
@@ -201,6 +110,8 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
         }),
       );
 
+      console.log('[TaskTimeline] bars for', member.username, ':', laneBars);
+
       const rowHeight =
         Math.max(1, lanes.length) * (BAR_HEIGHT + BAR_GAP) + (ROW_BASE_HEIGHT - BAR_HEIGHT);
 
@@ -210,7 +121,7 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
         rowHeight,
       };
     });
-  }, [tasks, teamMembers, monthStart, monthEnd]);
+  }, [tasks, members, monthStart, monthEnd]);
 
   const totalGridWidth = daysInMonth * DAY_WIDTH;
 
@@ -230,9 +141,10 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
             onClick={() =>
               setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
             }
-            className="h-10 w-10 cursor-pointer rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
           >
-            <i className="ri-arrow-left-s-line text-xl"></i>
+            {/*<i className="ri-arrow-left-s-line text-xl"></i>*/}
+            <IconChevronLeft className="text-xl" />
           </button>
 
           <div className="min-w-[120px] text-center text-sm font-semibold text-gray-800">
@@ -244,9 +156,10 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
             onClick={() =>
               setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
             }
-            className="h-10 w-10 cursor-pointer rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
           >
-            <i className="ri-arrow-right-s-line text-xl"></i>
+            {/*<i className="ri-arrow-right-s-line text-xl"></i>*/}
+            <IconChevronRight className="text-xl" />
           </button>
         </div>
       </div>
@@ -272,7 +185,7 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
                       key={formatISO(day)}
                       className={`flex h-[70px] flex-col items-center justify-center border-r border-gray-100 ${
                         isWeekend ? 'bg-gray-50/80' : 'bg-white'
-                      } ${isToday ? 'bg-blue-50' : ''}`}
+                      } ${isToday ? 'bg-red-50' : ''}`}
                       style={{ width: DAY_WIDTH }}
                     >
                       <div className="text-[11px] text-gray-400">
@@ -280,7 +193,7 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
                       </div>
                       <div
                         className={`text-sm font-semibold ${
-                          isToday ? 'text-blue-700' : 'text-gray-800'
+                          isToday ? 'text-red-700' : 'text-gray-800'
                         }`}
                       >
                         {day.getDate()}
@@ -293,19 +206,22 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
           </div>
 
           {rows.map((row) => (
-            <div key={row.member.id} className="flex border-b border-gray-100 last:border-b-0">
+            <div
+              key={row.member.username}
+              className="flex border-b border-gray-100 last:border-b-0"
+            >
               <div
                 className="flex shrink-0 items-start border-r border-gray-100 bg-white px-5 py-5"
                 style={{ width: NAME_COL_WIDTH, minHeight: row.rowHeight }}
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] text-sm font-semibold text-white">
-                    {(row.member.displayName || row.member.name).slice(0, 1)}
+                    {(row.member.displayName || row.member.username).slice(0, 1)}
                   </div>
 
                   <div className="min-w-0">
                     <div className="truncate text-sm font-semibold text-gray-900">
-                      {row.member.displayName || row.member.name}
+                      {row.member.displayName || row.member.username}
                     </div>
                     <div className="truncate text-xs text-gray-500">{row.member.role}</div>
                   </div>
@@ -332,15 +248,28 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
                 </div>
 
                 {todayOffset >= 0 && (
-                  <div
-                    className="pointer-events-none absolute bottom-0 top-0 z-10"
-                    style={{
-                      left: todayOffset * DAY_WIDTH + DAY_WIDTH / 2,
-                      width: 2,
-                      background:
-                        'linear-gradient(to bottom, rgba(37,99,235,0.16), rgba(37,99,235,0.7), rgba(37,99,235,0.16))',
-                    }}
-                  />
+                  <>
+                    {/* 소프트 글로우 (거의 투명한 pure red) */}
+                    <div
+                      className="pointer-events-none absolute bottom-0 top-0 z-10"
+                      style={{
+                        left: todayOffset * DAY_WIDTH + DAY_WIDTH / 2 - 1,
+                        width: 4,
+                        background:
+                          'linear-gradient(to bottom, rgba(255,0,0,0.04), rgba(255,0,0,0.16), rgba(255,0,0,0.04))',
+                      }}
+                    />
+                    {/* 중앙 얇은 라인 (윗부분은 살짝 연한 red, 아래는 pure red에 근접) */}
+                    <div
+                      className="pointer-events-none absolute bottom-0 top-0 z-20"
+                      style={{
+                        left: todayOffset * DAY_WIDTH + DAY_WIDTH / 2,
+                        width: 2,
+                        background:
+                          'linear-gradient(to bottom, rgba(255,80,80,1), rgba(255,0,0,1))',
+                      }}
+                    />
+                  </>
                 )}
 
                 {row.bars.map((task) => {
@@ -381,8 +310,8 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
                 })}
 
                 {row.bars.length === 0 && (
-                  <div className="absolute inset-0 flex items-center px-4 text-sm text-gray-300">
-                    이번 달에 배치된 작업이 없습니다.
+                  <div className="absolute inset-0 flex items-center justify-center whitespace-nowrap px-4 text-xs font-semibold text-gray-300">
+                    배정된 작업이 없습니다.
                   </div>
                 )}
               </div>
@@ -404,9 +333,7 @@ export default function TaskTimeline({ tasks = [], teamMembers = [], onTaskClick
           <span className="h-4 w-4 rounded-full bg-gray-700"></span>
           완료
         </div>
-        <div className="text-gray-400">
-          같은 작업 색상은 유지되고 상태에 따라 진하기만 달라집니다.
-        </div>
+        <div className="text-gray-400"> 작업 진행도에 따라 색이 점점 진해져요. </div>
       </div>
     </div>
   );

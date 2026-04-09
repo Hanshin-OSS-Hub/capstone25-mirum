@@ -1,4 +1,5 @@
 // import { boardHandlers } from './domains/boards/index.js';
+import { authHandlers } from './domains/auth/index.js';
 import { fileHandlers } from './domains/files/index.js';
 import { invitationHandlers } from './domains/invitations/index.js';
 import { memberHandlers } from './domains/members/index.js';
@@ -11,7 +12,7 @@ export const handlers = [
   ...projectHandlers,
   ...memberHandlers,
   ...invitationHandlers,
-  // ...boardHandlers,
+  ...authHandlers,
   ...taskHandlers,
   ...fileHandlers,
 ];

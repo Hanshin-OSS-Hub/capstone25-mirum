@@ -1,7 +1,7 @@
-import { errorResponse, parseUsername, successResponse } from '../common.js';
-import { projectsDB, deletedProjectsDB } from './model.js';
-import { usersDB } from '../users/model.js';
 import { http } from 'msw';
+import { errorResponse, parseUsername, successResponse } from '../common.js';
+import { usersDB } from '../users/model.js';
+import { deletedProjectsDB, projectsDB } from './model.js';
 
 export const projectHandlers = [
   // [GET] 참여 중인 프로젝트 목록 조회
@@ -24,7 +24,7 @@ export const projectHandlers = [
   }),
 
   // [GET] 프로젝트 상세 조회
-  http.get('*/api/projects/:projectId', ({ params, request }) => {
+  http.get('*/api/project/:projectId', ({ params, request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
 
@@ -55,8 +55,7 @@ export const projectHandlers = [
 
     const newProjectRequest = await request.json();
 
-    const maxId =
-      projectsDB.length > 0 ? Math.max(...projectsDB.map((p) => p.projectId)) : 0;
+    const maxId = projectsDB.length > 0 ? Math.max(...projectsDB.map((p) => p.projectId)) : 0;
     const newProjectId = maxId + 1;
 
     const newProject = {
@@ -140,7 +139,7 @@ export const projectHandlers = [
 
     projectsDB[projectIndex].isDeleted = true;
     projectsDB[projectIndex].deleteUsername = username;
-    projectsDB[projectIndex].updateDate = new Date().toISOString();
+    projectsDB[projectIndex].updatedDate = new Date().toISOString();
 
     console.log(`MSW: 프로젝트 삭제 처리 (projectId: ${projectId})`);
     return successResponse(null, 200);

@@ -9,18 +9,18 @@ import { api } from '@/api/client.js';
  *
  * @see TaskSummaryDTO
  * @see ../../../../../backend/src/main/java/backend/dto/Tasks/TaskSummaryDTO.java
- * @typedef {Pick<TaskData, 'projectId' | 'taskId' | 'title', | 'status' | 'createdDate' | 'updatedDate'>} ResponseTaskGetSummaryDTO
+ * @typedef {Pick<TaskData, 'projectId' | 'taskId' | 'title' | 'status' | 'createdDate' | 'updatedDate'>} ResponseTaskGetSummaryDTO
  * @returns {import('@tanstack/react-query').UseQueryResult<ResponseTaskGetSummaryDTO[], unknown>}
  */
 
-/** param {{ projectId: number }} */
 export const useGetTaskList = ({ projectId }) => {
   return useQuery({
-    queryKey: ['tasks', projectId],
+    queryKey: ['tasks', Number(projectId)],
     queryFn: async () => {
       /** @type {ResponseTaskGetSummaryDTO[]} */
       return await api.get(`/project/${projectId}/task`);
     },
+    initialData: [],
     select: (data) => {
       if (!Array.isArray(data)) {
         return [];

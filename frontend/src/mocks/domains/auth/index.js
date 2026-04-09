@@ -1,1 +1,1 @@
-export { authHandlers as default } from '../../api/auth.js';
+export { authHandlers } from '@/임시/api/auth.js';

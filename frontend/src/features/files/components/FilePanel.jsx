@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useGetFiles } from '@/features/files/api/useGetFiles.js';
-import FileGridCard from '@/features/files/components/FileGridCard.jsx';
-import FileListTable from '@/features/files/components/FileListTable.jsx';
-import FileSummaryCards from '@/features/files/components/FileSummaryCards.jsx';
-import FileToolbar from '@/features/files/components/FileToolbar.jsx';
 import {
   fileCategory,
   fileViewMode,
   folderContentType,
   formatFileSize,
 } from '@/features/files/types/file.js';
+import { useGetFiles } from '@/features/files/api/useGetFiles.js';
+import FileGridCard from '@/features/files/components/FileGridCard.jsx';
+import FileListTable from '@/features/files/components/FileListTable.jsx';
+import FileSummaryCards from '@/features/files/components/FileSummaryCards.jsx';
+import FileToolbar from '@/features/files/components/FileToolbar.jsx';
 
 /** @param {{ projectId: any }} props */
 export default function FilePanel({ projectId }) {
@@ -95,7 +95,8 @@ export default function FilePanel({ projectId }) {
 
     const href = item.downloadUrl || item.previewUrl;
     const fallbackText = `파일명: ${item.originalFilename}\n크기: ${item.displaySize}\n업로드한 사람: ${item.createdBy}`;
-    const downloadHref = href || `data:text/plain;charset=utf-8,${encodeURIComponent(fallbackText)}`;
+    const downloadHref =
+      href || `data:text/plain;charset=utf-8,${encodeURIComponent(fallbackText)}`;
 
     const link = document.createElement('a');
     link.href = downloadHref;
@@ -199,24 +200,21 @@ export default function FilePanel({ projectId }) {
         onSortOrderChange={changeSortOrder}
       />
 
-      <FileSummaryCards
-        totalFiles={summary.totalFiles}
-        folderCount={summary.folderCount}
-        totalUsageText={summary.totalUsageText}
-        ownerCount={summary.ownerCount}
-      />
+      {/*<FileSummaryCards*/}
+      {/*  totalFiles={summary.totalFiles}*/}
+      {/*  folderCount={summary.folderCount}*/}
+      {/*  totalUsageText={summary.totalUsageText}*/}
+      {/*  ownerCount={summary.ownerCount}*/}
+      {/*/>*/}
 
       <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 px-6 py-5">
-          <h3 className="text-2xl font-bold text-gray-900">파일 목록 ({sortedFiles.length}개)</h3>
-        </div>
-
+        {/*<div className="border-b border-gray-200 px-6 py-5">*/}
+        {/*  <h3 className="text-2xl font-bold text-gray-900">파일 목록</h3>*/}
+        {/*</div>*/}
         {selectedCount > 0 && (
           <div className="border-b border-gray-100 px-6 py-4">
             <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm font-medium text-blue-800">
-                선택된 파일 {selectedCount}개
-              </div>
+              <div className="text-sm font-medium text-blue-800">선택된 파일 {selectedCount}개</div>
 
               <div className="flex items-center gap-2">
                 <button

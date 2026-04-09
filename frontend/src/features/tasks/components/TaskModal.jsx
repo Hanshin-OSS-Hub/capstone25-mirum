@@ -11,12 +11,14 @@ export default function TaskModal(props) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isReviewerOpen, setIsReviewerOpen] = useState(false);
   const [editedTask, setEditedTask] = useState({ ...task, notes: task.notes || '' });
+
+  // region AI 리뷰 관련 상태
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
   const [review, setReview] = useState('');
   const [isReviewLoading, setIsReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState('');
-
+  // endregion
   const { mutate: updateTask } = useUpdateTask();
 
   useEffect(() => {
@@ -88,8 +90,18 @@ export default function TaskModal(props) {
   const handleSave = () => {
     updateTask(
       {
-        ...editedTask,
-        updateDate: new Date().toISOString().split('T')[0],
+        requestData: {
+          taskId: editedTask.taskId, // 반드시 포함
+          title: editedTask.title,
+          description: editedTask.description,
+          status: editedTask.status,
+          assigneeId: editedTask.assigneeId,
+          assigneeName: editedTask.assigneeName,
+          dueDate: editedTask.dueDate,
+          tags: editedTask.tags,
+          notes: editedTask.notes,
+        },
+        projectId: Number(task.projectId),
       },
       {
         onSuccess: () => {
@@ -102,10 +114,21 @@ export default function TaskModal(props) {
 
   const handleClose = () => {
     if (editedTask.notes !== task.notes) {
-      updateTask({
-        ...editedTask,
-        updateDate: new Date().toISOString().split('T')[0],
-      });
+      updateTask(
+        {
+          requestData: {
+            taskId: editedTask.taskId,
+            notes: editedTask.notes,
+          },
+          projectId: Number(task.projectId),
+        },
+        {
+          onSuccess: () => {
+            // 서버 통신이 '성공'했을 때만 편집 모드를 종료합니다.
+            setIsEditMode(false);
+          },
+        },
+      );
     }
     onClose();
   };
@@ -272,9 +295,11 @@ export default function TaskModal(props) {
                 <p className="mb-3 text-sm font-semibold text-gray-700">담당자</p>
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 font-bold text-violet-700">
-                    {(editedTask.assignee || '?').slice(0, 1)}
+                    {(editedTask.assigneeName || '?').slice(0, 1)}
                   </div>
-                  <p className="text-sm font-medium text-gray-900">{editedTask.assignee || '-'}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {editedTask.assigneeName || '-'}
+                  </p>
                 </div>
               </div>
 

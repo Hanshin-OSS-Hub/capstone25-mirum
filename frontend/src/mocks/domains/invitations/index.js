@@ -1,12 +1,12 @@
+import { http } from 'msw';
 import { errorResponse, parseUsername, successResponse } from '../common.js';
-import { invitationsDB } from './model.js';
 import { projectsDB } from '../projects/model.js';
 import { usersDB } from '../users/model.js';
-import { http } from 'msw';
+import { invitationsDB } from './model.js';
 
 export const invitationHandlers = [
   // [GET] 받은 초대 목록 조회
-  http.get('*/api/invitations', ({ request }) => {
+  http.get('*/api/invitations/sent/:projectId', ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
 
@@ -53,9 +53,7 @@ export const invitationHandlers = [
       return errorResponse('존재하지 않거나 삭제된 프로젝트입니다.', 404);
     }
 
-    const isAlreadyMember = projectsDB[projectIndex].members.some(
-      (m) => m.username === username,
-    );
+    const isAlreadyMember = projectsDB[projectIndex].members.some((m) => m.username === username);
 
     if (isAlreadyMember) {
       return errorResponse('이미 프로젝트 멤버입니다.', 400);

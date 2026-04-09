@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useCreateTask } from '@/features/tasks/api/useCreateTask.js';
 
 export default function CreateTaskModal(props) {
-  const { projectId, isOpen, onClose, defaultAssigneeName, members = [], boardId } = props;
+  const { projectId, isOpen, onClose, defaultAssigneeName, members = [] } = props;
 
   const { mutate: createTask } = useCreateTask();
 
@@ -15,7 +15,10 @@ export default function CreateTaskModal(props) {
 
   const todayISO = new Date().toISOString().split('T')[0];
 
-  const initialTaskData = {
+  // initialTaskData를 useEffect 밖으로 빼거나 Memoize하지 않아도 되도록 설정
+  // 하지만 useEffect에서 접근하기 위해 상태 초기화 용도로만 사용합니다.
+
+  const [taskData, setTaskData] = useState({
     title: '',
     description: '',
     status: 'TODO',
@@ -23,9 +26,7 @@ export default function CreateTaskModal(props) {
     assignee: '',
     startDate: todayISO,
     dueDate: todayISO,
-  };
-
-  const [taskData, setTaskData] = useState(initialTaskData);
+  });
   const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
@@ -42,13 +43,19 @@ export default function CreateTaskModal(props) {
 
   useEffect(() => {
     if (isOpen) {
+      // 모달이 열릴 때마다 초기화 + 기본 담당자 지정
       setTaskData({
-        ...initialTaskData,
-        assignee: defaultAssigneeName,
+        title: '',
+        description: '',
+        status: 'TODO',
+        tags: [],
+        assignee: defaultAssigneeName || '',
+        startDate: todayISO,
+        dueDate: todayISO,
       });
       setNewTag('');
     }
-  }, [defaultAssigneeName, isOpen]);
+  }, [defaultAssigneeName, isOpen, todayISO]);
 
   if (!isOpen) return null;
 
@@ -70,20 +77,22 @@ export default function CreateTaskModal(props) {
       startDate: normalizedStartDate,
       dueDate: normalizedDueDate,
       projectId: Number(projectId),
-      boardId: Number(boardId),
-      assigneeId: selectedMember ? selectedMember.id : null,
+      // 유저 엔티티의 id가 제거되고 username으로 대체되었으므로 수정합니다.
+      assigneeId: selectedMember ? selectedMember.username : null,
+      assigneeName: selectedMember ? selectedMember.nickname : null,
     };
 
-    createTask(requestData, {
-      onSuccess: () => {
-        handleClose();
+    createTask(
+      { requestBody: requestData, projectId: Number(projectId) },
+      {
+        onSuccess: () => {
+          handleClose();
+        },
       },
-    });
+    );
   };
 
   const handleClose = () => {
-    setTaskData(initialTaskData);
-    setNewTag('');
     onClose();
   };
 
@@ -174,6 +183,7 @@ export default function CreateTaskModal(props) {
                       }
                       className={inputBase}
                     >
+                      <option value="">담당자 없음</option>
                       {sortedMembers.map((member) => (
                         <option key={member.username} value={member.username}>
                           {member.nickname} ({member.role})

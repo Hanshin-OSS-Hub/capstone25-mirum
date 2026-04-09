@@ -1,8 +1,8 @@
 export const successResponse = (data, status = 200) => {
   return Response.json(
     {
-      code: status,
-      message: 'Success',
+      success: true,
+      message: '성공',
       data,
     },
     { status },
@@ -12,8 +12,9 @@ export const successResponse = (data, status = 200) => {
 export const errorResponse = (message, status = 400) => {
   return Response.json(
     {
-      code: status,
-      message,
+      success: false,
+      message: '에러 발생',
+      data: null,
     },
     { status },
   );
@@ -27,9 +28,19 @@ export const createToken = (username, type = 'access') => {
 
 export const parseUsername = (token) => {
   try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload)).username;
-  } catch (e) {
+    if (!token) return null;
+    if (token.startsWith('mock.')) {
+      const payload = token.split('.')[1];
+      return JSON.parse(atob(payload)).username;
+    }
+
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const paddedPayload = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+    return JSON.parse(atob(paddedPayload)).username;
+  } catch (error) {
     return null;
   }
 };

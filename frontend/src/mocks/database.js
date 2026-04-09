@@ -1,4 +1,4 @@
-import { boardsDB } from './domains/boards/model.js';
+// import { boardsDB } from './domains/boards/model.js';
 import { invitationsDB } from './domains/invitations/model.js';
 import { deletedProjectsDB, projectsDB } from './domains/projects/model.js';
 import { tasksDB } from './domains/tasks/model.js';
@@ -12,7 +12,7 @@ export const database = {
   users: usersDB,
   projects: projectsDB,
   deleted_projects: deletedProjectsDB,
-  boards: boardsDB,
+  // boards: boardsDB,
   tasks: tasksDB,
   invitations: invitationsDB,
 };

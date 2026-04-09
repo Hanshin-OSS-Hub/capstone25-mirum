@@ -1,11 +1,11 @@
 import { http } from 'msw';
-import { database } from '../database.js';
+import { database } from '../../mocks/database.js';
 import { errorResponse, successResponse } from './common.js';
 import { parseUsername } from './common.js';
 
 /**
- * @typedef {import('@/features/projects/api/useCreateProject').CreateProjectRequestDTO} CreateProjectRequestDTO
- * @typedef {import('@/features/projects/api/useUpdateProject').UpdateProjectRequestDTO} UpdateProjectRequestDTO
+ * @typedef {import('@/features/projects/api/useCreateProject.js').CreateProjectRequestDTO} CreateProjectRequestDTO
+ * @typedef {import('@/features/projects/api/useUpdateProject.js').UpdateProjectRequestDTO} UpdateProjectRequestDTO
  */
 
 export const projectHandlers = [
