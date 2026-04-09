@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { askProjectAssistant } from '@/features/ai/api/askProjectAssistant.js';
 // import { taskStatus } from '@/features/tasks/types/task.js';
-import { useGetBoards } from '@/features/boards/api/useGetBoards.js';
+import { useGetBoards } from '@/임시/boards/api/useGetBoards.js';
+import { askProjectAssistant } from '@/features/ai/api/askProjectAssistant.js';
 import { useGetInvitees } from '@/features/invitations/api/useGetInvitees.js';
 import { useGetMemberList } from '@/features/members/api/useGetMemberList.js';
 import { useGetProjectDetails } from '@/features/projects/api/useGetProjectDetails.js';
@@ -14,6 +14,7 @@ import ProjectAdminPanel from '@/features/projects/components/ProjectAdminPanel.
 import CreateTaskModal from '@/features/tasks/components/CreateTaskModal.jsx';
 import TaskCard from '@/features/tasks/components/TaskCard.jsx';
 import TaskModal from '@/features/tasks/components/TaskModal.jsx';
+import TaskSummaryCard from '@/features/tasks/components/TaskSummaryCard.jsx';
 import TaskTimeline from '@/features/tasks/components/TaskTimeline.jsx';
 import { IconSettings, IconTrash, IconUserAdd } from '@/shared/assets/icons.js';
 import Header from '@/shared/components/Header.jsx';
@@ -61,7 +62,12 @@ export default function Task() {
 
   const openTask = (task) => setSelectedTask(task);
   const closeTask = () => setSelectedTask(null);
-  const openCreateTask = () => setIsCreateTaskModalOpen(true);
+
+  // 상단 새 작업 버튼 클릭 시 기본 담당자를 로그인한 유저로 고정
+  const openCreateTask = () => {
+    setDefaultAssigneeName(myUsername);
+    setIsCreateTaskModalOpen(true);
+  };
 
   const handleBack = () => {
     navigate('/dashboard');
@@ -76,10 +82,7 @@ export default function Task() {
   const { data: project = null } = useGetProjectDetails(id);
   const { data: members = [] } = useGetMemberList(id);
   const { data: pendingInvites = [] } = useGetInvitees(id);
-  // const { data: boards = [] } = useGetBoards(id);
-  const { data: tasks } = useGetTaskList(Number(id));
-
-  // const tasks = tasks?.allTasks || [];
+  const { data: tasks = [] } = useGetTaskList({ projectId: Number(id) });
 
   const title = project?.projectName || '프로젝트 이름';
   const desc = project?.description || '프로젝트 설명';
@@ -98,7 +101,8 @@ export default function Task() {
       ...task,
       id: task.taskId,
       title: task.title || '',
-      assignee: task.assignee || '',
+      assigneeId: task.assigneeId || '',
+      assigneeName: task.assigneeName || '',
       startDate: task.startDate || createdBase,
       dueDate: task.dueDate || task.startDate || createdBase,
       createdDate: createdBase,
@@ -117,40 +121,6 @@ export default function Task() {
     return { total, todo, inProgress, completed };
   }, [tasks]);
 
-  const summaryCards = useMemo(
-    () => [
-      {
-        label: '전체 작업',
-        value: stats.total,
-        icon: '📘',
-        cardClass: 'border-[#DEE7FF] bg-white',
-        iconWrapClass: 'bg-[#EEF2FF]',
-      },
-      {
-        label: '대기',
-        value: stats.todo,
-        icon: '⏳',
-        cardClass: 'border-gray-200 bg-white',
-        iconWrapClass: 'bg-gray-100',
-      },
-      {
-        label: '진행중',
-        value: stats.inProgress,
-        icon: '🏃',
-        cardClass: 'border-[#F1E9C9] bg-white',
-        iconWrapClass: 'bg-[#FBF2D4]',
-      },
-      {
-        label: '완료',
-        value: stats.completed,
-        icon: '✅',
-        cardClass: 'border-[#D8EEDC] bg-white',
-        iconWrapClass: 'bg-[#DFF3E2]',
-      },
-    ],
-    [stats],
-  );
-
   const sortedMembers = useMemo(() => {
     const myMember = members.find((m) => m.username === myUsername);
     const others = members.filter((m) => m.username !== myUsername);
@@ -163,12 +133,6 @@ export default function Task() {
   }, [members, myUsername]);
 
   const isLeader = myProjectRole === 'leader';
-
-  // useEffect(() => {
-  //   if (boards.length > 0 && activeBoardId === null) {
-  //     setActiveBoardId(boards[0].boardId);
-  //   }
-  // }, [boards, activeBoardId]);
 
   useEffect(() => {
     if (location.pathname.endsWith('/admin')) {
@@ -204,10 +168,14 @@ export default function Task() {
     sortedMembers.forEach((m) => {
       map[m.username] = [];
     });
+    // 담당자 없는 태스크를 담을 특수 버킷 추가
+    map['UNASSIGNED'] = [];
 
     tasks.forEach((t) => {
-      if (!map[t.assignee]) map[t.assignee] = [];
-      map[t.assignee].push(t);
+      // assigneeId가 없으면 'UNASSIGNED' 버킷으로
+      const key = t.assigneeId ? t.assigneeId : 'UNASSIGNED';
+      if (!map[key]) map[key] = [];
+      map[key].push(t);
     });
 
     return map;
@@ -215,7 +183,7 @@ export default function Task() {
 
   const timelineMembers = useMemo(() => {
     return sortedMembers.map((member) => ({
-      name: member.username,
+      username: member.username,
       displayName: member.nickname || member.username,
       role: member.role,
     }));
@@ -368,34 +336,10 @@ export default function Task() {
         </div>
       </div>
 
-      <div className="bg-white">
-        <div className="mx-auto max-w-7xl px-6 pb-4">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {summaryCards.map((card) => (
-              <div
-                key={card.label}
-                className={`flex min-h-[84px] items-center justify-between rounded-xl border px-5 py-4 shadow-sm ${card.cardClass}`}
-              >
-                <div className="flex min-w-0 items-center gap-3 pr-3">
-                  <div
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base ${card.iconWrapClass}`}
-                  >
-                    <span className="text-xl">{card.icon}</span>
-                  </div>
-                  <span className="truncate text-[14px] font-medium text-[#8A93A2]">
-                    {card.label}
-                  </span>
-                </div>
+      {/*작업 카드 상태 요약 카드*/}
+      <TaskSummaryCard stats={stats} />
 
-                <span className="ml-auto text-[26px] font-semibold text-[#111827]">
-                  {card.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
+      {/* 버튼 모음 */}
       <div className="bg-white">
         <div className="mx-auto flex max-w-7xl items-start justify-between px-6 py-6">
           <div className="flex flex-wrap items-center gap-3">
@@ -502,6 +446,7 @@ export default function Task() {
         </div>
       </div>
 
+      {/* project ai 입력창*/}
       <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
         {isAiOpen && (
           <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
@@ -559,79 +504,163 @@ export default function Task() {
         )}
 
         {topTab === 'project' && (
-          <div className="space-y-6">
-            {sortedMembers.map((member) => {
-              const list = tasksByMember[member.username] || [];
-              const doneCount = list.filter((t) => t.status === 'DONE').length;
+          <>
+            {/*<div className="flex items-center justify-between border-b border-gray-100 px-7 py-6">*/}
+            {/*  <div>*/}
+            {/*    <h2 className="text-[24px] font-bold text-gray-900">팀 진행 타임라인</h2>*/}
+            {/*    <p className="mt-1 text-sm text-gray-500">*/}
+            {/*      작업 기간과 완료 상태를 사람별로 한눈에 볼 수 있어요.*/}
+            {/*    </p>*/}
+            {/*  </div>*/}
+            {/*</div>*/}
+            <div className="space-y-6">
+              {/* 1. 멤버별 담당 태스크 */}
+              {sortedMembers.map((member) => {
+                const taskList = tasksByMember[member.username] || [];
+                const doneCount = taskList.filter((t) => t.status === 'DONE').length;
 
-              return (
-                <div
-                  key={member.username}
-                  className="rounded-2xl border border-gray-200 bg-white shadow-sm"
-                >
-                  <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
-                    <div className="flex min-w-0 items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] font-semibold text-white">
-                        {member.nickname?.slice(0, 1).toUpperCase() || '?'}
+                return (
+                  <div
+                    key={member.username}
+                    className="rounded-2xl border border-gray-200 bg-white shadow-sm"
+                  >
+                    <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] font-semibold text-white">
+                          {member.nickname?.slice(0, 1).toUpperCase() || '?'}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="text-lg font-semibold text-gray-900">
+                            {member.nickname}
+                          </div>
+                          <div className="truncate text-sm text-gray-500">
+                            {member.username} · {member.role}
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="min-w-0">
-                        <div className="text-lg font-semibold text-gray-900">{member.username}</div>
-                        <div className="truncate text-sm text-gray-500">
-                          {member.nickname} · {member.role}
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="text-gray-600">
+                          작업{' '}
+                          <span className="font-semibold text-gray-900">{taskList.length}</span>개
+                        </div>
+                        <div className="text-green-700">
+                          완료 <span className="font-semibold">{doneCount}</span>개
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="text-gray-600">
-                        작업 <span className="font-semibold text-gray-900">{list.length}</span>개
-                      </div>
-                      <div className="text-green-700">
-                        완료 <span className="font-semibold">{doneCount}</span>개
-                      </div>
-                    </div>
-                  </div>
+                    <div className="px-6 py-6">
+                      {taskList.length === 0 ? (
+                        <div className="flex h-44 flex-col items-center justify-center text-center">
+                          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                            <i className="ri-checkbox-line text-xl text-gray-400"></i>
+                          </div>
 
-                  <div className="px-6 py-6">
-                    {list.length === 0 ? (
-                      <div className="flex h-44 flex-col items-center justify-center text-center">
-                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-                          <i className="ri-checkbox-line text-xl text-gray-400"></i>
-                        </div>
+                          <p className="text-base text-gray-400">아직 할당된 작업이 없습니다.</p>
 
-                        <p className="text-base text-gray-400">아직 할당된 작업이 없습니다.</p>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDefaultAssigneeName(member.username);
-                            setIsCreateTaskModalOpen(true);
-                          }}
-                          className="mt-3 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
-                        >
-                          새 작업 추가
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {list.map((task) => (
-                          <TaskCard
-                            key={task.taskId}
-                            task={{
-                              ...task,
-                              tags: Array.isArray(task.tags) ? task.tags : [],
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDefaultAssigneeName(member.username);
+                              setIsCreateTaskModalOpen(true);
                             }}
-                            onClick={() => openTask(task)}
-                          />
-                        ))}
-                      </div>
-                    )}
+                            className="mt-3 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                          >
+                            새 작업 추가
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {taskList.map((task) => (
+                            <TaskCard
+                              key={task.taskId}
+                              task={{
+                                ...task,
+                                tags: Array.isArray(task.tags) ? task.tags : [],
+                              }}
+                              onClick={() => openTask(task)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+
+              {/* 2. 담당자 없음 버킷 */}
+              {(() => {
+                const unassignedTasks = tasksByMember['UNASSIGNED'] || [];
+                const doneCount = unassignedTasks.filter((t) => t.status === 'DONE').length;
+
+                return (
+                  <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 font-semibold text-gray-500">
+                          <i className="ri-user-unfollow-line text-xl"></i>
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="text-lg font-semibold text-gray-900">담당자 없음</div>
+                          <div className="truncate text-sm text-gray-500">배정 대기 중인 작업</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="text-gray-600">
+                          작업{' '}
+                          <span className="font-semibold text-gray-900">
+                            {unassignedTasks.length}
+                          </span>
+                          개
+                        </div>
+                        <div className="text-green-700">
+                          완료 <span className="font-semibold">{doneCount}</span>개
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-6 py-6">
+                      {unassignedTasks.length === 0 ? (
+                        <div className="flex h-44 flex-col items-center justify-center text-center">
+                          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                            <i className="ri-inbox-line text-xl text-gray-400"></i>
+                          </div>
+                          <p className="text-base text-gray-400">작업이 없습니다.</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDefaultAssigneeName('');
+                              setIsCreateTaskModalOpen(true);
+                            }}
+                            className="mt-3 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                          >
+                            새 작업 추가
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {unassignedTasks.map((task) => (
+                            <TaskCard
+                              key={task.taskId}
+                              task={{
+                                ...task,
+                                tags: Array.isArray(task.tags) ? task.tags : [],
+                              }}
+                              onClick={() => openTask(task)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </>
         )}
 
         {topTab === 'file' && <FilePanel projectId={Number(id)} />}
@@ -639,7 +668,7 @@ export default function Task() {
         {topTab === 'timeline' && (
           <TaskTimeline
             tasks={timelineTasks}
-            teamMembers={timelineMembers}
+            members={timelineMembers}
             onTaskClick={(task) => {
               const originalTask = tasks.find((item) => item.taskId === task.id);
               if (originalTask) openTask(originalTask);

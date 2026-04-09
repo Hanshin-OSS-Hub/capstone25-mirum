@@ -1,4 +1,5 @@
 import rawTasksData from './data.json';
+import rawDeletedTasksData from './data_deleted.json';
 
 /**
  * @typedef {import('@/features/tasks/types/task.js').TaskData} TaskData
@@ -23,4 +24,9 @@ export const tasksDB = rawTasksData.map((task) => ({
   dueDate: task.dueDate ? new Date(task.dueDate) : null,
   createdDate: new Date(task.createdDate),
   updatedDate: new Date(task.updatedDate),
+}));
+
+export const deletedTasksDB = rawDeletedTasksData.map((task) => ({
+  ...task,
+  deletedDate: new Date(task.deletedDate),
 }));

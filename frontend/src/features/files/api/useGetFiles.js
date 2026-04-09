@@ -23,33 +23,33 @@ import { folderContentType, normalizeFileItem } from '@/features/files/types/fil
 */
 
 const mockFileResponse = [
-  {
-    uuid: 'folder-001',
-    originalFilename: '디자인 시안',
-    size: 0,
-    contentType: folderContentType,
-    createdDate: '2026-03-27T10:15:30',
-    createdBy: '김민수',
-    itemCount: 12,
-  },
-  {
-    uuid: 'folder-002',
-    originalFilename: '참고 논문 모음',
-    size: 0,
-    contentType: folderContentType,
-    createdDate: '2026-03-26T14:20:10',
-    createdBy: '박준호',
-    itemCount: 8,
-  },
-  {
-    uuid: 'folder-003',
-    originalFilename: '이미지 자료',
-    size: 0,
-    contentType: folderContentType,
-    createdDate: '2026-03-25T09:30:00',
-    createdBy: '이지영',
-    itemCount: 15,
-  },
+  // {
+  //   uuid: 'folder-001',
+  //   originalFilename: '디자인 시안',
+  //   size: 0,
+  //   contentType: folderContentType,
+  //   createdDate: '2026-03-27T10:15:30',
+  //   createdBy: '김민수',
+  //   itemCount: 12,
+  // },
+  // {
+  //   uuid: 'folder-002',
+  //   originalFilename: '참고 논문 모음',
+  //   size: 0,
+  //   contentType: folderContentType,
+  //   createdDate: '2026-03-26T14:20:10',
+  //   createdBy: '박준호',
+  //   itemCount: 8,
+  // },
+  // {
+  //   uuid: 'folder-003',
+  //   originalFilename: '이미지 자료',
+  //   size: 0,
+  //   contentType: folderContentType,
+  //   createdDate: '2026-03-25T09:30:00',
+  //   createdBy: '이지영',
+  //   itemCount: 15,
+  // },
   {
     uuid: '8d3x-132k-1123-pptx',
     originalFilename: '발표 PPT 초안.pptx',
@@ -89,7 +89,8 @@ const mockFileResponse = [
     contentType: 'image/jpeg',
     createdDate: '2026-03-20T08:10:00',
     createdBy: '이지영',
-    previewUrl: 'https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=400&q=80',
+    previewUrl:
+      'https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=400&q=80',
   },
   {
     uuid: '8d3x-132k-1123-mp4',
@@ -98,7 +99,8 @@ const mockFileResponse = [
     contentType: 'video/mp4',
     createdDate: '2026-03-19T12:05:00',
     createdBy: '박준호',
-    previewUrl: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=400&q=80',
+    previewUrl:
+      'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=400&q=80',
   },
   {
     uuid: '8d3x-132k-1123-jpg-2',
@@ -107,7 +109,8 @@ const mockFileResponse = [
     contentType: 'image/jpeg',
     createdDate: '2026-03-18T18:25:00',
     createdBy: '최수진',
-    previewUrl: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80',
+    previewUrl:
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80',
   },
   {
     uuid: '8d3x-132k-1123-mp4-2',
@@ -116,7 +119,8 @@ const mockFileResponse = [
     contentType: 'video/mp4',
     createdDate: '2026-03-17T16:45:00',
     createdBy: '김민수',
-    previewUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80',
+    previewUrl:
+      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80',
   },
 ];
 

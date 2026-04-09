@@ -7,17 +7,23 @@ import { api } from '@/api/client.js';
  * @typedef {import('@/features/tasks/types/task.js').TaskRequestDTO} TaskRequestDTO
  *
  * (공통 TaskRequestDTO에서 taskId만 필수, 나머지는 옵셔널로 처리)
- * @typedef {Pick<TaskData, 'taskId'> & Partial<Omit<TaskData, 'taskId', 'createdDate', 'updatedDate'>>} RequestTaskUpdateDTO
+ * @typedef {Pick<TaskData, 'taskId'> &
+ *   Partial<Omit<TaskData, 'taskId' | 'createdDate' | 'updatedDate'>>} RequestTaskUpdateDTO
  *
  * (수정된 작업 카드의 전체 정보를 반환)
  * @typedef {import('@tanstack/react-query').DefaultError} Error
- * @returns {import('@tanstack/react-query').UseMutationResult<TaskData, Error, { RequestData: RequestTaskUpdateDTO, projectId: number }, unknown>}
+ * @returns {import('@tanstack/react-query').UseMutationResult<
+ *   TaskData,
+ *   Error,
+ *   { requestData: RequestTaskUpdateDTO, projectId: number },
+ *   unknown
+ * >}
  */
 export const useUpdateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    /** @param { RequestData: RequestTaskUpdateDTO, projectId: number } params */
+    /** @param {{ requestData: RequestTaskUpdateDTO, projectId: number }} params */
     mutationFn: ({ requestData, projectId }) => {
       /** @type {TaskData} */
       return api.patch(`/project/${projectId}/task/${requestData.taskId}`, requestData);

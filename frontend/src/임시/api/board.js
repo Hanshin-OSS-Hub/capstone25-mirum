@@ -1,5 +1,5 @@
-import { errorResponse, parseUsername, successResponse } from '@/mocks/api/common.js';
 import { database } from '@/mocks/database.js';
+import { errorResponse, parseUsername, successResponse } from '@/임시/api/common.js';
 import { http } from 'msw';
 
 export const boardHandlers = [

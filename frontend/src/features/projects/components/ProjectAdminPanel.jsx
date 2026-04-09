@@ -1,4 +1,7 @@
 import { useMemo, useState } from 'react';
+import { useGetTasksByStatus } from '@/features/tasks/api/useGetTasksByStatus.js';
+import { usePermanentDeleteTask } from '@/features/tasks/api/usePermanentDeleteTask.js';
+import { useRestoreTask } from '@/features/tasks/api/useRestoreTask.js';
 
 const ADMIN_TABS = [
   { key: 'general', label: '일반', icon: 'ri-settings-3-line' },
@@ -12,15 +15,18 @@ export default function ProjectAdminPanel({
   projectId,
   members = [],
   pendingInvites = [],
-  deletedCards = [],
-  taskStats = { total: 0, todo: 0, inProgress: 0, completed: 0 },
+  // deletedCards = [],
   onBack,
 }) {
   const [tab, setTab] = useState('general');
 
+  const { data: deletedCards } = useGetTasksByStatus({ projectId, status: 'deleted' });
+  // const { mutate: deleteTask } = usePermanentDeleteTask();
+  const { mutate: restoreTask } = useRestoreTask();
+
   const projectName = project?.projectName || project?.name || '프로젝트 이름';
   const projectDescription = project?.description || '프로젝트 설명이 없습니다.';
-  const createdAt = project?.creationDate ? String(project.creationDate).slice(0, 10) : '-';
+  const createdDate = project?.createdDate ? String(project.createdDate).slice(0, 10) : '-';
 
   const normalizedMembers = useMemo(() => {
     return members.map((member, index) => ({
@@ -32,8 +38,8 @@ export default function ProjectAdminPanel({
     }));
   }, [members]);
 
-  const leaderCount = normalizedMembers.filter((member) => member.role === 'leader').length;
-  const memberCount = normalizedMembers.length;
+  // const leaderCount = normalizedMembers.filter((member) => member.role === 'leader').length;
+  // const memberCount = normalizedMembers.length;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -49,14 +55,14 @@ export default function ProjectAdminPanel({
           </p>
         </div>
 
-        <div className="border-b border-gray-100 px-4 py-4">
-          <div className="grid grid-cols-2 gap-3">
-            <StatMiniCard label="멤버" value={memberCount} />
-            <StatMiniCard label="리더" value={leaderCount} />
-            <StatMiniCard label="초대 대기" value={pendingInvites.length} />
-            <StatMiniCard label="휴지통" value={deletedCards.length} />
-          </div>
-        </div>
+        {/*<div className="border-b border-gray-100 px-4 py-4">*/}
+        {/*  <div className="grid grid-cols-2 gap-3">*/}
+        {/*    <StatMiniCard label="멤버" value={memberCount} />*/}
+        {/*    <StatMiniCard label="리더" value={leaderCount} />*/}
+        {/*    <StatMiniCard label="초대 대기" value={pendingInvites.length} />*/}
+        {/*    <StatMiniCard label="휴지통" value={deletedCards.length} />*/}
+        {/*  </div>*/}
+        {/*</div>*/}
 
         <div className="px-3 py-3">
           <nav className="space-y-1">
@@ -107,17 +113,17 @@ export default function ProjectAdminPanel({
                 description="프로젝트의 기본 정보와 현재 상태를 확인할 수 있어요."
               />
 
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <InfoStatCard label="전체 작업" value={taskStats.total} icon="ri-file-list-3-line" />
-                <InfoStatCard label="대기" value={taskStats.todo} icon="ri-time-line" />
-                <InfoStatCard label="진행중" value={taskStats.inProgress} icon="ri-loader-4-line" />
-                <InfoStatCard label="완료" value={taskStats.completed} icon="ri-checkbox-circle-line" />
-              </div>
+              {/*<div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">*/}
+              {/*  <InfoStatCard label="전체 작업" value={taskStats.total} icon="ri-file-list-3-line" />*/}
+              {/*  <InfoStatCard label="대기" value={taskStats.todo} icon="ri-time-line" />*/}
+              {/*  <InfoStatCard label="진행중" value={taskStats.inProgress} icon="ri-loader-4-line" />*/}
+              {/*  <InfoStatCard label="완료" value={taskStats.completed} icon="ri-checkbox-circle-line" />*/}
+              {/*</div>*/}
 
               <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <InfoField label="프로젝트 이름" value={projectName} />
                 <InfoField label="프로젝트 ID" value={projectId || '-'} />
-                <InfoField label="생성일" value={createdAt} />
+                <InfoField label="생성일" value={createdDate} />
                 <InfoField label="초대 대기 인원" value={`${pendingInvites.length}명`} />
               </div>
 
@@ -126,31 +132,31 @@ export default function ProjectAdminPanel({
               </div>
             </ContentCard>
 
-            <ContentCard>
-              <SectionHeader
-                eyebrow="OVERVIEW"
-                title="빠른 요약"
-                description="지금 프로젝트 운영 상태를 한 번에 볼 수 있게 정리했어요."
-              />
+            {/*<ContentCard>*/}
+            {/*  <SectionHeader*/}
+            {/*    eyebrow="OVERVIEW"*/}
+            {/*    title="빠른 요약"*/}
+            {/*    description="지금 프로젝트 운영 상태를 한 번에 볼 수 있게 정리했어요."*/}
+            {/*  />*/}
 
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                <QuickSummary
-                  title="멤버 구성"
-                  description={`현재 멤버 ${memberCount}명 · 리더 ${leaderCount}명`}
-                  icon="ri-team-line"
-                />
-                <QuickSummary
-                  title="초대 상태"
-                  description={`수락 대기 중인 초대 ${pendingInvites.length}건`}
-                  icon="ri-mail-open-line"
-                />
-                <QuickSummary
-                  title="삭제 카드"
-                  description={`휴지통에 들어간 카드 ${deletedCards.length}개`}
-                  icon="ri-delete-bin-6-line"
-                />
-              </div>
-            </ContentCard>
+            {/*  <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">*/}
+            {/*    <QuickSummary*/}
+            {/*      title="멤버 구성"*/}
+            {/*      description={`현재 멤버 ${memberCount}명 · 리더 ${leaderCount}명`}*/}
+            {/*      icon="ri-team-line"*/}
+            {/*    />*/}
+            {/*    <QuickSummary*/}
+            {/*      title="초대 상태"*/}
+            {/*      description={`수락 대기 중인 초대 ${pendingInvites.length}건`}*/}
+            {/*      icon="ri-mail-open-line"*/}
+            {/*    />*/}
+            {/*    <QuickSummary*/}
+            {/*      title="삭제 카드"*/}
+            {/*      description={`휴지통에 들어간 카드 ${deletedCards.length}개`}*/}
+            {/*      icon="ri-delete-bin-6-line"*/}
+            {/*    />*/}
+            {/*  </div>*/}
+            {/*</ContentCard>*/}
           </>
         )}
 
@@ -271,9 +277,72 @@ export default function ProjectAdminPanel({
           <>
             <ContentCard>
               <SectionHeader
+                eyebrow="ACTION"
+                title="휴지통 안내"
+                description="지금은 UI만 먼저 구성했고, 이후 카드 복구/영구 삭제 API를 연결하면 돼요."
+              />
+
+              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <ActionHint
+                  title="복구 기능"
+                  description="삭제된 카드를 원래 보드로 되돌리는 기능 연결"
+                  icon="ri-arrow-go-back-line"
+                />
+                <ActionHint
+                  title="영구 삭제"
+                  description="휴지통에서 완전히 제거하는 기능 연결"
+                  icon="ri-delete-bin-5-line"
+                />
+              </div>
+            </ContentCard>
+
+            <ContentCard>
+              <SectionHeader
                 eyebrow="TRASH"
                 title="카드 휴지통"
                 description="삭제된 카드들을 모아두고 복구나 영구 삭제를 연결할 수 있는 자리예요."
+              />
+
+              <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200">
+                <div className="grid grid-cols-[minmax(0,1.4fr)_160px_140px] border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+                  <div>Task</div>
+                  <div>Assignee</div>
+                  <div>Status</div>
+                </div>
+
+                {deletedCards.length === 0 ? (
+                  <div className="px-5 py-12 text-center text-sm text-gray-400">
+                    삭제된 카드가 없습니다.
+                  </div>
+                ) : (
+                  deletedCards.map((card) => (
+                    <div
+                      key={card.taskId}
+                      className="grid grid-cols-[minmax(0,1.4fr)_160px_140px] items-center gap-4 border-b border-gray-100 px-5 py-4 last:border-b-0"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-semibold text-gray-900">
+                          {card.title || '제목 없음'}
+                        </p>
+                        <p className="mt-1 truncate text-sm text-gray-500">
+                          삭제 시간: {card.deletedDate || '-'}
+                        </p>
+                      </div>
+
+                      <div className="text-sm text-gray-700">{card.assigneeName || '미지정'}</div>
+
+                      <div className="text-sm font-medium text-red-500">Deleted</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ContentCard>
+
+            <ContentCard>
+              <SectionHeader
+                eyebrow="TRASH"
+                title="파일 휴지통"
+                description="삭제된 파일들을 모아두고 복구나 영구 삭제를 연결할 수 있는 자리예요."
               />
 
               <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200">
@@ -302,37 +371,12 @@ export default function ProjectAdminPanel({
                         </p>
                       </div>
 
-                      <div className="text-sm text-gray-700">
-                        {card.assignee || '미지정'}
-                      </div>
+                      <div className="text-sm text-gray-700">{card.assignee || '미지정'}</div>
 
-                      <div className="text-sm font-medium text-red-500">
-                        Deleted
-                      </div>
+                      <div className="text-sm font-medium text-red-500">Deleted</div>
                     </div>
                   ))
                 )}
-              </div>
-            </ContentCard>
-
-            <ContentCard>
-              <SectionHeader
-                eyebrow="ACTION"
-                title="휴지통 안내"
-                description="지금은 UI만 먼저 구성했고, 이후 카드 복구/영구 삭제 API를 연결하면 돼요."
-              />
-
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <ActionHint
-                  title="복구 기능"
-                  description="삭제된 카드를 원래 보드로 되돌리는 기능 연결"
-                  icon="ri-arrow-go-back-line"
-                />
-                <ActionHint
-                  title="영구 삭제"
-                  description="휴지통에서 완전히 제거하는 기능 연결"
-                  icon="ri-delete-bin-5-line"
-                />
               </div>
             </ContentCard>
           </>
@@ -348,16 +392,16 @@ export default function ProjectAdminPanel({
             />
 
             <div className="mt-6 space-y-4">
-              <DangerRow
-                title="프로젝트 이름 변경"
-                description="프로젝트 식별값과 표시명을 바꾸는 기능을 나중에 연결할 수 있어요."
-                buttonLabel="이름 변경"
-              />
-              <DangerRow
-                title="프로젝트 보관"
-                description="프로젝트를 읽기 전용 또는 비활성 상태처럼 처리하는 기능으로 확장할 수 있어요."
-                buttonLabel="프로젝트 보관"
-              />
+              {/*<DangerRow*/}
+              {/*  title="프로젝트 이름 변경"*/}
+              {/*  description="프로젝트 식별값과 표시명을 바꾸는 기능을 나중에 연결할 수 있어요."*/}
+              {/*  buttonLabel="이름 변경"*/}
+              {/*/>*/}
+              {/*<DangerRow*/}
+              {/*  title="프로젝트 보관"*/}
+              {/*  description="프로젝트를 읽기 전용 또는 비활성 상태처럼 처리하는 기능으로 확장할 수 있어요."*/}
+              {/*  buttonLabel="프로젝트 보관"*/}
+              {/*/>*/}
               <DangerRow
                 title="프로젝트 삭제"
                 description="프로젝트와 관련된 데이터가 사라질 수 있어요. 실제 삭제 연결 전까지는 UI만 먼저 구성해둔 상태예요."
@@ -374,9 +418,7 @@ export default function ProjectAdminPanel({
 
 function ContentCard({ children }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      {children}
-    </div>
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">{children}</div>
   );
 }
 
@@ -418,7 +460,9 @@ function InfoStatCard({ label, value, icon }) {
 }
 function InfoField({ label, value, multiline = false }) {
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white p-5 ${multiline ? 'min-h-[132px]' : ''}`}>
+    <div
+      className={`rounded-2xl border border-gray-200 bg-white p-5 ${multiline ? 'min-h-[132px]' : ''}`}
+    >
       <p className="text-sm font-medium text-gray-500">{label}</p>
       <p className={`mt-3 text-base text-gray-900 ${multiline ? 'leading-7' : 'font-semibold'}`}>
         {value}

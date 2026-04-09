@@ -2,11 +2,7 @@ import { useEffect, useRef } from 'react';
 import { HiChevronDown, HiChevronUp } from 'react-icons/hi2';
 import { LuDownload } from 'react-icons/lu';
 import FileTypeIcon from './FileTypeIcon.jsx';
-import {
-  fileCategory,
-  getFileExtension,
-  getOwnerInitial,
-} from '@/features/files/types/file.js';
+import { getFileExtension, getOwnerInitial } from '@/features/files/types/file.js';
 
 /**
  * @typedef {Object} FileListItem
@@ -42,8 +38,6 @@ import {
  * @param {FileListItem} item
  */
 function getIconType(item) {
-  if (item.category === fileCategory.folder) return 'folder';
-
   const name = item.originalFilename.toLowerCase();
 
   if (name.endsWith('.ppt') || name.endsWith('.pptx')) return 'ppt';
@@ -62,15 +56,6 @@ function getIconType(item) {
  */
 function getTypeIconStyle(filename = '', contentType = '') {
   const ext = getFileExtension(filename);
-
-  if (contentType === 'application/x-folder') {
-    return {
-      icon: 'ri-folder-2-fill',
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      subLabel: '폴더',
-    };
-  }
 
   if (contentType.startsWith('image/')) {
     return {
@@ -225,7 +210,6 @@ export default function FileListTable({
         </div>
       ) : (
         items.map((item) => {
-          const isFolder = item.category === fileCategory.folder;
           const iconStyle = getTypeIconStyle(item.originalFilename, item.contentType);
           const isSelected = selectedFileIds.includes(item.uuid);
 
@@ -263,15 +247,11 @@ export default function FileListTable({
                   <div className="truncate text-lg font-semibold text-gray-900">
                     {item.originalFilename}
                   </div>
-                  <div className="mt-1 text-sm text-gray-500">
-                    {isFolder ? '폴더' : iconStyle.subLabel}
-                  </div>
+                  <div className="mt-1 text-sm text-gray-500">{iconStyle.subLabel}</div>
                 </div>
               </div>
 
-              <div className="text-sm font-medium text-gray-600">
-                {isFolder ? '-' : item.displaySize}
-              </div>
+              <div className="text-sm font-medium text-gray-600">{item.displaySize}</div>
 
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500 text-xs font-semibold text-white shadow-sm">
@@ -288,13 +268,8 @@ export default function FileListTable({
                 <button
                   type="button"
                   onClick={() => onDownloadItem?.(item)}
-                  disabled={isFolder}
-                  className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition ${
-                    isFolder
-                      ? 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300'
-                      : 'border-blue-100 bg-blue-50 text-blue-600 hover:border-blue-200 hover:bg-blue-100 hover:text-blue-700'
-                  }`}
-                  title={isFolder ? '폴더는 다운로드할 수 없습니다' : '다운로드'}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 transition hover:border-blue-200 hover:bg-blue-100 hover:text-blue-700"
+                  title="다운로드"
                 >
                   <LuDownload className="text-xl" />
                 </button>

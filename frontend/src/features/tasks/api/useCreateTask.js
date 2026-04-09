@@ -21,11 +21,10 @@ export const useCreateTask = () => {
     /** @param {{ requestBody: RequestTaskCreateDTO, projectId: number }} params */
     mutationFn: async ({ requestBody, projectId }) => {
       /** @type {ResponseTaskCreate} */
-      return await api.post(`/${projectId}/tasks`, requestBody);
+      return await api.post(`project/${projectId}/task`, requestBody);
     },
     onSuccess: async (data, variables) => {
-      // 성공 시 해당 프로젝트의 tasks 캐시를 무효화하여 목록 새로고침
-      await queryClient.invalidateQueries({ queryKey: ['tasks', variables.projectId] });
+      await queryClient.invalidateQueries({ queryKey: ['tasks', Number(variables.projectId)] });
       console.log('생성 완료:', data);
       alert('작업 카드가 생성되었습니다.');
     },
