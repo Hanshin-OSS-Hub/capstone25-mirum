@@ -1,3 +1,4 @@
+/*
 # S3 Endpoint
 # ECR은 내부적으로 S3를 사용하므로 S3 Endpoint를 생성해야 ECR과 통신 가능
 resource "aws_vpc_endpoint" "s3" {
@@ -59,3 +60,17 @@ resource "aws_vpc_endpoint" "ec2_messages" {
   subnet_ids        = [aws_subnet.app_server_1.id] #, aws_subnet.private_subnet_2.id]
   security_group_ids = [aws_security_group.for_endpoint.id]
 } 
+
+# Secrets Manager Endpoint
+resource "aws_vpc_endpoint" "secretsmanager" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.region}.secretsmanager"
+  vpc_endpoint_type = "Interface"
+  
+  private_dns_enabled = true
+  subnet_ids = [aws_subnet.app_server_1.id] #, aws_subnet.app_server_2.id]
+  
+  security_group_ids = [aws_security_group.for_endpoint.id]
+}
+
+*/

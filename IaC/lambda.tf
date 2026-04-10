@@ -10,12 +10,13 @@ resource "aws_lambda_function" "image_pull" {
   function_name = "image_pull"
   role         = aws_iam_role.lambda_iam_role.arn
   handler     = "image_pull.lambda_handler"
-  runtime     = "python3.9"
+  runtime     = "python3.11"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   filename    = data.archive_file.lambda_zip.output_path
   environment {
     variables = {
       INSTANCE_IDS = join(",", [aws_instance.app_server_1.id]) #, aws_instance.app_server_2.id])
+      DB_ENDPOINT  = aws_db_instance.my_db.endpoint
     }
   }
 }

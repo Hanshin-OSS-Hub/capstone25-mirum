@@ -1,3 +1,4 @@
+# 웹 서버 및 리버스 프록시 용 nginx 인스턴스
 resource "aws_instance" "nginx_1" {
   ami = data.aws_ami.ami.id
   associate_public_ip_address = false
@@ -13,7 +14,22 @@ resource "aws_instance" "nginx_1" {
   root_block_device {
     volume_size = 10
   }
+
+  lifecycle {
+    ignore_changes = [associate_public_ip_address]
+  }
 }
+
+# nginx를 위한 EIP
+resource "aws_eip" "for_nginx" {
+  instance = aws_instance.nginx_1.id
+
+  tags = {
+    Name = "eip for nginx"
+  }
+}
+
+# 다중 AZ를 위한 두번째 인스턴스 (비용 절감을 위해 주석 처리)
 
 # resource "aws_instance" "nginx_2" {
 #   ami = data.aws_ami.ami.id
