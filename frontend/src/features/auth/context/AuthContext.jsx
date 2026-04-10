@@ -26,33 +26,37 @@ export default function AuthProvider({ children }) {
 
   const login = async (userData) => {
     // localStorage에 저장 (null/undefined는 저장하지 않음)
-    if (!userData.accessToken || !userData.refreshToken) return;
+    if (!userData?.accessToken || !userData?.refreshToken) return;
 
     localStorage.setItem('accessToken', userData.accessToken);
     localStorage.setItem('refreshToken', userData.refreshToken);
-    // 토큰 저장 후, 유저 정보 조회
-    const { data: profile } = await api.get('/user');
 
-    localStorage.setItem('username', profile.username);
-    profile.nickname
-      ? localStorage.setItem('nickname', profile.nickname)
-      : localStorage.removeItem('nickname');
-    profile.email ? localStorage.setItem('email', profile.email) : localStorage.removeItem('email');
+    try {
+      // 토큰 저장 후, 유저 정보 조회
+      const profile = await api.get('/user');
 
-    setIsAuthenticated(true);
-    setUser({
-      username: profile.username,
-      nickname: profile.nickname || null,
-      email: profile.email || null,
-    });
+      if (!profile) {
+        throw new Error('유저 정보 없음');
+      }
 
-    // state 업데이트
-    setIsAuthenticated(true);
-    setUser({
-      username: userData.username,
-      nickname: userData.nickname || null,
-      email: userData.email || null,
-    });
+      localStorage.setItem('username', profile.username);
+      profile.nickname
+        ? localStorage.setItem('nickname', profile.nickname)
+        : localStorage.removeItem('nickname');
+      profile.email
+        ? localStorage.setItem('email', profile.email)
+        : localStorage.removeItem('email');
+
+      setIsAuthenticated(true);
+      setUser({
+        username: profile.username,
+        nickname: profile.nickname || null,
+        email: profile.email || null,
+      });
+    } catch (err) {
+      console.error('유저 조회 실패', err);
+      logout();
+    }
   };
 
   const logout = () => {
