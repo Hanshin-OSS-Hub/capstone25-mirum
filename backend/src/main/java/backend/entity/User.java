@@ -49,10 +49,12 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role_type", nullable = false)
+
     //admin? or user?
     private UserRoleType roleType;
 
     @Column(name = "nickname")
+    //닉네임
     private String nickname;
 
     @Column(name = "email")
@@ -77,7 +79,7 @@ public class User {
     public void updateUser(UserRequestDTO dto) {
         //Setter는 최대한 지양
         this.email = dto.getEmail();
-        this.nickname = dto.getNickname();
+        this.nickname = dto.getUsername();
     }
 
 }

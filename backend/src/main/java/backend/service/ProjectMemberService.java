@@ -8,6 +8,7 @@ import backend.entity.Project.ProjectMemberRoleType;
 import backend.repository.ProjectInviteRepository;
 import backend.repository.ProjectMemberRepository;
 import backend.repository.ProjectRepository;
+import backend.service.taskcard.TaskService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,6 +24,7 @@ public class ProjectMemberService {
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectRepository projectRepository;
     private final ProjectInviteRepository projectInviteRepository;
+    private final TaskService taskService;
 
     // 소속 맴버 리스트
     public List<ProjectMemberDTO> getMembers(Long projectId) {
@@ -32,7 +34,7 @@ public class ProjectMemberService {
         List<ProjectMember> members = projectMemberRepository.findAllByProjectId(projectId);
 
         return members.stream().map(m -> ProjectMemberDTO.builder()
-                .username(m.getUser().getUsername())
+                .username(m.getUser().getNickname())
                 .nickname(m.getUser().getNickname())
                 .role(m.getRole())
                 .build()
@@ -69,6 +71,9 @@ public class ProjectMemberService {
                     .orElseThrow(() -> new EntityNotFoundException("Project not found"));
             p.deleteProject(requesterName);
         }
+
+        //Task 담당자 삭제 시 Task 담당자를 LEADER에게 자동 이관
+        taskService.changeAssigneeToLeader(projectId, Long.valueOf(username));
     }
 
     // 관리자 권한 확인
