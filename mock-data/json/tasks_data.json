@@ -1,0 +1,325 @@
+[
+  {
+    "taskId": 1,
+    "projectId": 1,
+    "title": "UI 디자인 완료",
+    "description": "메인 페이지와 로그인 페이지의 UI 디자인을 완료해야 합니다. 사용자 경험을 고려하여 직관적인 인터페이스를 구성해 주세요.",
+    "assigneeId": "younghee.lee",
+    "assigneeName": "이영희",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-15T00:00:00",
+    "dueDate": "2026-04-25T00:00:00",
+    "status": "DONE",
+    "tags": [
+      "디자인",
+      "UI/UX"
+    ],
+    "createdDate": "2026-04-15T14:00:00",
+    "updatedDate": "2026-04-20T10:00:00",
+    "notes": "# UI 디자인 피드백\n- 색상 팔레트 조정 필요\n- 모바일 반응형 고려"
+  },
+  {
+    "taskId": 2,
+    "projectId": 1,
+    "title": "백엔드 API 연동",
+    "description": "회원가입 및 로그인 API를 프론트엔드와 연동합니다. JWT 토큰 처리가 포함되어야 합니다.",
+    "assigneeId": "qwer",
+    "assigneeName": "테스트유저",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-16T00:00:00",
+    "dueDate": "2026-04-28T00:00:00",
+    "status": "IN_PROGRESS",
+    "tags": [
+      "개발",
+      "백엔드"
+    ],
+    "createdDate": "2026-04-16T09:30:00",
+    "updatedDate": "2026-04-18T16:20:00",
+    "notes": "API 명세서 v1.2 참고"
+  },
+  {
+    "taskId": 3,
+    "projectId": 1,
+    "title": "기획서 리뷰",
+    "description": "기획팀에서 전달받은 스토리보드를 검토하고 기술적 실현 가능성을 피드백합니다.",
+    "assigneeId": "chulsu.kim",
+    "assigneeName": "김철수",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-15T00:00:00",
+    "dueDate": "2026-04-18T00:00:00",
+    "status": "DONE",
+    "tags": [
+      "기획",
+      "미팅"
+    ],
+    "createdDate": "2026-04-15T11:00:00",
+    "updatedDate": "2026-04-18T14:00:00",
+    "notes": "주요 이슈 3건 리포트 완료"
+  },
+  {
+    "taskId": 7,
+    "projectId": 1,
+    "title": "로그인 페이지 퍼블리싱",
+    "description": "디자인 시안을 바탕으로 로그인 페이지 HTML/CSS 작업을 진행합니다.",
+    "assigneeId": "younghee.lee",
+    "assigneeName": "이영희",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-21T00:00:00",
+    "dueDate": "2026-04-26T00:00:00",
+    "status": "IN_PROGRESS",
+    "tags": [
+      "퍼블리싱",
+      "프론트엔드"
+    ],
+    "createdDate": "2026-04-21T10:00:00",
+    "updatedDate": "2026-04-22T15:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 8,
+    "projectId": 1,
+    "title": "DB 마이그레이션",
+    "description": "기존 데이터베이스 스키마 변경 사항을 반영합니다.",
+    "assigneeId": "qwer",
+    "assigneeName": "테스트유저",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-22T00:00:00",
+    "dueDate": "2026-04-30T00:00:00",
+    "status": "TODO",
+    "tags": [
+      "백엔드",
+      "DB"
+    ],
+    "createdDate": "2026-04-22T09:00:00",
+    "updatedDate": "2026-04-22T09:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 4,
+    "projectId": 2,
+    "title": "시장 조사 분석",
+    "description": "경쟁사 동향 및 타겟 고객층 분석 리포트 작성",
+    "assigneeId": "jieun.choi",
+    "assigneeName": "최지은",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-01T00:00:00",
+    "dueDate": "2026-04-05T00:00:00",
+    "status": "TODO",
+    "tags": [
+      "마케팅",
+      "분석"
+    ],
+    "createdDate": "2026-04-01T15:00:00",
+    "updatedDate": "2026-04-01T15:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 9,
+    "projectId": 2,
+    "title": "SNS 광고 시안 기획",
+    "description": "인스타그램 및 페이스북 광고용 이미지 시안 3종 기획",
+    "assigneeId": "jieun.choi",
+    "assigneeName": "최지은",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-02T00:00:00",
+    "dueDate": "2026-04-07T00:00:00",
+    "status": "IN_PROGRESS",
+    "tags": [
+      "마케팅",
+      "디자인"
+    ],
+    "createdDate": "2026-04-02T11:00:00",
+    "updatedDate": "2026-04-03T10:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 10,
+    "projectId": 2,
+    "title": "마케팅 예산안 수립",
+    "description": "분기별 마케팅 예산 계획 수립 및 보고",
+    "assigneeId": "qwer",
+    "assigneeName": "테스트유저",
+    "assigneeProfileImage": null,
+    "startDate": "2026-03-28T00:00:00",
+    "dueDate": "2026-04-03T00:00:00",
+    "status": "IN_PROGRESS",
+    "tags": [
+      "기획",
+      "미팅"
+    ],
+    "createdDate": "2026-03-25T10:00:00",
+    "updatedDate": "2026-03-29T15:00:00",
+    "notes": "킥오프 미팅 자료 초안 작성 완료"
+  },
+  {
+    "taskId": 11,
+    "projectId": 2,
+    "title": "블로그 콘텐츠 작성",
+    "description": "신제품 홍보를 위한 블로그 포스팅 원고 작성",
+    "assigneeId": "jieun.choi",
+    "assigneeName": "최지은",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-01T00:00:00",
+    "dueDate": "2026-04-08T00:00:00",
+    "status": "DONE",
+    "tags": [
+      "마케팅",
+      "콘텐츠"
+    ],
+    "createdDate": "2026-04-01T16:00:00",
+    "updatedDate": "2026-04-04T17:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 12,
+    "projectId": 2,
+    "title": "검색 키워드 분석",
+    "description": "주요 검색 키워드 추출 및 SEO 전략 수립",
+    "assigneeId": "qwer",
+    "assigneeName": "테스트유저",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-02T00:00:00",
+    "dueDate": "2026-04-06T00:00:00",
+    "status": "TODO",
+    "tags": [
+      "마케팅",
+      "SEO"
+    ],
+    "createdDate": "2026-04-02T13:00:00",
+    "updatedDate": "2026-04-02T13:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 5,
+    "projectId": 3,
+    "title": "앱 프로토타입 제작",
+    "description": "Figma를 사용하여 주요 기능의 프로토타입을 제작합니다.",
+    "assigneeId": "gildong.hong",
+    "assigneeName": "홍길동",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-31T00:00:00",
+    "dueDate": "2026-05-10T00:00:00",
+    "status": "IN_PROGRESS",
+    "tags": [
+      "디자인",
+      "프로토타입"
+    ],
+    "createdDate": "2026-04-31T10:00:00",
+    "updatedDate": "2026-05-02T11:30:00",
+    "notes": null
+  },
+  {
+    "taskId": 6,
+    "projectId": 3,
+    "title": "클라이언트 구조 설계",
+    "description": "React Native 프로젝트 초기 세팅 및 폴더 구조 잡기",
+    "assigneeId": "kangsoo.kang",
+    "assigneeName": "강수강",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-01T00:00:00",
+    "dueDate": "2026-04-12T00:00:00",
+    "status": "TODO",
+    "tags": [
+      "개발",
+      "모바일"
+    ],
+    "createdDate": "2026-04-01T13:00:00",
+    "updatedDate": "2026-04-01T13:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 13,
+    "projectId": 3,
+    "title": "앱 아이콘 디자인",
+    "description": "iOS 및 Android용 앱 아이콘 디자인 및 리소스 추출",
+    "assigneeId": "gildong.hong",
+    "assigneeName": "홍길동",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-02T00:00:00",
+    "dueDate": "2026-04-08T00:00:00",
+    "status": "DONE",
+    "tags": [
+      "디자인",
+      "그래픽"
+    ],
+    "createdDate": "2026-04-02T09:00:00",
+    "updatedDate": "2026-04-05T14:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 14,
+    "projectId": 3,
+    "title": "API 통신 모듈 구현",
+    "description": "Axios를 이용한 API 통신 공통 모듈 작성",
+    "assigneeId": "kangsoo.kang",
+    "assigneeName": "강수강",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-03T00:00:00",
+    "dueDate": "2026-04-15T00:00:00",
+    "status": "IN_PROGRESS",
+    "tags": [
+      "개발",
+      "네트워크"
+    ],
+    "createdDate": "2026-04-03T11:00:00",
+    "updatedDate": "2026-04-04T10:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 18,
+    "projectId": 1,
+    "title": "3월 말 QA 준비",
+    "description": "3월 말 릴리즈를 위한 QA 시나리오 작성 및 테스트 일정 조율",
+    "assigneeId": "qwer",
+    "assigneeName": "테스트유저",
+    "assigneeProfileImage": null,
+    "startDate": "2026-03-27T00:00:00",
+    "dueDate": "2026-04-04T00:00:00",
+    "status": "IN_PROGRESS",
+    "tags": [
+      "QA",
+      "릴리즈"
+    ],
+    "createdDate": "2026-03-25T10:00:00",
+    "updatedDate": "2026-03-28T15:00:00",
+    "notes": "주요 기능 리스트 정리 완료"
+  },
+  {
+    "taskId": 19,
+    "projectId": 1,
+    "title": "프론트엔드 구조 리팩토링 (3~4월)",
+    "description": "3월 말부터 시작되는 공통 컴포넌트 분리 및 라우팅 구조 정리",
+    "assigneeId": "younghee.lee",
+    "assigneeName": "이영희",
+    "assigneeProfileImage": null,
+    "startDate": "2026-03-30T00:00:00",
+    "dueDate": "2026-04-12T00:00:00",
+    "status": "TODO",
+    "tags": [
+      "프론트엔드",
+      "리팩토링"
+    ],
+    "createdDate": "2026-03-27T14:00:00",
+    "updatedDate": "2026-03-27T14:00:00",
+    "notes": null
+  },
+  {
+    "taskId": 20,
+    "projectId": 1,
+    "title": "모니터링 대시보드 초안",
+    "description": "4월 말부터 5월 초까지 사용할 성능 모니터링 대시보드 기획 및 시각화 초안 작성",
+    "assigneeId": "chulsu.kim",
+    "assigneeName": "김철수",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-25T00:00:00",
+    "dueDate": "2026-05-05T00:00:00",
+    "status": "TODO",
+    "tags": [
+      "백엔드",
+      "모니터링"
+    ],
+    "createdDate": "2026-04-20T09:00:00",
+    "updatedDate": "2026-04-20T09:00:00",
+    "notes": "APM 도입 일정과 맞춰 진행"
+  }
+]

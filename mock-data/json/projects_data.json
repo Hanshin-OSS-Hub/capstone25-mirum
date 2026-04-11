@@ -1,0 +1,103 @@
+[
+  {
+    "projectId": 1,
+    "projectName": "웹 개발 프로젝트",
+    "description": "대학생을 위한 프로젝트 관리 도구 개발",
+    "taskProgress": 65,
+    "memberCount": 4,
+    "createdDate": "2025-03-15T10:00:00",
+    "updatedDate": "2025-03-20T15:30:00",
+    "isDeleted": false,
+    "deleteUsername": null,
+    "members": [
+      { "username": "qwer", "nickname": "테스트유저", "role": "LEADER" },
+      { "username": "chulsu.kim", "nickname": "김철수", "role": "MEMBER" },
+      { "username": "younghee.lee", "nickname": "이영희", "role": "MEMBER" },
+      { "username": "joonseo.jo", "nickname": "박민수", "role": "MEMBER" }
+    ]
+  },
+  {
+    "projectId": 2,
+    "projectName": "마케팅 전략 수립",
+    "description": "신제품 출시를 위한 마케팅 전략 기획",
+    "taskProgress": 40,
+    "memberCount": 3,
+    "createdDate": "2025-04-01T14:30:00",
+    "updatedDate": "2025-04-03T09:00:00",
+    "isDeleted": false,
+    "deleteUsername": null,
+    "members": [
+      { "username": "qwer", "nickname": "테스트유저", "role": "LEADER" },
+      { "username": "chulsu.kim", "nickname": "김철수", "role": "MEMBER" },
+      { "username": "jieun.choi", "nickname": "최지은", "role": "MEMBER" }
+    ]
+  },
+  {
+    "projectId": 3,
+    "projectName": "모바일 앱 개발",
+    "description": "사용자 친화적인 모바일 앱 디자인 및 개발",
+    "taskProgress": 90,
+    "memberCount": 5,
+    "createdDate": "2025-03-30T09:15:00",
+    "updatedDate": "2025-04-12T18:20:00",
+    "isDeleted": false,
+    "deleteUsername": null,
+    "members": [
+      { "username": "qwer", "nickname": "테스트유저", "role": "LEADER" },
+      { "username": "gildong.hong", "nickname": "정우성", "role": "MEMBER" },
+      { "username": "kangsoo.kang", "nickname": "강동원", "role": "MEMBER" },
+      { "username": "hannah.han", "nickname": "송혜교", "role": "MEMBER" },
+      { "username": "seohee.seo", "nickname": "전지현", "role": "MEMBER" }
+    ]
+  },
+  {
+    "projectId": 4,
+    "projectName": "콘텐츠 제작 프로젝트",
+    "description": "브랜드 홍보를 위한 영상 및 그래픽 콘텐츠 제작",
+    "taskProgress": 55,
+    "memberCount": 3,
+    "createdDate": "2025-04-05T11:00:00",
+    "updatedDate": "2025-04-05T11:00:00",
+    "isDeleted": false,
+    "deleteUsername": null,
+    "members": [
+      { "username": "qwer", "nickname": "테스트유저", "role": "LEADER" },
+      { "username": "younghee.lee", "nickname": "이영희", "role": "MEMBER" },
+      { "username": "gildong.hong", "nickname": "정우성", "role": "MEMBER" }
+    ]
+  },
+  {
+    "projectId": 5,
+    "projectName": "고객 지원 시스템 개선",
+    "description": "효율적인 고객 지원을 위한 시스템 업그레이드",
+    "taskProgress": 30,
+    "memberCount": 4,
+    "createdDate": "2025-04-10T16:45:00",
+    "updatedDate": "2025-04-11T10:00:00",
+    "isDeleted": false,
+    "deleteUsername": null,
+    "members": [
+      { "username": "qwer", "nickname": "테스트유저", "role": "LEADER" },
+      { "username": "joonseo.jo", "nickname": "박민수", "role": "MEMBER" },
+      { "username": "kangsoo.kang", "nickname": "강동원", "role": "MEMBER" },
+      { "username": "seulgi.seo", "nickname": "현빈", "role": "MEMBER" }
+    ]
+  },
+  {
+    "projectId": 6,
+    "projectName": "데이터 분석 프로젝트",
+    "description": "고객 행동 패턴 분석 및 인사이트 도출",
+    "taskProgress": 80,
+    "memberCount": 4,
+    "createdDate": "2025-03-20T13:20:00",
+    "updatedDate": "2025-03-25T14:40:00",
+    "isDeleted": false,
+    "deleteUsername": null,
+    "members": [
+      { "username": "qwer", "nickname": "테스트유저", "role": "LEADER" },
+      { "username": "jieun.choi", "nickname": "최지은", "role": "MEMBER" },
+      { "username": "hannah.han", "nickname": "송혜교", "role": "MEMBER" },
+      { "username": "seulgi.seo", "nickname": "손예진", "role": "MEMBER" }
+    ]
+  }
+]
