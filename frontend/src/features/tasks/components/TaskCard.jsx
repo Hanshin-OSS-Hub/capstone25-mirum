@@ -1,55 +1,11 @@
-// import { taskStatus } from '@/features/tasks/types/task.js';
+import { formatDate, isTaskOverdue } from '@/features/tasks/utils/task-format.js';
+import {
+  getStatusColor,
+  getStatusIcon,
+  getStatusText,
+} from '@/features/tasks/utils/task-status.js';
 
 export default function TaskCard({ task, onClick }) {
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'DONE':
-        return 'ri-check-line text-green-600';
-      case 'IN_PROGRESS':
-        return 'ri-time-line text-orange-600';
-      default:
-        return 'ri-circle-line text-gray-400';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'DONE':
-        return '완료';
-      case 'IN_PROGRESS':
-        return '진행중';
-      default:
-        return '대기';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'DONE':
-        return 'bg-green-100 text-green-800';
-      case 'IN_PROGRESS':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const isOverdue = () => {
-    if (!task.dueDate) return false;
-    const today = new Date();
-    const dueDate = new Date(task.dueDate);
-    return dueDate < today && task.status !== 'DONE';
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   return (
     <div
       onClick={onClick}
@@ -67,7 +23,9 @@ export default function TaskCard({ task, onClick }) {
         </div>
 
         {task.dueDate && (
-          <span className={`text-xs ${isOverdue() ? 'font-medium text-red-600' : 'text-gray-500'}`}>
+          <span
+            className={`text-xs ${isTaskOverdue(task.dueDate, task.status) ? 'font-medium text-red-600' : 'text-gray-500'}`}
+          >
             {formatDate(task.dueDate)}
           </span>
         )}

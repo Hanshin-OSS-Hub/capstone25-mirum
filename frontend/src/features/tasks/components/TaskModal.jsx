@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-// import { taskStatus } from '@/features/tasks/types/task.js';
+import { formatDateDot, formatFileSize } from '@/features/tasks/utils/task-format.js';
+import {
+  getStatusColor,
+  getStatusDotColor,
+  getStatusText,
+} from '@/features/tasks/utils/task-status.js';
 import { useUpdateTask } from '@/features/tasks/api/useUpdateTask.js';
 import TaskNote from '@/features/note/components/TaskNote.jsx';
 import TaskModalEditor from '@/features/tasks/components/TaskModalEditor.jsx';
@@ -49,56 +54,6 @@ export default function TaskModal(props) {
       document.documentElement.style.overflow = 'auto';
     };
   }, [task]);
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'DONE':
-        return '완료';
-      case 'IN_PROGRESS':
-        return '진행중';
-      default:
-        return '대기';
-    }
-  };
-
-  const getStatusDotColor = (status) => {
-    switch (status) {
-      case 'DONE':
-        return 'bg-green-500';
-      case 'IN_PROGRESS':
-        return 'bg-orange-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getStatusPill = (status) => {
-    switch (status) {
-      case 'DONE':
-        return 'bg-green-100 text-green-800';
-      case 'IN_PROGRESS':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const formatDateDot = (dateString) => {
-    if (!dateString) return '';
-    const d = new Date(dateString);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}. ${m}. ${day}.`;
-  };
-
-  /** @param {number} bytes */
-  const formatFileSize = (bytes) => {
-    if (!Number.isFinite(bytes) || bytes < 0) return '-';
-    if (bytes < 1024) return `${bytes}B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-  };
 
   /** @param {import('react').ChangeEvent<HTMLInputElement>} event */
   const handleFileUpload = (event) => {
@@ -277,7 +232,7 @@ export default function TaskModal(props) {
         <div className="flex items-center justify-between border-b border-gray-100 px-8 py-4">
           <div className="flex items-center gap-2">
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${getStatusPill(editedTask.status)}`}
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(editedTask.status)}`}
             >
               {getStatusText(editedTask.status)}
             </span>
@@ -454,7 +409,7 @@ export default function TaskModal(props) {
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative flex h-full w-full items-center justify-center p-4">
         <div
-          className={`flex h-[92vh] w-full overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 ${isReviewerOpen ? 'max-w-7xl' : 'max-w-5xl'}`}
+          className={`flex h-[92vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 ${isReviewerOpen ? 'max-w-7xl' : 'max-w-5xl'}`}
         >
           <div className="min-w-0 flex-1">
             {isEditMode ? (

@@ -1,5 +1,9 @@
 import { useState } from 'react';
-// import { taskStatus } from '@/features/tasks/types/task.js';
+import {
+  getStatusColor,
+  getStatusDotColor,
+  getStatusText,
+} from '@/features/tasks/utils/task-status.js';
 import { useDeleteTask } from '@/features/tasks/api/useDeleteTask.js';
 import TaskNote from '@/features/note/components/TaskNote.jsx';
 import { IconClose, IconSave, IconTrash } from '@/shared/assets/icons.js';
@@ -15,49 +19,19 @@ export default function TaskModalEditor(props) {
 
   const panelCard = 'rounded-2xl border border-gray-200 bg-white p-5 shadow-sm';
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'DONE':
-        return '완료';
-      case 'IN_PROGRESS':
-        return '진행중';
-      default:
-        return '대기';
-    }
-  };
-
-  const getStatusDotColor = (status) => {
-    switch (status) {
-      case 'DONE':
-        return 'bg-green-500';
-      case 'IN_PROGRESS':
-        return 'bg-orange-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getStatusPill = (status) => {
-    switch (status) {
-      case 'DONE':
-        return 'bg-green-100 text-green-800';
-      case 'IN_PROGRESS':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const handleDelete = (event) => {
     event.preventDefault();
     event.stopPropagation();
 
     if (window.confirm('정말로 이 작업을 삭제하시겠습니까?')) {
-      deleteTask(editedTask.taskId, {
-        onSuccess: () => {
-          onCancel();
+      deleteTask(
+        { taskId: editedTask.taskId, projectId: editedTask.projectId },
+        {
+          onSuccess: () => {
+            onCancel();
+          },
         },
-      });
+      );
     }
   };
 
@@ -169,7 +143,7 @@ export default function TaskModalEditor(props) {
                 <div className="mb-2 flex items-center justify-between align-middle">
                   <label className="mb-2 block text-sm font-medium text-gray-800">상태</label>
                   <span
-                    className={`inline-flex flex-shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusPill(
+                    className={`inline-flex flex-shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(
                       editedTask.status,
                     )}`}
                   >
