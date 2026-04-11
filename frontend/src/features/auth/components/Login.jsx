@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api } from '../../../api/client';
+import { api } from '@/api/client.js';
 import { useAuth } from '../hooks/useAuth';
 import './modal.css';
 
