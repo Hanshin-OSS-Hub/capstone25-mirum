@@ -10,6 +10,6 @@ public class InviteResponseDTO {
     private Long inviteId;
     private String projectName;
     private String inviterName;
-    private String inviteeName;
+    private String invitedName;
     private InviteStatus status;
 }

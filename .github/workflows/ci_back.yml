@@ -76,36 +76,36 @@ jobs:
 
 
 
-      - name: Send Discord Success Notification
-        uses: sarisia/actions-status-discord@v1
-        if: success()
-        with:
-          webhook: ${{ secrets.DISCORD }}
-          title: "✅ BACKEND PR #${{ steps.commit_info.outputs.pr_number }} 빌드 성공!"
-          description: |
-            ## [${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
+      # - name: Send Discord Success Notification
+      #   uses: sarisia/actions-status-discord@v1
+      #   if: success()
+      #   with:
+      #     webhook: ${{ secrets.DISCORD }}
+      #     title: "✅ BACKEND PR #${{ steps.commit_info.outputs.pr_number }} 빌드 성공!"
+      #     description: |
+      #       ## [${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
             
-            **📌 PR 설명:** ${{ steps.commit_info.outputs.pr_description }}
-            **🔗 상세 로그:** [GitHub Actions에서 확인](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+      #       **📌 PR 설명:** ${{ steps.commit_info.outputs.pr_description }}
+      #       **🔗 상세 로그:** [GitHub Actions에서 확인](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
-            **📝 커밋 메시지:** ${{ steps.commit_info.outputs.msg }}
-            **👤 작성자:** ${{ steps.commit_info.outputs.author }}
-          color: 0x00ff00
-          nodetail: true
+      #       **📝 커밋 메시지:** ${{ steps.commit_info.outputs.msg }}
+      #       **👤 작성자:** ${{ steps.commit_info.outputs.author }}
+      #     color: 0x00ff00
+      #     nodetail: true
 
-      - name: Send Discord Failure Notification
-        uses: sarisia/actions-status-discord@v1
-        if: failure()
-        with:
-          webhook: ${{ secrets.DISCORD }}
-          title: "❌ BACKEND PR #${{ steps.commit_info.outputs.pr_number }} 빌드 실패!"
-          description: |
-            ## [${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
+      # - name: Send Discord Failure Notification
+      #   uses: sarisia/actions-status-discord@v1
+      #   if: failure()
+      #   with:
+      #     webhook: ${{ secrets.DISCORD }}
+      #     title: "❌ BACKEND PR #${{ steps.commit_info.outputs.pr_number }} 빌드 실패!"
+      #     description: |
+      #       ## [${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
             
-            **📌 PR 설명:** ${{ steps.commit_info.outputs.pr_description }}
-            **🔗 상세 로그:** [GitHub Actions에서 확인](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+      #       **📌 PR 설명:** ${{ steps.commit_info.outputs.pr_description }}
+      #       **🔗 상세 로그:** [GitHub Actions에서 확인](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
             
-            **📝 커밋 메시지:** ${{ steps.commit_info.outputs.msg }}
-            **👤 작성자:** ${{ steps.commit_info.outputs.author }}
-          color: 0xff0000
-          nodetail: true
+      #       **📝 커밋 메시지:** ${{ steps.commit_info.outputs.msg }}
+      #       **👤 작성자:** ${{ steps.commit_info.outputs.author }}
+      #     color: 0xff0000
+      #     nodetail: true
