@@ -37,6 +37,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Inject properties
+        run: |
+          mkdir -p src/main/resources
+          echo "aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }}" >> src/main/resources/application.properties
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./backend/gradlew
 
