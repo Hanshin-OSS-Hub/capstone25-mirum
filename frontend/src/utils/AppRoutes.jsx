@@ -3,7 +3,6 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import LoginModal from '../features/auth/components/Login.jsx';
 import Home from '../pages/Home.jsx';
 import Landing from '../pages/Landing.jsx';
-import Project from '../pages/Project.jsx';
 import Task from '../pages/Task.jsx';
 
 export default function AppRoutes() {
