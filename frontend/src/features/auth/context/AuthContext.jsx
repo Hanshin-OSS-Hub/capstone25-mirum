@@ -76,7 +76,7 @@ export default function AuthProvider({ children }) {
     // state 업데이트
     setUser((prev) => ({
       ...prev,
-      name: updatedData.name || prev.name,
+      nickname: updatedData.nickname || prev.nickname,
       email: updatedData.email || prev.email,
     }));
   };
