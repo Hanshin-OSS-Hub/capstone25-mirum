@@ -1,7 +1,7 @@
 import { processToken } from '@/mocks/domains/api/tokenHandlers.js';
 import { errorResponse, successResponse } from '@/mocks/domains/common.js';
+import { projectsDB } from '@/mocks/domains/model/projectDataModel.js';
 import { usersDB } from '@/mocks/domains/model/userDataModel.js';
-import { projectsDB } from '@/mocks/domains/projects/model.js';
 import { http } from 'msw';
 
 /**

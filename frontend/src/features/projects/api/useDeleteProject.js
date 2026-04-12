@@ -1,5 +1,5 @@
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { api } from "@/api/client.js";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/api/client.js';
 
 /**
  * [DELETE] 프로젝트 삭제 API
@@ -12,19 +12,19 @@ export const useDeleteProject = () => {
 
   return useMutation({
     mutationFn: async (projectId) => {
-      return await api.delete(`project/${projectId}`)
+      return await api.delete(`project/${projectId}`);
     },
     onSuccess: async (data, { projectId }) => {
       await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
-      alert("프로젝트를 제거했습니다.");
+      alert('프로젝트를 제거했습니다.');
     },
     onError: async (error) => {
-      console.log("프로젝트 제거 실패: ", error.message);
-      alert(error.message || "프로젝트 제거에 실패했습니다.");
-    }
-  })
-}
+      console.log('프로젝트 제거 실패: ', error.message);
+      alert(error.message || '프로젝트 제거에 실패했습니다.');
+    },
+  });
+};
 
 // [Project.jsx]
 // const handleDeleteProjectAPI = () => {

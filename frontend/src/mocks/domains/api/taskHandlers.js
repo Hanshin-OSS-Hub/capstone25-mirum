@@ -1,6 +1,6 @@
 import { processToken } from '@/mocks/domains/api/tokenHandlers.js';
+import { projectsDB } from '@/mocks/domains/model/projectDataModel.js';
 import { deletedTasksDB, tasksDB } from '@/mocks/domains/model/taskDataModel.js';
-import { projectsDB } from '@/mocks/domains/projects/model.js';
 import { http } from 'msw';
 import { errorResponse, successResponse } from '../common.js';
 

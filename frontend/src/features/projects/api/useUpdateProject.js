@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/api/client.js";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/api/client.js';
 
 /**
  * 프로젝트 수정 요청 DTO (클라이언트 요청 형식)
@@ -35,14 +35,14 @@ export const useUpdateProject = () => {
     },
     onSuccess: async (data, { projectId }) => {
       await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      alert("프로젝트 정보를 업데이트했습니다.");
+      alert('프로젝트 정보를 업데이트했습니다.');
     },
     onError: async (error) => {
-      console.log("프로젝트 업데이트 실패: ", error.message);
-      alert(error.message || "프로젝트 업데이트에 실패했습니다.");
-    }
-  })
-}
+      console.log('프로젝트 업데이트 실패: ', error.message);
+      alert(error.message || '프로젝트 업데이트에 실패했습니다.');
+    },
+  });
+};
 
 // [Project.jsx]
 // const handleUpdateProjectAPI = (data) => {

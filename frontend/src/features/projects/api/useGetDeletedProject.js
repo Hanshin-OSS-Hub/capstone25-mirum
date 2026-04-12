@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/api/client.js";
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/client.js';
 
 export const useGetDeletedProject = () => {
   return useQuery({
@@ -14,13 +14,10 @@ export const useGetDeletedProject = () => {
         return [];
       }
       return [...data].sort((a, b) => {
-        ///////////////////
-        // 필드명 통일 필요 //
-        ///////////////////
-        const dateA = new Date(a.updateDate);
-        const dateB = new Date(b.updateDate);
+        const dateA = new Date(a.updatedDate);
+        const dateB = new Date(b.updatedDate);
         return dateB - dateA;
-      })
+      });
     },
-  })
-}
+  });
+};

@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/api/client.js";
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/client.js';
 
 /**
  * 프로젝트 상세 정보 DTO (서버 응답 형식)
  * @see ProjectResponseDTO.java
  * @see ../../../../../backend/src/main/java/backend/dto/project/ProjectResponseDTO.java
- * @typedef {import('@/features/projects/types/project.js').Project} ProjectDetailDTO
+ * @typedef {import('../../../../../types/project.js').Project} ProjectDetailDTO
  */
 
 /**
@@ -20,13 +20,12 @@ export const useGetProjectDetails = (projectId) => {
     queryKey: ['project', projectId],
     /** @returns {Promise<ProjectDetailDTO>} */
     queryFn: async () => {
-      return await api.get(`/project/${projectId}`)
+      return await api.get(`/project/${projectId}`);
     },
     enabled: !!projectId,
-    // initialData 제거! (객체이므로 빈 배열 X)
-    // initialData: [],
+    initialData: undefined,
   });
-}
+};
 
 // [Project.jsx]
 // const handleGetProjectDetailsAPI = useCallback(() => {

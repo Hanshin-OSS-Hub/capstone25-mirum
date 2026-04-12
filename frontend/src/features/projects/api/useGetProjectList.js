@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/api/client.js";
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/client.js';
 
 /**
  * 프로젝트 목록 DTO
@@ -11,9 +11,8 @@ import { api } from "@/api/client.js";
  * @property {string} description
  * @property {number} memberCount
  * @property {number} taskProgress
- * * 업데이트 날짜 필요할 듯?
- * @property {Date} creationDate
- * @property {Date} updateDate
+ * @property {Date} createdDate
+ * @property {Date} updatedDate
  */
 
 /**
@@ -36,17 +35,13 @@ export const useGetProjectList = () => {
       }
       // 날짜 최신순 정렬
       return [...data].sort((a, b) => {
-          ///////////////////
-          // 필드명 통일 필요 //
-          ///////////////////
-          const dateA = new Date(a.updateDate);
-          const dateB = new Date(b.updateDate);
-          return dateB - dateA;
-        }
-      )}
+        const dateA = new Date(a.updatedDate);
+        const dateB = new Date(b.updatedDate);
+        return dateB - dateA;
+      });
+    },
   });
-}
-
+};
 
 // [Home.jsx]
 // const handleGetProjectList = async () => {
