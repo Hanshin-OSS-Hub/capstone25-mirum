@@ -1,23 +1,18 @@
+import { processToken } from '@/mocks/domains/api/tokenHandlers.js';
+import { deletedTasksDB, tasksDB } from '@/mocks/domains/model/taskDataModel.js';
 import { projectsDB } from '@/mocks/domains/projects/model.js';
-import { deletedTasksDB, tasksDB } from '@/mocks/domains/tasks/model.js';
-import { usersDB } from '@/mocks/domains/users/model.js';
 import { http } from 'msw';
-import { errorResponse, parseUsername, successResponse } from '../common.js';
+import { errorResponse, successResponse } from '../common.js';
 
 export const taskHandlers = [
   /** {@link useGetTaskList} */
   // [GET] 프로젝트의 태스크 목록 조회
   http.get('*/api/project/:projectId/task', ({ request, params }) => {
-    // 1. 토큰 검증
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
-    // (야매) 토큰 처리 - username 조회 과정 생략
-    const token = authHeader.split(' ')[1];
-    const username = parseUsername(token);
-
-    // 2. 유저 정보 검증
-    const userData = usersDB.find((u) => u.username === username);
-    if (!userData) return errorResponse('유효하지 않은 사용자입니다.', 401);
+    // 1. 토큰/유저 검증 (공통 유틸 사용)
+    const currentUser = processToken(request);
+    // processToken이 errorResponse를 리턴할 수 있으므로, 에러 응답인 경우 그대로 반환
+    // (errorResponse는 Response 객체이므로 instanceof Response 체크로 분기 가능)
+    if (currentUser instanceof Response) return currentUser;
 
     // 3. 프로젝트 정보 검증
     const { projectId } = params;
@@ -27,7 +22,7 @@ export const taskHandlers = [
     // 프로젝트 정보가 DB에 존재하지 않는 경우
     if (!projectData) return errorResponse('프로젝트를 찾을 수 없습니다.', 404);
     // 프로젝트 멤버인지 확인
-    const isMember = projectData.members.some((m) => m.username === userData.username);
+    const isMember = projectData.members.some((m) => m.username === currentUser.username);
     if (!isMember) return errorResponse('프로젝트 멤버가 아닙니다.', 403);
 
     // 4. 태스크 목록 조회 및 필터링
@@ -42,16 +37,16 @@ export const taskHandlers = [
   /** {@link useCreateTask} */
   // [POST] 새 태스크 생성
   http.post('*/api/project/:projectId/task', async ({ request }) => {
-    // 1. 토큰 검증
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
+    // 1. 토큰/유저 검증
+    const currentUser = processToken(request);
+    if (currentUser instanceof Response) return currentUser;
     // 2. 요청 body 파싱
-    /** @type {import('@/features/tasks/types/task.js').TaskRequestDTO} */
+    /** @type {import('@/types/task.js').TaskRequestDTO} */
     let newTaskRequest;
     // 🌟 Body 파싱 안전하게 처리
     try {
       newTaskRequest = await request.json();
-    } catch (error) {
+    } catch {
       return errorResponse('요청 Body가 비어있거나 잘못된 JSON 형식입니다.', 400);
     }
 
@@ -96,11 +91,11 @@ export const taskHandlers = [
   /** {@link useUpdateTask} */
   // [PATCH] 태스크 수정
   http.patch('*/api/project/:projectId/task/:taskId', async ({ request }) => {
-    // 1. 토큰 검증
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
+    // 1. 토큰/유저 검증
+    const currentUser = processToken(request);
+    if (currentUser instanceof Response) return currentUser;
     // 2. 요청 body 파싱
-    /** @type {import('@/features/tasks/types/task.js').TaskRequestDTO} */
+    /** @type {import('@/types/task.js').TaskRequestDTO} */
     const updatedTaskRequest = await request.json();
     const { taskId } = updatedTaskRequest;
 
@@ -122,9 +117,9 @@ export const taskHandlers = [
   /** {@link useDeleteTask} */
   // [DELETE] 태스크 삭제 (Soft Delete -> DELETED)
   http.delete('*/api/project/:projectId/task/:taskId', ({ params, request }) => {
-    // 1. 토큰 검증
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
+    // 1. 토큰/유저 검증
+    const currentUser = processToken(request);
+    if (currentUser instanceof Response) return currentUser;
 
     const { taskId } = params;
     const task = tasksDB.find((t) => t.taskId === Number(taskId));
@@ -141,9 +136,9 @@ export const taskHandlers = [
   /** {@link useRestoreTask} */
   // [PATCH] 태스크 복구 (DELETED -> TODO)
   http.patch('*/api/project/:projectId/task/:taskId/restore', ({ params, request }) => {
-    // 1. 토큰 검증
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
+    // 1. 토큰/유저 검증
+    const currentUser = processToken(request);
+    if (currentUser instanceof Response) return currentUser;
 
     const { taskId } = params;
     const task = tasksDB.find((t) => t.taskId === Number(taskId));
@@ -161,36 +156,44 @@ export const taskHandlers = [
 
   /** {@link useGetTasksByStatus} */
   // [GET] 상태별 태스크 목록 조회 (현재는 삭제된 태스크 목록 조회용)
-  http.get('*/api/project/:projectId/task/status?status=:status', ({ request, params }) => {
-    // 1. 토큰 검증
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
-    // (야매) 토큰 처리 - username 조회 과정 생략
-    const token = authHeader.split(' ')[1];
-    const username = parseUsername(token);
+  http.get('*/api/project/:projectId/task/status', ({ request, params }) => {
+    // 1. 토큰/유저 검증
+    const currentUser = processToken(request);
+    if (currentUser instanceof Response) return currentUser;
 
-    // 2. 유저 정보 검증
-    const userData = usersDB.find((u) => u.username === username);
-    if (!userData) return errorResponse('유효하지 않은 사용자입니다.', 401);
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
 
-    // 3. 프로젝트 정보 검증
     const { projectId } = params;
-    // projectId가 null(undefined)인 경우
     if (!projectId) return errorResponse('유효하지 않은 요청입니다.', 400);
+
     const projectData = projectsDB.find((p) => p.projectId === Number(projectId));
-    // 프로젝트 정보가 DB에 존재하지 않는 경우
     if (!projectData) return errorResponse('프로젝트를 찾을 수 없습니다.', 404);
-    // 프로젝트 멤버인지 확인
-    const isMember = projectData.members.some((m) => m.username === userData.username);
+
+    const isMember = projectData.members.some((m) => m.username === currentUser.username);
     if (!isMember) return errorResponse('프로젝트 멤버가 아닙니다.', 403);
 
-    // 4. 삭제된 태스크 목록 조회
-    const deletedTasks = deletedTasksDB.filter((t) => {
-      return t.projectId === Number(projectId) && t.status === 'DELETED';
-    });
+    // 상태별 태스크 조회
+    let result;
+    if (status === 'DELETED') {
+      // 삭제 테이블(deletedTasksDB) + tasksDB에서 status가 DELETED인 항목을 함께 고려 가능
+      const softDeleted = tasksDB.filter(
+        (t) => t.projectId === Number(projectId) && t.status === 'DELETED',
+      );
+      const hardDeleted = deletedTasksDB.filter((t) => t.projectId === Number(projectId));
+      result = [...softDeleted, ...hardDeleted];
+    } else if (status) {
+      result = tasksDB.filter((t) => t.projectId === Number(projectId) && t.status === status);
+    } else {
+      // status 쿼리 파라미터가 없으면 전체 반환(기존 useGetTaskList와 역할이 겹치므로 상황에 맞게 조정 가능)
+      result = tasksDB.filter((t) => t.projectId === Number(projectId));
+    }
+
     console.log(
-      `MSW: 삭제된 태스크 목록 조회 (Project ID: ${projectId}, Count: ${deletedTasks.length})`,
+      `MSW: 상태별 태스크 목록 조회 (Project ID: ${projectId}, status: ${status}, Count: ${
+        result.length
+      })`,
     );
-    return successResponse(deletedTasks, 200);
+    return successResponse(result, 200);
   }),
 ];
