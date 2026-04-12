@@ -3,8 +3,8 @@ import { api } from '@/api/client.js';
 
 /**
  * [UPDATE] 작업 카드 수정 요청
- * @typedef {import('@/features/tasks/types/task.js').TaskData} TaskData
- * @typedef {import('@/features/tasks/types/task.js').TaskRequestDTO} TaskRequestDTO
+ * @typedef {import('@/types/task.js').TaskData} TaskData
+ * @typedef {import('@/types/task.js').TaskRequestDTO} TaskRequestDTO
  *
  * (공통 TaskRequestDTO에서 taskId만 필수, 나머지는 옵셔널로 처리)
  * @typedef {Pick<TaskData, 'taskId'> &

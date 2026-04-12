@@ -3,8 +3,8 @@ import { api } from '@/api/client.js';
 
 /**
  * [CREATE] 새 작업 카드 생성 API
- * @typedef {import('@/features/tasks/types/task.js').TaskData} TaskData
- * @typedef {import('@/features/tasks/types/task.js').TaskRequestDTO} TaskRequestDTO
+ * @typedef {import('@/types/task.js').TaskData} TaskData
+ * @typedef {import('@/types/task.js').TaskRequestDTO} TaskRequestDTO
  *
  * (공통 TaskRequestDTO에서 title만 필수, 나머지는 옵셔널로 처리)
  * @typedef {Pick<TaskRequestDTO, 'title'> & Partial<Omit<TaskRequestDTO, 'title'>>} RequestTaskCreateDTO

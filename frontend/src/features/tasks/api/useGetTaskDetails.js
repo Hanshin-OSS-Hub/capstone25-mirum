@@ -3,7 +3,7 @@ import { api } from '@/api/client.js';
 
 /**
  * [READ] 작업 카드 상세정보 조회 API
- * @typedef {import('@/features/tasks/types/task.js').TaskData} TaskData
+ * @typedef {import('@/types/task.js').TaskData} TaskData
  * @typedef {{ projectId: number, taskId: number }} RequestGetTaskDetailsDTO
  * @param {RequestGetTaskDetailsDTO} params
  *

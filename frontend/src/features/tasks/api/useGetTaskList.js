@@ -3,7 +3,7 @@ import { api } from '@/api/client.js';
 
 /**
  * [READ] 태스크 목록 조회 API
- * @typedef {import('@/features/tasks/types/task.js').TaskData} TaskData
+ * @typedef {import('@/types/task.js').TaskData} TaskData
  * @typedef {{ projectId: number }} RequestGetTaskSummary
  * @param {RequestGetTaskSummary} params
  *
