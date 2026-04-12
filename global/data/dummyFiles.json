@@ -31,78 +31,114 @@
   },
   {
     "uuid": "8d3x-132k-1123-pptx",
+    "projectId": 1,
+    "taskId": 101,
     "originalFilename": "발표 PPT 초안.pptx",
     "size": 2516582,
     "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "createdDate": "2026-03-24T11:20:00",
     "createdBy": "이지영",
-    "isDeleted": false
+    "previewUrl": null,
+    "expiredDate": null,
+    "isDeleted": false,
+    "deletedDate": null
   },
   {
     "uuid": "8d3x-132k-1123-xlsx",
+    "projectId": 1,
+    "taskId": 101,
     "originalFilename": "통일비용 분석.xlsx",
     "size": 1887436,
     "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "createdDate": "2026-03-23T13:40:00",
     "createdBy": "최수진",
-    "isDeleted": false
+    "previewUrl": null,
+    "expiredDate": null,
+    "isDeleted": false,
+    "deletedDate": null
   },
   {
     "uuid": "8d3x-132k-1123-hwp",
+    "projectId": 1,
+    "taskId": 102,
     "originalFilename": "발표 대본.hwp",
     "size": 159744,
     "contentType": "application/x-hwp",
     "createdDate": "2026-03-22T15:15:00",
     "createdBy": "김민수",
-    "isDeleted": false
+    "previewUrl": null,
+    "expiredDate": null,
+    "isDeleted": false,
+    "deletedDate": null
   },
   {
     "uuid": "8d3x-132k-1123-pdf",
+    "projectId": 2,
+    "taskId": 201,
     "originalFilename": "통일 설문조사 결과.pdf",
     "size": 3355443,
     "contentType": "application/pdf",
     "createdDate": "2026-03-21T17:50:00",
     "createdBy": "박준호",
-    "isDeleted": false
+    "previewUrl": null,
+    "expiredDate": null,
+    "isDeleted": false,
+    "deletedDate": null
   },
   {
     "uuid": "8d3x-132k-1123-jpg",
+    "projectId": 2,
+    "taskId": 201,
     "originalFilename": "고양이 사진.jpg",
     "size": 2202009,
     "contentType": "image/jpeg",
     "createdDate": "2026-03-20T08:10:00",
     "createdBy": "이지영",
     "previewUrl": "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=400&q=80",
-    "isDeleted": false
+    "expiredDate": null,
+    "isDeleted": false,
+    "deletedDate": null
   },
   {
     "uuid": "8d3x-132k-1123-mp4",
+    "projectId": 2,
+    "taskId": 202,
     "originalFilename": "강아지 동영상.mp4",
     "size": 16043213,
     "contentType": "video/mp4",
     "createdDate": "2026-03-19T12:05:00",
     "createdBy": "박준호",
     "previewUrl": "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=400&q=80",
-    "isDeleted": false
+    "expiredDate": null,
+    "isDeleted": false,
+    "deletedDate": null
   },
   {
     "uuid": "8d3x-132k-1123-jpg-2",
+    "projectId": 3,
+    "taskId": 301,
     "originalFilename": "통일 관련 사진들.jpg",
     "size": 4404019,
     "contentType": "image/jpeg",
     "createdDate": "2026-03-18T18:25:00",
     "createdBy": "최수진",
     "previewUrl": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
-    "isDeleted": false
+    "expiredDate": null,
+    "isDeleted": false,
+    "deletedDate": null
   },
   {
     "uuid": "8d3x-132k-1123-mp4-2",
+    "projectId": 3,
+    "taskId": 302,
     "originalFilename": "발표 연습 영상.mp4",
     "size": 30094131,
     "contentType": "video/mp4",
     "createdDate": "2026-03-17T16:45:00",
     "createdBy": "김민수",
     "previewUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80",
-    "isDeleted": false
+    "expiredDate": null,
+    "isDeleted": false,
+    "deletedDate": null
   }
 ]
