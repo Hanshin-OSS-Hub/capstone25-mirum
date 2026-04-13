@@ -6,13 +6,12 @@
     "originalFilename": "구버전 디자인 시안",
     "size": 0,
     "contentType": "application/x-folder",
-    "createdDate": "2026-02-27T10:15:30",
-    "createdBy": "김민수",
+    "uploadedDate": "2026-02-27T10:15:30",
+    "uploadedBy": "김민수",
     "previewUrl": null,
     "expiredDate": null,
     "deletedDate": "2026-03-01T09:00:00",
-    "itemCount": 3,
-    "isDeleted": true
+    "itemCount": 3
   },
   {
     "uuid": "deleted-8d3x-132k-1123-pdf",
@@ -21,12 +20,11 @@
     "originalFilename": "초기_통일 설문조사 결과.pdf",
     "size": 3105443,
     "contentType": "application/pdf",
-    "createdDate": "2026-02-21T17:50:00",
-    "createdBy": "박준호",
+    "uploadedDate": "2026-02-21T17:50:00",
+    "uploadedBy": "박준호",
     "previewUrl": null,
     "expiredDate": null,
-    "deletedDate": "2026-02-25T10:00:00",
-    "isDeleted": true
+    "deletedDate": "2026-02-25T10:00:00"
   },
   {
     "uuid": "deleted-8d3x-132k-1123-jpg",
@@ -35,11 +33,10 @@
     "originalFilename": "잘못찍힌 사진.jpg",
     "size": 1502009,
     "contentType": "image/jpeg",
-    "createdDate": "2026-02-20T08:10:00",
-    "createdBy": "이지영",
+    "uploadedDate": "2026-02-20T08:10:00",
+    "uploadedBy": "이지영",
     "previewUrl": "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=400&q=80",
     "expiredDate": null,
-    "deletedDate": "2026-02-22T09:30:00",
-    "isDeleted": true
+    "deletedDate": "2026-02-22T09:30:00"
   }
 ]

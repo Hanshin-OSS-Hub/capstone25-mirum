@@ -20,7 +20,7 @@ export const filesDB = rawFilesData.map((file) => ({
   size: file.size,
   contentType: file.contentType,
   // 업로드 정보 (uploaded* 네이밍으로 통일)
-  uploadedBy: file.uploadedBy ?? file.createdBy,
+  uploadedBy: file.uploadedBy,
   uploadedDate: new Date(file.uploadedDate ?? file.createdDate),
   // 선택 필드
   previewUrl: file.previewUrl,
