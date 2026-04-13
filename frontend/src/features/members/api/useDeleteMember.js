@@ -1,12 +1,12 @@
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { api } from '@/api/client.js'
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/api/client.js';
 
 /**
  * [DELETE] 멤버 탈퇴/방출 API
- * @typedef {import('@/api/types/common.js').ApiResponse<null> } EjectResponse
- * @returns {import('@tanstack/react-query').UseMutationResult<EjectResponse, DefaultError, {readonly projectId?: *, readonly targetName?: *}, unknown>}
+ * @typedef {{ projectId: string|number, targetName: string }} DeleteMemberVariables
+ * @typedef {import('@/types/common.js').ApiResponse<null>} EjectResponse
+ * @returns {import('@tanstack/react-query').UseMutationResult<EjectResponse, import('@tanstack/react-query').DefaultError, DeleteMemberVariables, unknown>}
  */
-
 export const useDeleteMember = () => {
   const queryClient = useQueryClient();
 
@@ -15,21 +15,21 @@ export const useDeleteMember = () => {
       return await api.delete(`/member/${projectId}?targetName=${targetName}`);
     },
 
-    onSuccess: async (data, { projectId }) => {
-      if (data && data.success === false) {
-        alert(data.data.detail || '멤버 삭제에 실패했습니다.');
+    onSuccess: async (data, variables) => {
+      if (!data?.success) {
+        alert(data?.message || '멤버 삭제에 실패했습니다.');
         return;
       }
-      await queryClient.invalidateQueries(['members', projectId]);
+      await queryClient.invalidateQueries({ queryKey: ['members', variables.projectId] });
       alert('프로젝트 멤버가 삭제되었습니다.');
     },
 
     onError: (error) => {
       console.error('멤버 삭제 실패:', error);
       alert(error.message || '멤버 삭제에 실패했습니다.');
-    }
-  })
-}
+    },
+  });
+};
 
 // [Project.jsx]
 // const handleDeleteMemberAPI = (member) => {

@@ -1,28 +1,26 @@
+import { processToken } from '@/mocks/domains/api/tokenHandlers.js';
 import { http } from 'msw';
-import { parseUsername } from '../api/tokenHandlers.js';
 import { errorResponse, successResponse } from '../common.js';
 import { invitationsDB } from '../model/inviteDataModel.js';
 import { projectsDB } from '../model/projectDataModel.js';
 import { usersDB } from '../model/userDataModel.js';
 
+/** @typedef {import('@/features/members/types/member.js').ProjectMemberDTO} ProjectMemberDTO */
+
 export const memberHandlers = [
   // [GET] 프로젝트 멤버 목록 조회
+  // 반환: ProjectMemberDTO[]
   http.get('*/api/member/:projectId', ({ params, request }) => {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
+    const authResult = processToken(request);
+    if ('status' in authResult && authResult.status >= 400) return authResult;
 
-    const token = authHeader.split(' ')[1];
-    const username = parseUsername(token);
-
-    const userData = usersDB.find((u) => u.username === username);
-    if (!userData) return errorResponse('유효하지 않은 사용자입니다.', 401);
-
+    const user = authResult;
     const { projectId } = params;
     const project = projectsDB.find((p) => p.projectId === Number(projectId));
 
     if (!project || project.isDeleted) return errorResponse('프로젝트를 찾을 수 없습니다.', 404);
 
-    const isMember = project.members.some((m) => m.username === username);
+    const isMember = project.members.some((m) => m.username === user.username);
     if (!isMember) return errorResponse('프로젝트 접근 권한이 없습니다.', 403);
 
     console.log(`MSW: 프로젝트 멤버 목록 조회 (projectId: ${projectId})`, project.members);
@@ -31,15 +29,10 @@ export const memberHandlers = [
 
   // [POST] 새 멤버 초대
   http.post('*/api/projects/:projectId/members/invite', async ({ params, request }) => {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
+    const authResult = processToken(request);
+    if ('status' in authResult && authResult.status >= 400) return authResult;
 
-    const token = authHeader.split(' ')[1];
-    const username = parseUsername(token);
-
-    const userData = usersDB.find((u) => u.username === username);
-    if (!userData) return errorResponse('유효하지 않은 사용자입니다.', 401);
-
+    const user = authResult;
     const { projectId } = params;
     const projectIndex = projectsDB.findIndex((p) => p.projectId === Number(projectId));
 
@@ -47,7 +40,7 @@ export const memberHandlers = [
       return errorResponse('프로젝트를 찾을 수 없습니다.', 404);
     }
 
-    const member = projectsDB[projectIndex].members.find((m) => m.username === username);
+    const member = projectsDB[projectIndex].members.find((m) => m.username === user.username);
     if (!member || member.role !== 'LEADER') {
       return errorResponse('초대 권한이 없습니다.', 403);
     }
@@ -78,10 +71,10 @@ export const memberHandlers = [
       inviteId: maxInviteId + 1,
       projectId: Number(projectId),
       projectName: projectsDB[projectIndex].projectName,
-      inviterName: username,
+      inviterName: user.username,
       invitedName: invitedUsername,
       status: 'INVITED',
-      createdAt: new Date().toISOString(),
+      inviteDate: new Date().toISOString(),
     };
 
     invitationsDB.push(newInvitation);
@@ -95,12 +88,10 @@ export const memberHandlers = [
 
   // [DELETE] 프로젝트 멤버 강퇴
   http.delete('*/api/projects/:projectId/members/:memberUsername', ({ params, request }) => {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
+    const authResult = processToken(request);
+    if ('status' in authResult && authResult.status >= 400) return authResult;
 
-    const token = authHeader.split(' ')[1];
-    const username = parseUsername(token);
-
+    const user = authResult;
     const { projectId, memberUsername } = params;
     const projectIndex = projectsDB.findIndex((p) => p.projectId === Number(projectId));
 
@@ -108,12 +99,12 @@ export const memberHandlers = [
       return errorResponse('프로젝트를 찾을 수 없습니다.', 404);
     }
 
-    const member = projectsDB[projectIndex].members.find((m) => m.username === username);
+    const member = projectsDB[projectIndex].members.find((m) => m.username === user.username);
     if (!member || member.role !== 'LEADER') {
       return errorResponse('멤버 추방 권한이 없습니다.', 403);
     }
 
-    if (username === memberUsername) {
+    if (user.username === memberUsername) {
       return errorResponse('자신을 강퇴할 수 없습니다. 프로젝트 나가기를 이용해주세요.', 400);
     }
 
@@ -134,12 +125,10 @@ export const memberHandlers = [
 
   // [DELETE] 프로젝트 나가기
   http.delete('*/api/projects/:projectId/members/leave', ({ params, request }) => {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) return errorResponse('로그인이 필요합니다.', 401);
+    const authResult = processToken(request);
+    if ('status' in authResult && authResult.status >= 400) return authResult;
 
-    const token = authHeader.split(' ')[1];
-    const username = parseUsername(token);
-
+    const user = authResult;
     const { projectId } = params;
     const projectIndex = projectsDB.findIndex((p) => p.projectId === Number(projectId));
 
@@ -148,7 +137,7 @@ export const memberHandlers = [
     }
 
     const targetMemberIndex = projectsDB[projectIndex].members.findIndex(
-      (m) => m.username === username,
+      (m) => m.username === user.username,
     );
 
     if (targetMemberIndex === -1) {
@@ -167,7 +156,7 @@ export const memberHandlers = [
     projectsDB[projectIndex].members.splice(targetMemberIndex, 1);
     projectsDB[projectIndex].memberCount -= 1;
 
-    console.log(`MSW: 프로젝트 나가기 완료 (projectId: ${projectId}, user: ${username})`);
+    console.log(`MSW: 프로젝트 나가기 완료 (projectId: ${projectId}, user: ${user.username})`);
     return successResponse(null, 200);
   }),
 ];
