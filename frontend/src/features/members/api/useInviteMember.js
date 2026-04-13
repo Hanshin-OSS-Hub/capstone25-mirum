@@ -3,8 +3,9 @@ import { api } from '@/api/client.js';
 
 /**
  * [CREATE] 프로젝트 초대 API
- * @typedef {{ projectId: number|string, invitedName: string }} InviteMemberVariables
- * @returns {import('@tanstack/react-query').UseMutationResult<null, import('@tanstack/react-query').DefaultError, InviteMemberVariables, unknown> }
+ * @typedef {{ projectId: number|string, invitedName: string }} RequestInviteMemberDTO
+ * @typedef {{ invitationNumber: number }} ResponseInviteMemberDTO
+ * @returns {import('@tanstack/react-query').UseMutationResult<ResponseInviteMemberDTO, import('@tanstack/react-query').DefaultError, RequestInviteMemberDTO, unknown> }
  */
 
 export const useInviteMember = () => {

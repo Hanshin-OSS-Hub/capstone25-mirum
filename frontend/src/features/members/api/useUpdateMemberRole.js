@@ -4,24 +4,20 @@ import { api } from '@/api/client.js';
 /**
  * 폐기 예정
  * [UPDATE] 멤버 권한 수정 API
- * @typedef {{ projectId: string|number, username: string, role: 'LEADER'|'MEMBER' }} UpdateMemberRoleVariables
- * @typedef {import('@/types/common.js').ApiResponse<null>} UpdateRoleResponse
- * @returns {import('@tanstack/react-query').UseMutationResult<UpdateRoleResponse, import('@tanstack/react-query').DefaultError, UpdateMemberRoleVariables, unknown>}
+ * @typedef {{ projectId: string|number, username: string, role: 'LEADER'|'MEMBER' }} RequestUpdateMemberRole
+ * @returns {import('@tanstack/react-query').UseMutationResult<void, import('@tanstack/react-query').DefaultError, RequestUpdateMemberRole, unknown>}
  */
 export const useUpdateMemberRole = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    /** @param {RequestUpdateMemberRole} params */
     mutationFn: async ({ projectId, username, role }) => {
-      /** @type {UpdateRoleResponse} */
-      return await api.put(`/member/${projectId}/role`, { username, role });
+      // client.js에서 응답 제네릭을 처리하므로 여기서는 반환값을 사용하지 않습니다.
+      await api.put(`/member/${projectId}/role`, { username, role });
     },
-    onSuccess: async (data, { projectId }) => {
-      if (!data?.success) {
-        alert(data?.message || '멤버 권한 변경에 실패했습니다.');
-        return;
-      }
-      await queryClient.invalidateQueries({ queryKey: ['members', projectId] });
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['members', variables.projectId] });
       alert('멤버 권한이 변경되었습니다.');
     },
     onError: (error) => {
