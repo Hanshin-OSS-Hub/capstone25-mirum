@@ -6,7 +6,7 @@
     "inviterName": "qwer",
     "invitedName": "newbie",
     "status": "INVITED",
-    "createdAt": "2025-05-01T10:00:00"
+    "inviteDate": "2025-05-01T10:00:00"
   },
   {
     "inviteId": 2,
@@ -15,7 +15,7 @@
     "inviterName": "qwer",
     "invitedName": "newbie",
     "status": "ACCEPTED",
-    "createdAt": "2025-04-20T14:00:00"
+    "inviteDate": "2025-04-20T14:00:00"
   },
   {
     "inviteId": 3,
@@ -24,7 +24,7 @@
     "inviterName": "qwer",
     "invitedName": "newbie",
     "status": "DECLINED",
-    "createdAt": "2025-04-25T09:30:00"
+    "inviteDate": "2025-04-25T09:30:00"
   },
   {
     "inviteId": 4,
@@ -33,7 +33,7 @@
     "inviterName": "user1",
     "invitedName": "newbie",
     "status": "INVITED",
-    "createdAt": "2025-05-02T11:00:00"
+    "inviteDate": "2025-05-02T11:00:00"
   },
   {
     "inviteId": 5,
@@ -42,6 +42,6 @@
     "inviterName": "qwer",
     "invitedName": "user2",
     "status": "INVITED",
-    "createdAt": "2025-05-01T10:05:00"
+    "inviteDate": "2025-05-01T10:05:00"
   }
 ]

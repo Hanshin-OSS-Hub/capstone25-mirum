@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/api/client.js";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/api/client.js';
 
 /**
  * [UPDATE] 프로젝트 초대 수락 API
@@ -15,16 +15,16 @@ export const useAcceptInvitation = () => {
       return await api.post(`/invitations/${inviteId}/accept`, {});
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({queryKey: ['invitations', 'received']});
-      await queryClient.invalidateQueries({queryKey: ['projects']});
+      await queryClient.invalidateQueries({ queryKey: ['invitations', 'received'] });
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
       alert('프로젝트 초대를 수락했습니다.');
     },
     onError: (error) => {
       console.log('초대 처리 실패: ', error);
       alert(error.message || '초대 처리에 실패했습니다.');
-    }
+    },
   });
-}
+};
 
 // [Home.jsx]
 // const handleAcceptInvitationApi = async (invitationId) => {

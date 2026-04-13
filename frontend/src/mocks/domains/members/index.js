@@ -1,8 +1,9 @@
 import { http } from 'msw';
-import { errorResponse, parseUsername, successResponse } from '../common.js';
-import { invitationsDB } from '../invitations/model.js';
-import { projectsDB } from '../projects/model.js';
-import { usersDB } from '../users/model.js';
+import { parseUsername } from '../api/tokenHandlers.js';
+import { errorResponse, successResponse } from '../common.js';
+import { invitationsDB } from '../model/inviteDataModel.js';
+import { projectsDB } from '../model/projectDataModel.js';
+import { usersDB } from '../model/userDataModel.js';
 
 export const memberHandlers = [
   // [GET] 프로젝트 멤버 목록 조회

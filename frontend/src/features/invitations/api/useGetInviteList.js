@@ -1,34 +1,32 @@
-import {useQuery} from "@tanstack/react-query";
-import {api} from "@/api/client.js";
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/client.js';
+
+/** @typedef {import('@/types/invitation.js').Invitation} Invitation */
 
 /**
  * [READ] 나(로그인 사용자)에게 온 초대 목록 조회 API
- * @typedef {import('@/api/types/common.js').ApiResponse} InvitationsResponse
- * @returns {import('@tanstack/react-query').UseQueryResult<InvitationsResponse, DefaultError>, InvitationsResponse[]}
+ * @returns {import('@tanstack/react-query').UseQueryResult<Invitation[], import('@tanstack/react-query').DefaultError>}
  */
-
 export const useGetInviteList = () => {
   return useQuery({
     queryKey: ['invitations', 'received'],
     queryFn: async () => {
+      /** @type {Invitation[]} */
       return await api.get('/invitations/received');
     },
     select: (data) => {
       if (!Array.isArray(data)) {
         return [];
       }
-      // 날짜 최신순 정렬
+      // 날짜 최신순 정렬 (inviteDate 기준)
       return [...data].sort((a, b) => {
-        ///////////////////
-        // 필드명 통일 필요 //
-        ///////////////////
-        const dateA = new Date(a.createdAt);
-        const dateB = new Date(b.createdAt);
+        const dateA = new Date(a.inviteDate);
+        const dateB = new Date(b.inviteDate);
         return dateB - dateA;
-      })
-    }
+      });
+    },
   });
-}
+};
 
 // [Home.jsx]
 // const handleGetInvitationsApi = async () => {
