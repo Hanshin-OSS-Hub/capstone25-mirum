@@ -17,7 +17,7 @@ import { api } from '@/api/client.js';
  * @typedef {{
  *   projectId: FileData['projectId'],
  *   taskId: FileData['taskId'],
- *   model: File[],
+ *   files: File[],
  * }} RequestFileUploadUrlDTO
  *
  * 업로드용 Pre-signed URL 응답 DTO (S3 → 클라이언트)
@@ -35,7 +35,7 @@ export const useUploadFiles = () => {
   return useMutation({
     // mutationFn: 파일 여러 개가 든 배열(model)을 통째로 받습니다.
     /** @param {RequestFileUploadUrlDTO} params */
-    mutationFn: async ({ files, projectId }) => {
+    mutationFn: async ({ files, projectId, taskId }) => {
       // 보낼 파일이 없으면 함수 종료
       if (!files || files.length === 0) return;
 
@@ -44,6 +44,7 @@ export const useUploadFiles = () => {
       /** @type {ResponseFileUploadUrlDTO} */
       const presignedResponse = await api.post(`/files/uploadUrl`, {
         projectId,
+        taskId,
         filenames: fileNames,
       });
 
