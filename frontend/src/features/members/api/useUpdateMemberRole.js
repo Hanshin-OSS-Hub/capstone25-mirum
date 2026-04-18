@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
 
 /**
- * 폐기 예정
+ * todo 리더 양도 기능 지원할건지 논의
  * [UPDATE] 멤버 권한 수정 API
  * @typedef {{ projectId: string|number, username: string, role: 'LEADER'|'MEMBER' }} RequestUpdateMemberRole
  * @returns {import('@tanstack/react-query').UseMutationResult<void, import('@tanstack/react-query').DefaultError, RequestUpdateMemberRole, unknown>}

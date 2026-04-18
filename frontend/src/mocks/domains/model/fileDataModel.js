@@ -32,7 +32,22 @@ export const filesDB = rawFilesData.map((file) => ({
 
 // 삭제된 파일 메모리 DB
 export const deletedFilesDB = rawDeletedFilesData.map((file) => ({
-  ...file,
+  // 기본 식별자
+  uuid: file.uuid,
+  // 참조 정보
+  projectId: file.projectId,
+  taskId: file.taskId,
+  // 파일 메타데이터
+  originalFilename: file.originalFilename,
+  size: file.size,
+  contentType: file.contentType,
+  // 업로드 정보 (uploaded* 네이밍으로 통일)
+  uploadedBy: file.uploadedBy,
+  uploadedDate: new Date(file.uploadedDate ?? file.createdDate),
+  // 선택 필드
+  previewUrl: file.previewUrl,
+  expiredDate: file.expiredDate ? new Date(file.expiredDate) : null,
+  // 삭제 관련
   deletedDate: new Date(file.deletedDate),
   isDeleted: true,
 }));

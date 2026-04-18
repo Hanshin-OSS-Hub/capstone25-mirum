@@ -11,6 +11,17 @@ body {
   background-color: #ffffff;
 }
 
+/* 스크롤은 되는데 스크롤바만 숨기는 유틸 */
+.hide-scrollbar {
+    -ms-overflow-style: none; /* IE, Edge 레거시 */
+    scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge 등 WebKit 기반 */
+}
+
+
 
 
 /*:root {*/

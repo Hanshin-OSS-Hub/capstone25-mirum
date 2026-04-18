@@ -3,14 +3,13 @@ import { api } from '@/api/client.js';
 
 /**
  * [DELETE] 멤버 탈퇴/방출 API
- * @typedef {{ projectId: string|number, targetName: string }} requestDeleteMember
- * @returns {import('@tanstack/react-query').UseMutationResult<void, import('@tanstack/react-query').DefaultError, requestDeleteMember, unknown>}
+ * @typedef {{ projectId: string|number, targetName: string }} RequestDeleteMemberDTO
  */
 export const useDeleteMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    /** @param {requestDeleteMember} params */
+    /** @param {RequestDeleteMemberDTO} params */
     mutationFn: async ({ projectId, targetName }) => {
       /** @type { void }*/
       return await api.delete(`/member/${projectId}?targetName=${targetName}`);

@@ -17,7 +17,7 @@ export default function AuthProvider({ children }) {
         : setIsAuthenticated(false);
       // "null" 문자열을 null로 변환
       setUser({
-        username,
+        username: username,
         nickname: nickname && nickname !== 'null' ? nickname : null,
         email: email && email !== 'null' ? email : null,
       });

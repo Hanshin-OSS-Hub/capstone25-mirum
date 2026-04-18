@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useGetInviteList } from "@/features/invitations/api/useGetInviteList.js";
-import { useAcceptInvitation} from "@/features/invitations/api/useAcceptInvitation.js";
-import { useDeclineInvitation } from "@/features/invitations/api/useDeclineInvitation.js";
-import { InvitationsList } from "@/features/invitations/components/InvitationsList.jsx";
+import { useAcceptInvitation } from '@/features/invitations/api/useAcceptInvitation.js';
+import { useDeclineInvitation } from '@/features/invitations/api/useDeclineInvitation.js';
+import { useGetInviteList } from '@/features/invitations/api/useGetInviteList.js';
+import { InvitationCard } from '@/features/invitations/components/InvitationCard.jsx';
 
 /**
  * [ProjectInvitationModal]
@@ -13,10 +13,13 @@ import { InvitationsList } from "@/features/invitations/components/InvitationsLi
  */
 
 export default function ProjectInvitationModal(props) {
-  const [activeTab, setActiveTab] = useState('received');
   const [loadingId, setLoadingId] = useState(null);
 
-  const { data: receivedInvitations, isLoading: isReceivedInvitationsLoading, error: receivedInvitationsError } = useGetInviteList();
+  const {
+    data: receivedInvitations,
+    isLoading: isReceivedInvitationsLoading,
+    error: receivedInvitationsError,
+  } = useGetInviteList();
   const { mutate: accept } = useAcceptInvitation();
   const { mutate: decline } = useDeclineInvitation();
 
@@ -45,43 +48,12 @@ export default function ProjectInvitationModal(props) {
           zIndex: 999,
         }}
       >
-        {/*<div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>*/}
-        {/*  <button */}
-        {/*    onClick={() => setActiveTab('received')} */}
-        {/*    style={{ */}
-        {/*      fontWeight: activeTab === 'received' ? 'bold' : 'normal',*/}
-        {/*      borderBottom: activeTab === 'received' ? '2px solid #2563eb' : 'none',*/}
-        {/*      paddingBottom: '4px',*/}
-        {/*      cursor: 'pointer',*/}
-        {/*      background: 'none',*/}
-        {/*      border: 'none',*/}
-        {/*      color: activeTab === 'received' ? '#2563eb' : '#6b7280'*/}
-        {/*    }}*/}
-        {/*  >*/}
-        {/*    받은 초대*/}
-        {/*  </button>*/}
-        {/*  <button */}
-        {/*    onClick={() => setActiveTab('sent')} */}
-        {/*    style={{ */}
-        {/*      fontWeight: activeTab === 'sent' ? 'bold' : 'normal',*/}
-        {/*      borderBottom: activeTab === 'sent' ? '2px solid #2563eb' : 'none',*/}
-        {/*      paddingBottom: '4px',*/}
-        {/*      cursor: 'pointer',*/}
-        {/*      background: 'none',*/}
-        {/*      border: 'none',*/}
-        {/*      color: activeTab === 'sent' ? '#2563eb' : '#6b7280'*/}
-        {/*    }}*/}
-        {/*  >*/}
-        {/*    보낸 초대*/}
-        {/*  </button>*/}
-        {/*</div>*/}
-
-        <InvitationsList
-            invitations={receivedInvitations}
-            loadingId={loadingId}
-            setLoadingId={setLoadingId}
-            onAccept={handleAccept}
-            onReject={handleReject}
+        <InvitationCard
+          invitations={receivedInvitations}
+          loadingId={loadingId}
+          setLoadingId={setLoadingId}
+          onAccept={handleAccept}
+          onReject={handleReject}
         />
       </div>
     </>
