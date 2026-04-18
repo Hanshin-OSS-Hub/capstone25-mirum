@@ -1,5 +1,5 @@
+import '@/types/invitation.js';
 import rawInvitationsData from '../../../../../global/data/dummyInvitations.json';
-import '../../types/invitation.js';
 
 /** @typedef {import('../../../types/invitation.js').Invitation} Invitation */
 

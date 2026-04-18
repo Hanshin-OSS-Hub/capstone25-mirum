@@ -83,6 +83,22 @@
     "updatedDate": "2026-03-24T18:20:00",
     "deletedDate": "2026-04-02T09:30:00",
     "notes": "관련 스크립트는 docs 디렉토리로 이동됨"
+  },
+  {
+    "taskId": 106,
+    "projectId": 1,
+    "title": "로그인 로직 리팩토링 (취소됨)",
+    "description": "소셜 로그인 추가 전 진행하려던 리팩토링 작업",
+    "assigneeId": "chulsu.kim",
+    "assigneeName": "김철수",
+    "assigneeProfileImage": null,
+    "startDate": "2026-04-11T00:00:00",
+    "dueDate": "2026-04-15T00:00:00",
+    "status": "DELETED",
+    "tags": ["백엔드", "리팩토링"],
+    "createdDate": "2026-04-10T14:00:00",
+    "updatedDate": "2026-04-11T11:00:00",
+    "deletedDate": "2026-04-11T11:00:00",
+    "notes": "소셜 로그인 우선 적용으로 인해 보류 후 삭제"
   }
 ]
-
