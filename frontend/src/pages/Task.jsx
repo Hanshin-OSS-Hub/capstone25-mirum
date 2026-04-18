@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-// import { taskStatus } from '@/features/tasks/types/task.js';
-import { useGetBoards } from '@/임시/boards/api/useGetBoards.js';
 import { askProjectAssistant } from '@/features/ai/api/askProjectAssistant.js';
+import { useGetProjectFiles } from '@/features/files/api/useGetProjectFiles.js';
 import { useGetInvitees } from '@/features/invitations/api/useGetInvitees.js';
 import { useGetMemberList } from '@/features/members/api/useGetMemberList.js';
 import { useGetProjectDetails } from '@/features/projects/api/useGetProjectDetails.js';
 import { useGetTaskList } from '@/features/tasks/api/useGetTaskList.js';
 import { useAuth } from '@/features/auth/hooks/useAuth.js';
 import FilePanel from '@/features/files/components/FilePanel.jsx';
-import ProjectMemberModal from '@/features/members/components/MemberManagementModal.jsx';
-import ProjectAdminPanel from '@/features/projects/components/ProjectAdminPanel.jsx';
+import ProjectMemberModal from '@/features/members/components/ProjectInvitationModal.jsx';
+import ProjectConfigPanel from '@/features/projects/components/ProjectConfigPanel.jsx';
 import CreateTaskModal from '@/features/tasks/components/CreateTaskModal.jsx';
 import TaskCard from '@/features/tasks/components/TaskCard.jsx';
 import TaskModal from '@/features/tasks/components/TaskModal.jsx';
@@ -18,7 +17,7 @@ import TaskSummaryCard from '@/features/tasks/components/TaskSummaryCard.jsx';
 import TaskTimeline from '@/features/tasks/components/TaskTimeline.jsx';
 import { IconSettings, IconTrash, IconUserAdd } from '@/shared/assets/icons.js';
 import Header from '@/shared/components/Header.jsx';
-import ProjectTrashPanel from '../features/projects/components/ProjectTrashPanel.jsx';
+import UserProfileImg from '@/shared/components/userProfileImg.jsx';
 
 const TASK_COLOR_PALETTE = [
   '#5B8DEF',
@@ -40,32 +39,32 @@ const AI_EXAMPLE_QUESTIONS = [
 ];
 
 export default function Task() {
-  const { id } = useParams();
-  const location = useLocation();
+  const { projectId } = useParams();
+  // const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const myUsername = user?.username || '';
 
   // const [activeBoardId, setActiveBoardId] = useState(null);
-  const [defaultAssigneeName, setDefaultAssigneeName] = useState(myUsername);
+  const [defaultAssigneeId, setDefaultAssigneeId] = useState(myUsername);
   const [selectedTask, setSelectedTask] = useState(null);
   const [topTab, setTopTab] = useState('project');
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiAnswer, setAiAnswer] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
 
-  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
-  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
-
   const openTask = (task) => setSelectedTask(task);
   const closeTask = () => setSelectedTask(null);
 
   // 상단 새 작업 버튼 클릭 시 기본 담당자를 로그인한 유저로 고정
   const openCreateTask = () => {
-    setDefaultAssigneeName(myUsername);
+    setDefaultAssigneeId(myUsername);
     setIsCreateTaskModalOpen(true);
   };
 
@@ -76,13 +75,14 @@ export default function Task() {
   /** @param {'project' | 'timeline' | 'file'} tabKey */
   const openMainTab = (tabKey) => {
     setTopTab(tabKey);
-    navigate(`/project/${id}`);
+    navigate(`/project/${projectId}`);
   };
 
-  const { data: project = null } = useGetProjectDetails(id);
-  const { data: members = [] } = useGetMemberList(id);
-  const { data: pendingInvites = [] } = useGetInvitees(id);
-  const { data: tasks = [] } = useGetTaskList({ projectId: Number(id) });
+  const { data: project = null } = useGetProjectDetails(Number(projectId));
+  const { data: members = [] } = useGetMemberList(Number(projectId), myUsername);
+  const { data: pendingInvites = [] } = useGetInvitees(Number(projectId));
+  const { data: tasks = [] } = useGetTaskList({ projectId: Number(projectId) });
+  const { data: files = [] } = useGetProjectFiles(Number(projectId));
 
   const title = project?.projectName || '프로젝트 이름';
   const desc = project?.description || '프로젝트 설명';
@@ -94,8 +94,8 @@ export default function Task() {
   };
 
   const normalizeTaskForTimeline = (task) => {
-    const createdBase =
-      task.createdDate || task.updatedDate || new Date().toISOString().split('T')[0];
+    // const createdBase =
+    //   task.createdDate || task.updatedDate || new Date().toISOString().split('T')[0];
 
     return {
       ...task,
@@ -103,10 +103,10 @@ export default function Task() {
       title: task.title || '',
       assigneeId: task.assigneeId || '',
       assigneeName: task.assigneeName || '',
-      startDate: task.startDate || createdBase,
-      dueDate: task.dueDate || task.startDate || createdBase,
-      createdDate: createdBase,
-      color: task.color || getTaskColor(task.taskId),
+      startDate: task.startDate || null,
+      dueDate: task.dueDate || null,
+      createdDate: task.createdDate,
+      color: getTaskColor(task.taskId),
       tags: Array.isArray(task.tags) ? task.tags : [],
       notes: task.notes || '',
     };
@@ -129,38 +129,39 @@ export default function Task() {
 
   const myProjectRole = useMemo(() => {
     const myMember = members.find((member) => member.username === myUsername);
-    return String(myMember?.role || 'member').toLowerCase();
+    // role 값을 항상 대문자로 통일
+    return String(myMember?.role || 'MEMBER').toUpperCase();
   }, [members, myUsername]);
 
-  const isLeader = myProjectRole === 'leader';
+  const isLeader = myProjectRole === 'LEADER';
 
-  useEffect(() => {
-    if (location.pathname.endsWith('/admin')) {
-      setTopTab('settings');
-      return;
-    }
+  // useEffect(() => {
+  //   if (location.pathname.endsWith('/admin')) {
+  //     setTopTab('settings');
+  //     return;
+  //   }
+  //
+  //   if (location.pathname.endsWith('/trash')) {
+  //     setTopTab('trash');
+  //     return;
+  //   }
+  //
+  //   if (topTab === 'settings' || topTab === 'trash') {
+  //     setTopTab('project');
+  //   }
+  // }, [location.pathname]);
 
-    if (location.pathname.endsWith('/trash')) {
-      setTopTab('trash');
-      return;
-    }
+  // useEffect(() => {
+  //   if (!isLeader && topTab === 'settings') {
+  //     setTopTab('project');
+  //   }
+  // }, [isLeader, topTab]);
 
-    if (topTab === 'settings' || topTab === 'trash') {
-      setTopTab('project');
-    }
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (!isLeader && topTab === 'settings') {
-      setTopTab('project');
-    }
-  }, [isLeader, topTab]);
-
-  useEffect(() => {
-    if (!isLeader && location.pathname.endsWith('/admin')) {
-      navigate(`/project/${id}`, { replace: true });
-    }
-  }, [isLeader, location.pathname, navigate, id]);
+  // useEffect(() => {
+  //   if (!isLeader && location.pathname.endsWith('/admin')) {
+  //     navigate(`/project/${projectId}`, { replace: true });
+  //   }
+  // }, [isLeader, location.pathname, navigate, projectId]);
 
   const tasksByMember = useMemo(() => {
     const map = {};
@@ -204,7 +205,7 @@ export default function Task() {
 
     return {
       project: {
-        projectId: id || '',
+        projectId: projectId || '',
         title: project?.projectName || '',
         description: project?.description || '',
         startDate: project?.createdDate || '',
@@ -223,7 +224,7 @@ export default function Task() {
       })),
       tasks: tasks.map((task) => ({
         title: task.title || '',
-        assignee: task.assignee || '',
+        assigneeId: task.assigneeId || '',
         status: task.status || '',
         dueDate: task.dueDate || '',
         tags: Array.isArray(task.tags) ? task.tags : [],
@@ -232,7 +233,13 @@ export default function Task() {
         username: myUsername,
       },
     };
-  }, [id, project, members, tasks, myUsername]);
+  }, [projectId, project, members, tasks, myUsername]);
+
+  // 현재 선택된 작업 카드에 속한 파일만 필터링 (TaskModal 등에 전달)
+  const taskFiles = useMemo(() => {
+    if (!selectedTask) return [];
+    return files.filter((file) => file.taskId === selectedTask.taskId);
+  }, [files, selectedTask]);
 
   const handleAskProjectAI = async () => {
     const trimmedQuestion = aiQuestion.trim();
@@ -261,18 +268,6 @@ export default function Task() {
       handleAskProjectAI();
     }
   };
-
-  const deletedTasks = useMemo(() => {
-    // TODO: 삭제된 작업 카드 조회 API 연동
-    return /** @type {{ id?: string | number; title?: string; assignee?: string; deletedAt?: string }[]} */ ([]);
-  }, []);
-
-  const deletedFiles = useMemo(() => {
-    // TODO: 삭제된 파일 조회 API 연동
-    return /** @type {{ id?: string | number; filename?: string; owner?: string; deletedAt?: string }[]} */ ([]);
-  }, []);
-
-  const deletedCards = deletedTasks;
 
   if (!project) {
     return (
@@ -312,9 +307,7 @@ export default function Task() {
             <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
             <ul className="mt-1 text-sm text-gray-500">
               <li>{desc}</li>
-              <li>
-                시작일: {day} · 프로젝트 ID: {id}
-              </li>
+              <li>생성일: {day}</li>
             </ul>
           </div>
 
@@ -400,12 +393,12 @@ export default function Task() {
               className="cursor-pointer rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 transition hover:bg-gray-50"
               onClick={() => setIsMemberModalOpen(!isMemberModalOpen)}
             >
-              <IconUserAdd /> 멤버
+              <IconUserAdd size={24} />
             </button>
 
             {isMemberModalOpen && (
               <ProjectMemberModal
-                projectId={id}
+                projectId={projectId}
                 members={sortedMembers || []}
                 myUsername={myUsername}
                 pendingInvites={pendingInvites || []}
@@ -413,7 +406,7 @@ export default function Task() {
               />
             )}
 
-            {isLeader ? (
+            {
               <button
                 className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
                   topTab === 'settings'
@@ -422,26 +415,12 @@ export default function Task() {
                 }`}
                 onClick={() => {
                   setTopTab('settings');
-                  navigate(`/project/${id}/admin`);
+                  // navigate(`/project/${projectId}/admin`);
                 }}
               >
-                <IconSettings /> 설정
+                <IconSettings size={24} />
               </button>
-            ) : (
-              <button
-                className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
-                  topTab === 'trash'
-                    ? 'border-gray-300 bg-gray-100 text-gray-800'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  setTopTab('trash');
-                  navigate(`/project/${id}/trash`);
-                }}
-              >
-                <IconTrash /> 휴지통
-              </button>
-            )}
+            }
           </div>
         </div>
       </div>
@@ -526,9 +505,10 @@ export default function Task() {
                   >
                     <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
                       <div className="flex min-w-0 items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] font-semibold text-white">
-                          {member.nickname?.slice(0, 1).toUpperCase() || '?'}
-                        </div>
+                        {/*<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] font-semibold text-white">*/}
+                        {/*  {member.nickname?.slice(0, 1).toUpperCase() || '?'}*/}
+                        {/*</div>*/}
+                        <UserProfileImg name={member.nickname} />
 
                         <div className="min-w-0">
                           <div className="text-lg font-semibold text-gray-900">
@@ -563,7 +543,7 @@ export default function Task() {
                           <button
                             type="button"
                             onClick={() => {
-                              setDefaultAssigneeName(member.username);
+                              setDefaultAssigneeId(member.username);
                               setIsCreateTaskModalOpen(true);
                             }}
                             className="mt-3 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
@@ -633,7 +613,7 @@ export default function Task() {
                           <button
                             type="button"
                             onClick={() => {
-                              setDefaultAssigneeName('');
+                              setDefaultAssigneeId('');
                               setIsCreateTaskModalOpen(true);
                             }}
                             className="mt-3 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
@@ -663,7 +643,9 @@ export default function Task() {
           </>
         )}
 
-        {topTab === 'file' && <FilePanel projectId={Number(id)} />}
+        {topTab === 'file' && (
+          <FilePanel rawFiles={files} tasks={tasks} projectId={Number(projectId)} />
+        )}
 
         {topTab === 'timeline' && (
           <TaskTimeline
@@ -676,34 +658,30 @@ export default function Task() {
           />
         )}
 
-        {topTab === 'trash' && (
-          <ProjectTrashPanel deletedTasks={deletedTasks} deletedFiles={deletedFiles} />
-        )}
+        {/*{topTab === 'trash' && (*/}
+        {/*  <ProjectTrashPanel deletedTasks={deletedTasks} deletedFiles={deletedFiles} />*/}
+        {/*)}*/}
 
-        {topTab === 'settings' &&
-          (isLeader ? (
-            <ProjectAdminPanel
-              project={project}
-              projectId={id}
-              members={sortedMembers}
-              pendingInvites={pendingInvites}
-              deletedCards={deletedCards}
-              taskStats={stats}
-              onBack={() => setTopTab('project')}
-            />
-          ) : (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-800 shadow-sm">
-              관리자 페이지는 리더만 접근할 수 있습니다.
-            </div>
-          ))}
+        {topTab === 'settings' && (
+          <ProjectConfigPanel
+            isLeader={isLeader}
+            myUsername={myUsername}
+            project={project}
+            projectId={projectId}
+            members={sortedMembers}
+            pendingInvites={pendingInvites}
+            // deletedCards={deletedTasks} - ProjectConfigPanel 내부에서 호출하므로 불필요해짐
+            onBack={() => setTopTab('project')}
+          />
+        )}
       </div>
 
       <CreateTaskModal
-        projectId={id}
+        projectId={projectId}
         isOpen={isCreateTaskModalOpen}
         onClose={() => setIsCreateTaskModalOpen(false)}
         members={members}
-        defaultAssigneeName={defaultAssigneeName}
+        defaultAssigneeId={defaultAssigneeId}
         // boardId={activeBoardId}
       />
 
@@ -714,6 +692,7 @@ export default function Task() {
             tags: Array.isArray(selectedTask.tags) ? selectedTask.tags : [],
           }}
           onClose={closeTask}
+          files={taskFiles}
           members={members}
           myUserName={myUsername}
         />

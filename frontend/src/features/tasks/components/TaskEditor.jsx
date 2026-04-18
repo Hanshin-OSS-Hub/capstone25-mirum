@@ -8,7 +8,7 @@ import { useDeleteTask } from '@/features/tasks/api/useDeleteTask.js';
 import TaskNote from '@/features/note/components/TaskNote.jsx';
 import { IconClose, IconSave, IconTrash } from '@/shared/assets/icons.js';
 
-export default function TaskModalEditor(props) {
+export default function TaskEditor(props) {
   const { editedTask, setEditedTask, teamMembers, onSave, onCancel } = props;
   const { mutate: deleteTask } = useDeleteTask();
   const [newTag, setNewTag] = useState('');
@@ -96,8 +96,8 @@ export default function TaskModalEditor(props) {
               <div className="mb-4">
                 <label className="mb-2 block text-sm font-medium text-gray-800">담당자</label>
                 <select
-                  value={editedTask.assignee}
-                  onChange={(e) => setEditedTask({ ...editedTask, assignee: e.target.value })}
+                  value={editedTask.assigneeId}
+                  onChange={(e) => setEditedTask({ ...editedTask, assigneeId: e.target.value })}
                   className={inputBase}
                 >
                   {teamMembers.map((member) => (

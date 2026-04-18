@@ -47,15 +47,30 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
   useEffect(() => {
     if (autoAligned) return;
     if (tasks.length === 0) return;
+    const today = new Date();
+    const todayMonthStart = startOfMonth(today);
+    const todayMonthEnd = endOfMonth(today);
 
-    const datedTask = tasks.find((task) => task.startDate || task.dueDate || task.createdDate);
-    const baseDate =
-      datedTask && parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdDate);
+    // 오늘이 포함된 달에 속한 task만 auto-align 대상
+    const datedTask = tasks.find((task) => {
+      const raw = task.startDate || task.dueDate || task.createdDate;
+      const d = parseDate(raw);
+      if (!d || Number.isNaN(d.getTime())) return false;
+      return d >= todayMonthStart && d <= todayMonthEnd;
+    });
+
+    // const datedTask = tasks.find((task) => task.startDate || task.dueDate || task.createdDate);
+    // const baseDate =
+    //   datedTask && parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdDate);
+    //
+    if (!datedTask) return;
+
+    const baseDate = parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdDate);
 
     if (!baseDate || Number.isNaN(baseDate.getTime())) return;
 
     const baseMonth = startOfMonth(baseDate);
-    const today = new Date();
+    // const today = new Date();
     const isStillTodayMonth =
       currentMonth.getFullYear() === today.getFullYear() &&
       currentMonth.getMonth() === today.getMonth();
@@ -82,15 +97,10 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
   const todayOffset = isCurrentMonth ? differenceInDays(today, monthStart) : -1;
 
   const rows = useMemo(() => {
-    console.log('[TaskTimeline] tasks:', tasks);
-    console.log('[TaskTimeline] members:', members);
-
     return members.map((member) => {
       const memberTasks = tasks.filter((task) => task.assigneeId === member.username);
-      console.log('[TaskTimeline] member:', member);
-      console.log('[TaskTimeline] memberTasks:', memberTasks);
+
       const lanes = buildLanes(memberTasks, monthStart, monthEnd);
-      console.log('[TaskTimeline] lanes for', member.username, ':', lanes);
 
       const laneBars = lanes.flatMap((lane, laneIndex) =>
         lane.map((task) => {
@@ -143,11 +153,17 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
             }
             className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
           >
-            {/*<i className="ri-arrow-left-s-line text-xl"></i>*/}
-            <IconChevronLeft className="text-xl" />
+            <i className="ri-arrow-left-s-line text-xl"></i>
+            {/*<IconChevronLeft className="text-xl" />*/}
           </button>
 
-          <div className="min-w-[120px] text-center text-sm font-semibold text-gray-800">
+          <div
+            className="min-w-[120px] cursor-pointer rounded-xl border border-gray-200 bg-white p-2 text-center text-sm font-semibold text-gray-800 hover:bg-gray-50"
+            onClick={() => {
+              setCurrentMonth(new Date());
+              setAutoAligned(false);
+            }}
+          >
             {formatMonthLabel(currentMonth)}
           </div>
 
@@ -158,8 +174,8 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
             }
             className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
           >
-            {/*<i className="ri-arrow-right-s-line text-xl"></i>*/}
-            <IconChevronRight className="text-xl" />
+            <i className="ri-arrow-right-s-line text-xl"></i>
+            {/*<IconChevronRight className="text-xl" />*/}
           </button>
         </div>
       </div>

@@ -41,9 +41,9 @@ export default function AppRoutes() {
             /* </PrivateRoute>  */
           }
         />
-        <Route path="/project/:id" element={<Task />} />
-        <Route path="/project/:id/admin" element={<Task />} />
-        <Route path="/project/:id/trash" element={<Task />} />
+        <Route path="/project/:projectId" element={<Task />} />
+        {/*<Route path="/project/:projectId/admin" element={<Task />} />*/}
+        {/*<Route path="/project/:projectId/trash" element={<Task />} />*/}
       </Routes>
 
       {/* Modals */}

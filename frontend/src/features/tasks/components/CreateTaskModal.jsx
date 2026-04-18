@@ -3,15 +3,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { useCreateTask } from '@/features/tasks/api/useCreateTask.js';
 
 export default function CreateTaskModal(props) {
-  const { projectId, isOpen, onClose, defaultAssigneeName, members = [] } = props;
+  const { projectId, isOpen, onClose, defaultAssigneeId, members = [] } = props;
 
   const { mutate: createTask } = useCreateTask();
 
   const sortedMembers = useMemo(() => {
-    const myMember = members.find((m) => m.username === defaultAssigneeName);
-    const others = members.filter((m) => m.username !== defaultAssigneeName);
+    const myMember = members.find((m) => m.username === defaultAssigneeId);
+    const others = members.filter((m) => m.username !== defaultAssigneeId);
     return myMember ? [myMember, ...others] : others;
-  }, [members, defaultAssigneeName]);
+  }, [members, defaultAssigneeId]);
 
   const todayISO = new Date().toISOString().split('T')[0];
 
@@ -23,7 +23,7 @@ export default function CreateTaskModal(props) {
     description: '',
     status: 'TODO',
     tags: [],
-    assignee: '',
+    assigneeId: '',
     startDate: todayISO,
     dueDate: todayISO,
   });
@@ -49,13 +49,13 @@ export default function CreateTaskModal(props) {
         description: '',
         status: 'TODO',
         tags: [],
-        assignee: defaultAssigneeName || '',
+        assignee: defaultAssigneeId || '',
         startDate: todayISO,
         dueDate: todayISO,
       });
       setNewTag('');
     }
-  }, [defaultAssigneeName, isOpen, todayISO]);
+  }, [defaultAssigneeId, isOpen, todayISO]);
 
   if (!isOpen) return null;
 
@@ -63,7 +63,7 @@ export default function CreateTaskModal(props) {
     event.preventDefault();
     if (!taskData.title.trim()) return;
 
-    const selectedMember = sortedMembers.find((m) => m.username === taskData.assignee);
+    const selectedMember = sortedMembers.find((m) => m.username === taskData.assigneeId);
 
     const normalizedStartDate = taskData.startDate || todayISO;
     const normalizedDueDate =
@@ -177,9 +177,9 @@ export default function CreateTaskModal(props) {
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-800">담당자</label>
                     <select
-                      value={taskData.assignee}
+                      value={taskData.assigneeId}
                       onChange={(event) =>
-                        setTaskData({ ...taskData, assignee: event.target.value })
+                        setTaskData({ ...taskData, assigneeId: event.target.value })
                       }
                       className={inputBase}
                     >

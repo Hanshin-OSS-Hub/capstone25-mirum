@@ -5,34 +5,48 @@ import {
   getStatusDotColor,
   getStatusText,
 } from '@/features/tasks/utils/task-status.js';
+import { useDeleteFiles } from '@/features/files/api/useDeleteFiles.js';
+import { useUploadFiles } from '@/features/files/api/useUploadFiles.js';
 import { useUpdateTask } from '@/features/tasks/api/useUpdateTask.js';
 import TaskNote from '@/features/note/components/TaskNote.jsx';
-import TaskModalEditor from '@/features/tasks/components/TaskModalEditor.jsx';
+import TaskEditor from '@/features/tasks/components/TaskEditor.jsx';
 import { IconClose, IconEdit } from '@/shared/assets/icons.js';
 import { reviewTask } from '../../ai/api/reviewTask.js';
 
 /**
- * @typedef {Object} AttachmentItem
- * @property {string} id
- * @property {string} name
- * @property {number} size
+ * Task 상세 모달 컴포넌트
+ *
+ * @typedef {import('@/types/task.js').TaskData} TaskData
+ * @typedef {import('@/types/file.js').FileListItem} FileListItem
+ * @typedef {import('@/features/members/types/member.js').ProjectMember} ProjectMember
+ *
+ * @typedef {Object} TaskModalProps
+ * @property {string | number} projectId - 현재 프로젝트 ID (라우트 파라미터 기반)
+ * @property {TaskData} task - 상세 정보를 표시/편집할 작업 카드 엔티티
+ * @property {ProjectMember[]} members - 프로젝트 멤버 목록 (담당자 선택용)
+ * @property {FileListItem[]} files - 해당 작업(taskId)에 연결된 첨부 파일 목록
+ * @property {() => void} onClose - 모달을 닫을 때 호출되는 콜백
+ *
+ * @param {TaskModalProps} props
  */
 
 export default function TaskModal(props) {
-  const { task, onClose, members } = props;
+  const { projectId, task, members, files, onClose } = props;
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isReviewerOpen, setIsReviewerOpen] = useState(false);
   const [editedTask, setEditedTask] = useState({ ...task, notes: task.notes || '' });
-  const [attachments, setAttachments] = useState(/** @type {AttachmentItem[]} */ ([]));
 
   // region AI 리뷰 관련 상태
+  const [isReviewerOpen, setIsReviewerOpen] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
   const [review, setReview] = useState('');
   const [isReviewLoading, setIsReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState('');
   // endregion
+
   const { mutate: updateTask } = useUpdateTask();
+  const { mutate: uploadFiles, isPending: isUploading } = useUploadFiles();
+  const { mutate: deleteFiles, isPending: isDeleting } = useDeleteFiles();
 
   useEffect(() => {
     setEditedTask({ ...task, notes: task.notes || '' });
@@ -43,7 +57,6 @@ export default function TaskModal(props) {
     setReviewError('');
     setIsReviewLoading(false);
     setIsReviewerOpen(false);
-    setAttachments([]);
   }, [task]);
 
   useEffect(() => {
@@ -60,19 +73,27 @@ export default function TaskModal(props) {
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
 
-    const uploaded = files.map((file, index) => ({
-      id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
-      name: file.name,
-      size: file.size,
-    }));
+    // useUploadFiles는 RequestFileUploadUrlDTO 형태의 params를 기대합니다.
+    // 프로젝트 / 태스크 단위 업로드 모두를 지원하므로, projectId와 taskId, files를 함께 전달합니다.
+    uploadFiles({ projectId: Number(projectId), taskId: Number(task.taskId), files });
 
-    setAttachments((prev) => [...prev, ...uploaded]);
+    // 같은 파일을 다시 선택할 수 있도록 input 초기화
     event.target.value = '';
   };
 
-  /** @param {string} fileId */
-  const handleRemoveAttachment = (fileId) => {
-    setAttachments((prev) => prev.filter((file) => file.id !== fileId));
+  /** @param {string} fileUuid */
+  const handleRemoveAttachment = (fileUuid) => {
+    if (!fileUuid) return;
+
+    // TaskModal에 주입된 files는 NormalizedFileItem[] 형태라고 가정하고,
+    // uuid 기준으로 삭제 대상 파일을 선택합니다.
+    const target = files.find((file) => file.uuid === fileUuid);
+    if (!target) return;
+
+    deleteFiles({
+      selectedFiles: [target],
+      projectId: Number(projectId),
+    });
   };
 
   const handleSave = () => {
@@ -200,7 +221,7 @@ export default function TaskModal(props) {
         title: editedTask.title,
         description: editedTask.description,
         notes: editedTask.notes,
-        assignee: editedTask.assignee,
+        assignee: editedTask.assigneeId,
         status: editedTask.status,
         dueDate: editedTask.dueDate,
         tags: editedTask.tags,
@@ -333,41 +354,45 @@ export default function TaskModal(props) {
 
               <label
                 htmlFor="task-attachment-upload"
-                className="inline-flex cursor-pointer items-center rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-100"
+                className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition ${isUploading ? 'cursor-not-allowed border-gray-100 bg-gray-100 text-gray-400' : 'cursor-pointer border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-100'}`}
               >
                 <i className="ri-upload-2-line mr-1.5 text-base"></i>
-                파일 업로드
+                {isUploading ? '업로드 중...' : '파일 업로드'}
               </label>
               <input
                 id="task-attachment-upload"
                 type="file"
                 multiple
                 onChange={handleFileUpload}
+                disabled={isUploading}
                 className="hidden"
               />
             </div>
 
-            {attachments.length === 0 ? (
+            {files.length === 0 ? (
               <p className="mt-4 text-sm text-gray-400">첨부된 파일이 없습니다.</p>
             ) : (
               <ul className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
-                {attachments.map((file) => (
+                {files.map((file) => (
                   <li
-                    key={file.id}
+                    key={file.uuid}
                     className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-sm last:border-b-0"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-gray-800">{file.name}</p>
+                      <p className="truncate font-medium text-gray-800">
+                        {file.originalFilename || file.name}
+                      </p>
                       <p className="mt-0.5 text-xs text-gray-500">{formatFileSize(file.size)}</p>
                     </div>
 
                     <button
                       type="button"
-                      onClick={() => handleRemoveAttachment(file.id)}
-                      className="shrink-0 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
-                      aria-label={`${file.name} 삭제`}
+                      onClick={() => handleRemoveAttachment(file.uuid)}
+                      disabled={isDeleting}
+                      className="shrink-0 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label={`${file.originalFilename || file.name} 삭제`}
                     >
-                      X
+                      {isDeleting ? '삭제 중...' : 'X'}
                     </button>
                   </li>
                 ))}
@@ -409,11 +434,11 @@ export default function TaskModal(props) {
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative flex h-full w-full items-center justify-center p-4">
         <div
-          className={`flex h-[92vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 ${isReviewerOpen ? 'max-w-7xl' : 'max-w-5xl'}`}
+          className={`hide-scrollbar flex h-[92vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 ${isReviewerOpen ? 'max-w-7xl' : 'max-w-5xl'}`}
         >
           <div className="min-w-0 flex-1">
             {isEditMode ? (
-              <TaskModalEditor
+              <TaskEditor
                 editedTask={editedTask}
                 setEditedTask={setEditedTask}
                 teamMembers={members}

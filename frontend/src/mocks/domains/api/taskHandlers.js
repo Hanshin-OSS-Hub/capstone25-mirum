@@ -70,7 +70,6 @@ export const taskHandlers = [
       notes: newTaskRequest.notes || '',
       assigneeId: newTaskRequest.assigneeId,
       assigneeName: null,
-      assignee: newTaskRequest.assignee,
       createdDate: new Date().toISOString(), // DB 저장 시 문자열로 직렬화
       updatedDate: new Date().toISOString(),
       dueDate: newTaskRequest.dueDate,
