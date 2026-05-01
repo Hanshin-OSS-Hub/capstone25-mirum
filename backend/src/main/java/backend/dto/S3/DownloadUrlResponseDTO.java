@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class S3UrlResponseDTO {
+public class DownloadUrlResponseDTO {
     private String url;
     private String filename;
 }

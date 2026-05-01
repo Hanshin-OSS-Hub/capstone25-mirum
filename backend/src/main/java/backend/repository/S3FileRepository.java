@@ -13,9 +13,8 @@ import java.util.Optional;
 
 @Repository
 public interface S3FileRepository extends JpaRepository<S3File, String> {
-    Optional<S3File> findByUuidAndIsDeletedFalse(String uuid);
-
-    Optional<S3File> findByUuidAndIsDeletedTrue(String uuid);
+    List<S3File> findAllByUuidInAndIsDeletedFalse(List<String> uuid);
+    List<S3File> findAllByUuidInAndIsDeletedTrue(List<String> uuid);
 
     @Query("SELECT s FROM S3File s JOIN FETCH s.project p WHERE s.isDeleted = FALSE AND p.id = :projectId")
     List<S3File> findAllFilesInProject(@Param("projectId")Long projectId);

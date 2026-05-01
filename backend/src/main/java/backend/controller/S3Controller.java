@@ -1,7 +1,6 @@
 package backend.controller;
 
-import backend.dto.S3.S3InfoResponseDTO;
-import backend.dto.S3.S3UrlResponseDTO;
+import backend.dto.S3.*;
 import backend.global.response.ApiResponse;
 import backend.service.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -18,21 +17,20 @@ import java.util.Map;
 public class S3Controller {
     private final S3Service s3Service;
 
-    @GetMapping("/uploadUrl")
-    public ResponseEntity<ApiResponse<S3UrlResponseDTO>> getUploadUrl(@RequestParam String filename, @RequestParam Long projectId, @AuthenticationPrincipal String username) {
-        return ResponseEntity.ok(ApiResponse.response(s3Service.getUploadUrl(filename, username, projectId)));
+    @PostMapping("/uploadUrl")
+    public ResponseEntity<ApiResponse<UploadUrlResponseDTO>> getUploadUrl(@RequestBody UploadUrlRequestDTO request, @AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(ApiResponse.response(s3Service.getUploadUrl(request, username)));
     }
 
-    @GetMapping("/downloadUrl")
-    public ResponseEntity<ApiResponse<Map<String,String>>> getDownloadUrl(@RequestParam String uuid){
-        Map<String, String> result = Map.of("url", s3Service.getDownloadUrl(uuid));
-        return ResponseEntity.ok(ApiResponse.response(result));
+    @PostMapping("/downloadUrl")
+    public ResponseEntity<ApiResponse<List<DownloadUrlResponseDTO>>> getDownloadUrl(@RequestBody List<String> uuids) {
+        return ResponseEntity.ok(ApiResponse.response(s3Service.getDownloadUrl(uuids)));
     }
 
     // C
     @PostMapping("/upload/complete")
-    public ResponseEntity<ApiResponse<Void>> uploadComplete(@RequestParam String uuid) {
-        s3Service.uploadComplete(uuid);
+    public ResponseEntity<ApiResponse<Void>> uploadComplete(@RequestBody List<String> uuids) {
+        s3Service.uploadComplete(uuids);
         return ResponseEntity.ok(ApiResponse.response(null));
     }
 
@@ -43,16 +41,14 @@ public class S3Controller {
     }
 
     // soft D
-    @DeleteMapping("/softDelete")
-    public ResponseEntity<ApiResponse<Void>> softDelete(@AuthenticationPrincipal String username, @RequestParam String uuid, @RequestParam Long projectId) {
-        s3Service.softDelete(uuid, username, projectId);
-        return ResponseEntity.ok(ApiResponse.response(null));
+    @PostMapping("/softDelete")
+    public ResponseEntity<ApiResponse<Map<String, String>>> softDelete(@AuthenticationPrincipal String username, @RequestBody DeleteDTO files) {
+        return ResponseEntity.ok(ApiResponse.response(s3Service.softDelete(files, username)));
     }
 
     // real D
     @DeleteMapping("/realDelete")
-    public ResponseEntity<ApiResponse<Void>> realDelete(@AuthenticationPrincipal String username, @RequestParam String uuid, @RequestParam Long projectId) {
-        s3Service.realDelete(uuid, username, projectId);
-        return ResponseEntity.ok(ApiResponse.response(null));
+    public ResponseEntity<ApiResponse<Map<String, String>>> realDelete(@AuthenticationPrincipal String username, @RequestBody DeleteDTO files) {
+        return ResponseEntity.ok(ApiResponse.response(s3Service.realDelete(files, username)));
     }
 }

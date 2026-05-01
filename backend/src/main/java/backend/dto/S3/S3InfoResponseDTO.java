@@ -14,4 +14,5 @@ public class S3InfoResponseDTO {
     private String contentType;
     private LocalDateTime createdDate;
     private String createdBy;
+    private Boolean isDeleted;
 }

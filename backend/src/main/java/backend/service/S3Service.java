@@ -1,7 +1,7 @@
 package backend.service;
 
-import backend.dto.S3.S3InfoResponseDTO;
-import backend.dto.S3.S3UrlResponseDTO;
+import backend.dto.S3.*;
+import backend.entity.Project.Project;
 import backend.entity.Project.ProjectMember;
 import backend.entity.Project.ProjectMemberRoleType;
 import backend.entity.S3File;
@@ -10,6 +10,7 @@ import backend.repository.ProjectRepository;
 import backend.repository.S3FileRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -23,12 +24,12 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class S3Service {
     private final S3Presigner s3Presigner;
     private final S3Client s3Client;
@@ -40,65 +41,106 @@ public class S3Service {
     private String bucketName;
 
     @Transactional
-    public S3UrlResponseDTO getUploadUrl(String filename, String username,  Long projectId) {
-        // 중복 방지 위한 고유 id
-        String uuid = UUID.randomUUID().toString();
+    public UploadUrlResponseDTO getUploadUrl(UploadUrlRequestDTO request, String username) {
+        List<String> urls = new ArrayList<>();
+        List<String> uuids = new ArrayList<>();
+        List<S3File> files = new ArrayList<>();
+        Project project = projectRepository.findByIdAndIsDeletedFalse(request.getProjectId()).orElseThrow(EntityNotFoundException::new);
 
-        // AWS에서 제공하는 허가증
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucketName)
-                .key(uuid)
-                .build();
-        //URL 발급 요청
-        PutObjectPresignRequest putObjectPresignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(5))  // URL 유효시간 5분
-                .putObjectRequest(putObjectRequest)
-                .build();
+        request.getFilenames().forEach(f -> {
+            // 1. 원본 파일명에서 확장자 추출 (.png, .jpg 등)
+            String extension = "";
+            int dotIndex = f.lastIndexOf(".");
 
-        S3File s3File = S3File.builder()
-                .project(projectRepository.findByIdAndIsDeletedFalse(projectId).orElseThrow(EntityNotFoundException::new))
-                .uuid(uuid)
-                .originalFilename(filename)
-                .createdBy(username)
-                .isDeleted(false)
-                .build();
+            // 점(.)이 존재하고, 파일명 맨 앞이 아닌 경우에만 확장자 추출
+            if (dotIndex > 0) {
+                extension = f.substring(dotIndex);
+            }
 
-        s3FileRepository.save(s3File);
+            // 중복 방지 위한 고유 id
+            String uuid = UUID.randomUUID().toString() + extension;
 
-        return S3UrlResponseDTO.builder()
-                .url(s3Presigner.presignPutObject(putObjectPresignRequest).url().toString())
-                .filename(uuid)
+            // AWS에서 제공하는 허가증
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(uuid)
+                    .build();
+
+            //URL 발급 요청
+            PutObjectPresignRequest putObjectPresignRequest = PutObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofMinutes(5))  // URL 유효시간 5분
+                    .putObjectRequest(putObjectRequest)
+                    .build();
+
+            S3File s3File = S3File.builder()
+                    .project(project)
+                    .uuid(uuid)
+                    .originalFilename(f)
+                    .createdBy(username)
+                    .isDeleted(false)
+                    .build();
+
+            files.add(s3File);
+
+            urls.add(s3Presigner.presignPutObject(putObjectPresignRequest).url().toString());
+            uuids.add(uuid);
+        });
+
+        s3FileRepository.saveAll(files);
+
+        return UploadUrlResponseDTO.builder()
+                .urls(urls)
+                .uuids(uuids)
                 .build();
     }
 
-    public String getDownloadUrl(String uuid) {
-        S3File s3File = s3FileRepository.findByUuidAndIsDeletedFalse(uuid).orElseThrow(EntityNotFoundException::new);
-        String filename = URLEncoder.encode(s3File.getOriginalFilename(), StandardCharsets.UTF_8)
-                .replaceAll("\\+", "%20");
+    public List<DownloadUrlResponseDTO> getDownloadUrl(List<String> uuids) {
+        List<S3File> s3File = s3FileRepository.findAllByUuidInAndIsDeletedFalse(uuids);
+        if (s3File.isEmpty() || uuids.size() != s3File.size()) throw  new EntityNotFoundException();
+        List<DownloadUrlResponseDTO> urls = new ArrayList<>();
 
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(uuid)
-                .responseContentDisposition("attachment; filename=\"" + filename + "\"")
-                .build();
-        GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
-                .getObjectRequest(getObjectRequest)
-                .build();
-        return s3Presigner.presignGetObject(getObjectPresignRequest).url().toString();
+        s3File.forEach(f -> {
+            String filename = URLEncoder.encode(f.getOriginalFilename(), StandardCharsets.UTF_8)
+                    .replaceAll("\\+", "%20");
+
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(f.getUuid())
+                    .responseContentDisposition("attachment; filename=\"" + filename + "\"")
+                    .build();
+            GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofMinutes(10))
+                    .getObjectRequest(getObjectRequest)
+                    .build();
+
+            urls.add(DownloadUrlResponseDTO.builder()
+                    .filename(f.getOriginalFilename())
+                    .url(s3Presigner.presignGetObject(getObjectPresignRequest).url().toString())
+                    .build());
+        });
+
+
+        return urls;
     }
 
     // C
     @Transactional
-    public void uploadComplete(String uuid) {
-        HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                .bucket(bucketName)
-                .key(uuid)
-                .build();
-        HeadObjectResponse metadata = s3Client.headObject(headObjectRequest);
+    public void uploadComplete(List<String> uuids) {
+        List<S3File> s3files =  s3FileRepository.findAllByUuidInAndIsDeletedFalse(uuids);
+        s3files.forEach(f -> {
+            try {
+                HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(f.getUuid())
+                        .build();
+                HeadObjectResponse metadata = s3Client.headObject(headObjectRequest);
 
-        S3File s3File = s3FileRepository.findByUuidAndIsDeletedFalse(uuid).orElseThrow(EntityNotFoundException::new);
-        s3File.setMetadata(metadata.contentLength(), metadata.contentType());
+                f.setMetadata(metadata.contentLength(), metadata.contentType());
+            } catch (Exception e) {
+                log.error("업로드 완료 처리 중 에러 발생 : {} 파일에서 에러발생",  f.getUuid());
+            }
+        });
+
     }
 
     // R
@@ -107,13 +149,15 @@ public class S3Service {
         List<S3File> s3Files = s3FileRepository.findAllFilesInProject(projectId);
 
         return s3Files.stream().map(s -> S3InfoResponseDTO.builder()
-                        .uuid(s.getUuid())
-                        .originalFilename(s.getOriginalFilename())
-                        .size(s.getSize())
-                        .contentType(s.getContentType())
-                        .createdDate(s.getCreatedDate())
-                        .createdBy(s.getCreatedBy())
-                        .build()).toList();
+                .uuid(s.getUuid())
+                .originalFilename(s.getOriginalFilename())
+                .size(s.getSize())
+                .contentType(s.getContentType())
+                .createdDate(s.getCreatedDate())
+                .createdBy(s.getCreatedBy())
+                .isDeleted(s.isDeleted())
+                        //task id 넣을 것
+                .build()).toList();
     }
 
     // 테스크에 속한 모든 파일 가져오기
@@ -121,30 +165,60 @@ public class S3Service {
 
     // 휴지통
     @Transactional
-    public void softDelete(String uuid, String username, Long projectId) {
-        S3File s3File = s3FileRepository.findByUuidAndIsDeletedFalse(uuid).orElseThrow(EntityNotFoundException::new);
-        if (isNotCreatorOrLeader(s3File, username, projectId)) throw new AccessDeniedException("권한이 없습니다.");
+    public Map<String, String> softDelete(DeleteDTO files, String username) {
+        Map<String, String> response = new HashMap<>();
 
-        s3File.deleteFile();
+        List<S3File> s3Files = s3FileRepository.findAllByUuidInAndIsDeletedFalse(files.getUuid());
+        List<String> leaders = projectMemberRepository.findLeader(files.getProjectId(), ProjectMemberRoleType.LEADER);
+
+        s3Files.forEach(f -> {
+            if (leaders.contains(username) || f.getCreatedBy().equals(username)) {
+                f.deleteFile();
+                response.put(f.getOriginalFilename(), "삭제 성공");
+            } else response.put(f.getOriginalFilename(), "권한 없음");
+        });
+
+        if (files.getUuid().size() != s3Files.size()) {
+            String a = (files.getUuid().size() - s3Files.size()) + "개의 파일";
+            response.put(a, "존재하지 않는 파일");
+        }
+
+        return response;
     }
 
     // 진짜 삭제
     @Transactional
-    public void realDelete(String uuid, String username, Long projectId) {
-        S3File s3File = s3FileRepository.findByUuidAndIsDeletedTrue(uuid).orElseThrow(EntityNotFoundException::new);
-        if (isNotCreatorOrLeader(s3File, username, projectId)) throw new AccessDeniedException("권한이 없습니다.");
+    public Map<String, String> realDelete(DeleteDTO files, String username) {
+        Map<String, String> response = new HashMap<>();
 
-        DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(uuid)
-                .build();
-        s3Client.deleteObject(deleteRequest);
+        List<S3File> s3Files = s3FileRepository.findAllByUuidInAndIsDeletedTrue(files.getUuid());
+        List<String> leaders = projectMemberRepository.findLeader(files.getProjectId(), ProjectMemberRoleType.LEADER);
+        List<S3File> delete = new ArrayList<>();
 
-        s3FileRepository.delete(s3File);
+        s3Files.forEach(f -> {
+            if (leaders.contains(username) || f.getCreatedBy().equals(username)) {
+                DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(f.getUuid())
+                        .build();
+                s3Client.deleteObject(deleteRequest);
+
+                delete.add(f);
+                response.put(f.getOriginalFilename(), "삭제 성공");
+            } else response.put(f.getOriginalFilename(), "권한 없음");
+        });
+        s3FileRepository.deleteAll(delete);
+
+        if (files.getUuid().size() != s3Files.size()) {
+            String a = (files.getUuid().size() - s3Files.size()) + "개의 파일";
+            response.put(a, "존재하지 않는 파일");
+        }
+
+        return response;
     }
 
     private Boolean isNotCreatorOrLeader(S3File s3File, String username, Long projectId) {
-        ProjectMember member = projectMemberRepository.findByProjectIdAndUsername(projectId, username).orElseThrow(EntityNotFoundException::new);
+        ProjectMember member = projectMemberRepository.findByProjectIdAndUsername(projectId, username).orElseThrow(() -> new AccessDeniedException("해당 프로젝트의 맴버가 아닙니다."));
         return !s3File.getCreatedBy().equals(username) && !member.getRole().equals(ProjectMemberRoleType.LEADER);
     }
 }
