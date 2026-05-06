@@ -1,5 +1,5 @@
-import rawDeletedProjectsData from '../../../../../global/data/dummyDeletedProjects.json';
-import rawProjectsData from '../../../../../global/data/dummyProjects.json';
+import rawDeletedProjectsData from '@global/data/dummyDeletedProjects.json';
+import rawProjectsData from '@global/data/dummyProjects.json';
 
 /**
  * @typedef {import('@/types/project.js').ProjectData} ProjectData
@@ -11,22 +11,29 @@ import rawProjectsData from '../../../../../global/data/dummyProjects.json';
  */
 
 /**
- * projects.json 데이터를 앱에서 사용할 수 있는 타입으로 변환하고 관리하는 메모리 DB 모델입니다.
+ * projects.json 및 dummyDeletedProjects.json 데이터를 앱에서 사용할 수 있는 타입으로 변환하고
+ * 통합 관리하는 메모리 DB 모델입니다.
  */
-export const projectsDB = rawProjectsData.map((project) => ({
+const initialProjects = rawProjectsData.map((project) => ({
   ...project,
-  // 필요한 경우 날짜 문자열을 Date 객체로 변환 등 데이터 가공
+  projectId: Number(project.projectId),
+  isDeleted: false,
 }));
 
-export const deletedProjectsDB = rawDeletedProjectsData.map((project) => ({
-  projectId: project.projectId,
+const initialDeletedProjects = rawDeletedProjectsData.map((project) => ({
+  projectId: Number(project.projectId),
   projectName: project.projectName,
   description: project.description,
   taskProgress: project.taskProgress,
-  memberCount: project.memberCount,
+  memberCount: 0, // 로직에 맞춰 0명으로 설정
   createdDate: project.createdDate,
   updatedDate: project.updatedDate,
-  isDeleted: project.isDeleted,
-  deleteUsername: project.deleteUsername,
-  members: project.members,
+  isDeleted: true,
+  deleteUsername: 'qwer', // 로직에 맞춰 현재 데모 유저로 설정
+  members: [], // 로직에 맞춰 빈 배열로 설정
 }));
+
+// 활성 + 삭제 프로젝트 통합
+export const projectsDB = [...initialProjects, ...initialDeletedProjects];
+
+export const deletedProjectsDB = initialDeletedProjects; // 하위 호환성을 위해 유지하되 projectsDB와 동기화됨

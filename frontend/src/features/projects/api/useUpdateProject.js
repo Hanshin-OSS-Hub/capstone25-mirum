@@ -1,11 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * 프로젝트 수정 요청 DTO (클라이언트 요청 형식)
  * @see ProjectUpdateDTO.java
  * @see ../../../../../backend/src/main/java/backend/dto/project/ProjectUpdateDTO.java
- * @typedef {Object} UpdateProjectRequestDTO
+ * @typedef {object} UpdateProjectRequestDTO
  * @property {number} projectId
  * @property {string} projectName
  * @property {string} description
@@ -33,13 +35,12 @@ export const useUpdateProject = () => {
     mutationFn: async (variables) => {
       return await api.put(`project`, variables);
     },
-    onSuccess: async (data, { projectId }) => {
+    onSuccess: async (_data, { projectId }) => {
       await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      alert('프로젝트 정보를 업데이트했습니다.');
+      notify.success('프로젝트 정보를 업데이트했습니다.');
     },
     onError: async (error) => {
-      console.log('프로젝트 업데이트 실패: ', error.message);
-      alert(error.message || '프로젝트 업데이트에 실패했습니다.');
+      notify.error(getErrorMessage(error, '프로젝트 업데이트에 실패했습니다.'));
     },
   });
 };

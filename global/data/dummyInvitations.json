@@ -43,5 +43,32 @@
     "invitedName": "user2",
     "status": "INVITED",
     "inviteDate": "2025-05-01T10:05:00"
+  },
+  {
+    "inviteId": 6,
+    "projectId": 2,
+    "projectName": "마케팅 전략 수립",
+    "inviterName": "younghee.lee",
+    "invitedName": "qwer",
+    "status": "INVITED",
+    "inviteDate": "2026-05-03T09:20:00"
+  },
+  {
+    "inviteId": 7,
+    "projectId": 4,
+    "projectName": "콘텐츠 제작 프로젝트",
+    "inviterName": "gildong.hong",
+    "invitedName": "qwer",
+    "status": "INVITED",
+    "inviteDate": "2026-05-04T15:40:00"
+  },
+  {
+    "inviteId": 8,
+    "projectId": 6,
+    "projectName": "데이터 분석 프로젝트",
+    "inviterName": "jieun.choi",
+    "invitedName": "qwer",
+    "status": "INVITED",
+    "inviteDate": "2026-05-06T11:10:00"
   }
 ]

@@ -1,35 +1,5 @@
 [
   {
-    "uuid": "folder-001",
-    "originalFilename": "디자인 시안",
-    "size": 0,
-    "contentType": "application/x-folder",
-    "uploadedDate": "2026-03-27T10:15:30",
-    "uploadedBy": "이영희",
-    "itemCount": 12,
-    "isDeleted": false
-  },
-  {
-    "uuid": "folder-002",
-    "originalFilename": "참고 논문 모음",
-    "size": 0,
-    "contentType": "application/x-folder",
-    "uploadedDate": "2026-03-26T14:20:10",
-    "uploadedBy": "김철수",
-    "itemCount": 8,
-    "isDeleted": false
-  },
-  {
-    "uuid": "folder-003",
-    "originalFilename": "이미지 자료",
-    "size": 0,
-    "contentType": "application/x-folder",
-    "uploadedDate": "2026-03-25T09:30:00",
-    "uploadedBy": "박민수",
-    "itemCount": 15,
-    "isDeleted": false
-  },
-  {
     "uuid": "8d3x-132k-1123-pptx",
     "projectId": 1,
     "taskId": 1,

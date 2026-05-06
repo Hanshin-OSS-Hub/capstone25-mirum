@@ -24,20 +24,21 @@ import { normalizeFileItem } from '@/features/files/utils/normalizeFileItem.js';
  *   uploadedDate: string  // ISO 문자열 (예: 2026-04-10T12:34:56)
  *   expiredDate?: string | null
  * }} ResponseGetFilesListDTO
- *
  * @typedef {ResponseGetFilesListDTO[]} ResponseGetFilesListDTOArray
  *
  * 정규화된 파일 아이템 타입 (UI에서 사용하는 형태)
  * - /model/project?projectId={id} 응답(ResponseGetFilesListDTOArray)을 가정하고,
  *   FileListItemDTO[] → NormalizedFileItem[] 으로 변환해 반환합니다.
  * @typedef {import('@/features/files/types/file.js').NormalizedFileItem} NormalizedFileItem
- *
  * @typedef {import('@tanstack/react-query').UseQueryResult<NormalizedFileItem[], unknown>} UseGetProjectFilesResult
  * @returns {UseGetProjectFilesResult}
  */
 
 /** @param {number} projectId - 조회할 프로젝트 ID */
 export const useGetProjectFiles = (projectId) => {
+  const isTokenAvailable =
+    typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
+
   return useQuery({
     queryKey: ['files', projectId],
     /** @returns {Promise<NormalizedFileItem[]>} */
@@ -47,7 +48,8 @@ export const useGetProjectFiles = (projectId) => {
       if (!Array.isArray(data)) return [];
       return data.map(normalizeFileItem);
     },
-    initialData: [],
-    enabled: !!projectId,
+    enabled: !!projectId && isTokenAvailable,
+    staleTime: 15000,
+    refetchOnMount: 'always',
   });
 };

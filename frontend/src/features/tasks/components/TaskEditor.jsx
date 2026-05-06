@@ -1,33 +1,44 @@
 import { useState } from 'react';
-import {
-  getStatusColor,
-  getStatusDotColor,
-  getStatusText,
-} from '@/features/tasks/utils/task-status.js';
+import { getStatusDotColor } from '@/features/tasks/utils/task-status.js';
 import { useDeleteTask } from '@/features/tasks/api/useDeleteTask.js';
 import TaskNote from '@/features/note/components/TaskNote.jsx';
-import { IconClose, IconSave, IconTrash } from '@/shared/assets/icons.js';
+import { IconAdd, IconClose, IconHashtag, IconSave, IconTrash } from '@/shared/assets/icons.js';
+import { Button, DialogHeader, IconButton } from '@/shared/components/ui/index.js';
 
+/**
+ * 작업 편집 모드 컴포넌트
+ * @param props
+ */
 export default function TaskEditor(props) {
-  const { editedTask, setEditedTask, teamMembers, onSave, onCancel } = props;
+  const { editedTask, setEditedTask, teamMembers, onSave, onCancel, onDeleteSuccess, projectId } =
+    props;
   const { mutate: deleteTask } = useDeleteTask();
   const [newTag, setNewTag] = useState('');
 
   const inputBase =
-    'w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 ' +
-    'focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500';
+    'w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary/50 focus:ring-4 focus:ring-primary/15';
+  const panelCard =
+    'rounded-[28px] border border-border bg-card p-6 shadow-sm ring-1 ring-black/5 dark:ring-white/10';
 
-  const panelCard = 'rounded-2xl border border-gray-200 bg-white p-5 shadow-sm';
+  const toDateInputValue = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value.slice(0, 10);
+    if (value instanceof Date) return value.toISOString().slice(0, 10);
+    return '';
+  };
 
   const handleDelete = (event) => {
     event.preventDefault();
-    event.stopPropagation();
-
     if (window.confirm('정말로 이 작업을 삭제하시겠습니까?')) {
+      const targetProjectId = Number(projectId ?? editedTask.projectId);
       deleteTask(
-        { taskId: editedTask.taskId, projectId: editedTask.projectId },
+        { taskId: Number(editedTask.taskId), projectId: targetProjectId },
         {
           onSuccess: () => {
+            if (onDeleteSuccess) {
+              onDeleteSuccess();
+              return;
+            }
             onCancel();
           },
         },
@@ -51,209 +62,193 @@ export default function TaskEditor(props) {
   };
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-white">
-      <div className="flex items-center justify-between border-b border-gray-100 bg-white/80 px-6 py-4 backdrop-blur">
-        <div className="flex min-w-0 flex-1 items-center gap-3 pr-4">
+    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+      {/* Header */}
+      <DialogHeader className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-card px-8 py-4">
+        <div className="flex items-center gap-3">
           <div
-            className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${getStatusDotColor(editedTask.status)}`}
+            className={`h-2.5 w-2.5 rounded-full ${getStatusDotColor(editedTask.status)} animate-pulse`}
           ></div>
-          <h2 className="text-lg font-semibold text-gray-900">작업 카드 수정</h2>
+          <h2 className="text-lg font-black tracking-tight text-foreground">작업 정보 편집</h2>
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-2">
-          <button
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onSave();
-            }}
-            className="cursor-pointer rounded-xl bg-blue-600 px-4 py-2 text-white shadow-sm transition-colors hover:bg-blue-700"
+        <div className="flex items-center gap-2">
+          <IconButton
+            onClick={onSave}
+            className="border-blue-600 bg-blue-600 text-white hover:bg-blue-700"
+            title="저장"
           >
-            <IconSave className="mr-2 inline-block" />
-            저장
-          </button>
-
-          <button
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onCancel();
-            }}
-            className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
-          >
-            <IconClose className="mr-2 inline-block" />
-            취소
-          </button>
+            <IconSave size={18} />
+          </IconButton>
+          <IconButton onClick={onCancel} className="text-muted-foreground" title="취소">
+            <IconClose size={18} />
+          </IconButton>
         </div>
-      </div>
+      </DialogHeader>
 
-      <div className="flex-1 overflow-y-auto bg-gray-50 px-6 py-6">
+      <div className="custom-scrollbar flex-1 overflow-y-auto bg-muted/30 px-8 py-8">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="flex flex-col space-y-6 lg:col-span-1">
+          {/* Side Panel: Metadata */}
+          <div className="space-y-6 lg:col-span-1">
             <div className={panelCard}>
-              <h3 className="mb-4 text-sm font-semibold text-gray-900">작업 정보</h3>
+              <h3 className="mb-5 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                설정 상세
+              </h3>
 
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-gray-800">담당자</label>
-                <select
-                  value={editedTask.assigneeId}
-                  onChange={(e) => setEditedTask({ ...editedTask, assigneeId: e.target.value })}
-                  className={inputBase}
-                >
-                  {teamMembers.map((member) => (
-                    <option key={member.username} value={member.username}>
-                      {member.nickname} ({member.role})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-gray-800">시작일</label>
-                <input
-                  type="date"
-                  value={editedTask.startDate || ''}
-                  onChange={(e) => {
-                    const nextStartDate = e.target.value;
-                    setEditedTask((prev) => ({
-                      ...prev,
-                      startDate: nextStartDate,
-                      dueDate:
-                        prev.dueDate && prev.dueDate >= nextStartDate
-                          ? prev.dueDate
-                          : nextStartDate,
-                    }));
-                  }}
-                  className={inputBase}
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-gray-800">마감일</label>
-                <input
-                  type="date"
-                  min={editedTask.startDate || ''}
-                  value={editedTask.dueDate || ''}
-                  onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })}
-                  className={inputBase}
-                />
-              </div>
-
-              <div className="mb-2">
-                <div className="mb-2 flex items-center justify-between align-middle">
-                  <label className="mb-2 block text-sm font-medium text-gray-800">상태</label>
-                  <span
-                    className={`inline-flex flex-shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(
-                      editedTask.status,
-                    )}`}
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    담당자 변경
+                  </label>
+                  <select
+                    value={editedTask.assigneeId}
+                    onChange={(e) => {
+                      const selectedMember = teamMembers.find(
+                        (member) => member.username === e.target.value,
+                      );
+                      setEditedTask({
+                        ...editedTask,
+                        assigneeId: e.target.value,
+                        assigneeName: selectedMember?.nickname || selectedMember?.username || '',
+                      });
+                    }}
+                    className={inputBase}
                   >
-                    {getStatusText(editedTask.status)}
-                  </span>
+                    {teamMembers.map((member) => (
+                      <option key={member.username} value={member.username}>
+                        {member.nickname} (@{member.username})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <select
-                  value={editedTask.status}
-                  onChange={(e) => setEditedTask({ ...editedTask, status: e.target.value })}
-                  className={inputBase}
-                >
-                  <option value={'TODO'}>대기</option>
-                  <option value={'IN_PROGRESS'}>진행중</option>
-                  <option value={'DONE'}>완료</option>
-                </select>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                      시작일
+                    </label>
+                    <input
+                      type="date"
+                      value={toDateInputValue(editedTask.startDate)}
+                      onChange={(e) => setEditedTask({ ...editedTask, startDate: e.target.value })}
+                      className={inputBase}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                      마감일
+                    </label>
+                    <input
+                      type="date"
+                      min={toDateInputValue(editedTask.startDate)}
+                      value={toDateInputValue(editedTask.dueDate)}
+                      onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })}
+                      className={inputBase}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    현재 상태
+                  </label>
+                  <select
+                    value={editedTask.status}
+                    onChange={(e) => setEditedTask({ ...editedTask, status: e.target.value })}
+                    className={inputBase}
+                  >
+                    <option value="TODO">대기 (TODO)</option>
+                    <option value="IN_PROGRESS">진행중 (IN PROGRESS)</option>
+                    <option value="DONE">완료 (DONE)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
+            {/* Tag Editor */}
             <div className={panelCard}>
-              <h3 className="mb-4 text-sm font-semibold text-gray-900">태그 편집</h3>
-
-              <div className="mb-3 flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={newTag}
-                    onChange={(event) => setNewTag(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        addTag();
-                      }
-                    }}
-                    placeholder="새 태그 입력"
-                    className={`${inputBase} py-2 pr-10`}
-                  />
-                  <button
-                    type="button"
-                    onClick={addTag}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                    aria-label="add tag"
-                  >
-                    <i className="ri-add-line text-lg"></i>
-                  </button>
-                </div>
+              <h3 className="mb-5 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                태그 관리
+              </h3>
+              <div className="relative mb-4">
+                <IconAdd
+                  size={18}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-primary"
+                  onClick={addTag}
+                />
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                  placeholder="태그 추가..."
+                  className={`${inputBase} pr-12`}
+                />
               </div>
-
-              <div className="flex max-h-24 flex-wrap gap-2 overflow-y-auto pr-2">
+              <div className="custom-scrollbar flex max-h-32 flex-wrap gap-2 overflow-y-auto pr-1">
                 {(editedTask.tags || []).map((tag, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1.5 text-sm text-blue-700 ring-1 ring-blue-100"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary"
                   >
-                    <i className="ri-hashtag"></i>
+                    <IconHashtag size={12} />
                     {tag}
                     <button
-                      type="button"
                       onClick={() => removeTag(tag)}
-                      className="ml-1 cursor-pointer rounded-full p-1 text-blue-600 hover:bg-blue-100 hover:text-blue-800"
+                      className="transition-colors hover:text-red-500"
                     >
-                      <i className="ri-close-line text-xs"></i>
+                      <IconClose size={12} />
                     </button>
                   </span>
                 ))}
               </div>
             </div>
 
-            <button
-              type="button"
+            <Button
               onClick={handleDelete}
-              className="mt-auto flex w-full cursor-pointer items-center justify-center rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
+              variant="outline"
+              className="h-auto w-full justify-center gap-2 rounded-[22px] border-red-200 py-3.5 text-sm font-bold text-red-600 transition-all hover:bg-red-500/15 dark:border-red-500/40"
             >
-              <IconTrash className="mr-2 text-lg" />
-              작업 삭제
-            </button>
+              <IconTrash size={18} />
+              작업 삭제하기
+            </Button>
           </div>
 
+          {/* Main Content Area */}
           <div className="space-y-6 lg:col-span-2">
             <div className={panelCard}>
-              <h3 className="mb-4 text-sm font-semibold text-gray-900">작업명</h3>
+              <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                작업 제목
+              </h3>
               <input
                 type="text"
                 value={editedTask.title || ''}
-                onChange={(event) => setEditedTask({ ...editedTask, title: event.target.value })}
-                className={inputBase}
+                onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                className="w-full border-none bg-transparent p-0 text-2xl font-black text-gray-900 outline-none placeholder:text-gray-200"
                 placeholder="작업 제목을 입력하세요"
               />
             </div>
 
             <div className={panelCard}>
-              <h3 className="mb-4 text-sm font-semibold text-gray-900">설명</h3>
+              <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                작업 설명
+              </h3>
               <textarea
                 value={editedTask.description || ''}
-                onChange={(event) =>
-                  setEditedTask({ ...editedTask, description: event.target.value })
-                }
-                className={`${inputBase} h-28 resize-none`}
+                onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+                className="w-full resize-none border-none bg-transparent p-0 text-base font-medium text-muted-foreground outline-none placeholder:text-muted-foreground/50"
+                rows={4}
+                placeholder="상세 내용을 입력하세요..."
               />
             </div>
 
             <div className={panelCard}>
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">메모</h3>
-              </div>
-
+              <h3 className="mb-5 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                상세 메모
+              </h3>
               <TaskNote
                 notes={editedTask.notes || ''}
-                onChange={(text) => {
-                  setEditedTask({ ...editedTask, notes: text });
-                }}
+                onChange={(text) => setEditedTask({ ...editedTask, notes: text })}
               />
             </div>
           </div>

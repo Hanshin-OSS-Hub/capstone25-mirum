@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * [PATCH] 삭제된 파일 복구 API 훅
@@ -11,21 +13,19 @@ export const useRestoreFiles = () => {
 
   return useMutation({
     // params: { selectedFiles: NormalizedFileItem[], projectId: number }
-    mutationFn: ({ selectedFiles, projectId }) => {
+    mutationFn: ({ selectedFiles }) => {
       if (!selectedFiles || selectedFiles.length <= 0) return;
 
       const uuids = selectedFiles.map((file) => file.uuid);
       return api.patch(`/files/restore`, uuids);
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['files', 'deleted', variables.projectId] });
       await queryClient.invalidateQueries({ queryKey: ['files', variables.projectId] });
-      console.log('파일 복구 완료:', data);
-      alert('복구가 완료되었습니다.');
+      notify.success('복구가 완료되었습니다.');
     },
-    onError: () => {
-      console.error('파일 복구 실패');
-      alert('복구에 실패하였습니다.');
+    onError: (error) => {
+      notify.error(getErrorMessage(error, '복구에 실패하였습니다.'));
     },
   });
 };

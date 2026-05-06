@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * File Entity 기본 타입
@@ -25,7 +27,6 @@ import { api } from '@/api/client.js';
  *
  * 업로드 확인 요청 DTO (클라이언트 → 서버)
  * @typedef {{ uuids: string[] }} RequestFileUploadCompleteDTO
- *
  * @returns {import('@tanstack/react-query').UseMutationResult<void, Error, RequestFileUploadUrlDTO, unknown>}
  */
 
@@ -77,16 +78,15 @@ export const useUploadFiles = () => {
     },
 
     // onSuccess (전체 파일 업로드 성공 시)
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       // 파일 목록 화면을 새로고침하여 새로 올린 파일들이 즉시 보이게 합니다.
       await queryClient.invalidateQueries({ queryKey: ['files', variables.projectId] });
-      alert('파일 업로드 성공!');
+      notify.success('파일 업로드 성공!');
     },
 
     // onError (단 하나의 파일이라도 실패 시)
     onError: (error) => {
-      console.error('파일 업로드 실패:', error);
-      alert(error.message || '파일 업로드 중 오류가 발생했습니다.');
+      notify.error(getErrorMessage(error, '파일 업로드 중 오류가 발생했습니다.'));
     },
   });
 };

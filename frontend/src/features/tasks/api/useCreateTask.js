@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * [CREATE] 새 작업 카드 생성 API
@@ -23,14 +25,12 @@ export const useCreateTask = () => {
       /** @type {ResponseTaskCreate} */
       return await api.post(`project/${projectId}/task`, requestBody);
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['tasks', Number(variables.projectId)] });
-      console.log('생성 완료:', data);
-      alert('작업 카드가 생성되었습니다.');
+      notify.success('작업 카드가 생성되었습니다.');
     },
     onError: (error) => {
-      console.error('생성 실패:', error);
-      alert(error.message || '작업 카드 생성에 실패하였습니다.');
+      notify.error(getErrorMessage(error, '작업 카드 생성에 실패하였습니다.'));
     },
   });
 };

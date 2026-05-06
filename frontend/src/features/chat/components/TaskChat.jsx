@@ -1,178 +1,311 @@
 import { useEffect, useRef, useState } from 'react';
-import { IconCollapse } from '@/shared/assets/icons.js';
+import ReactMarkdown from 'react-markdown';
+import { useGetChatMessages } from '@/features/chat/api/useGetChatMessages.js';
+import { useSendChatMessage } from '@/features/chat/api/useSendChatMessage.js';
+import { useMirumAI } from '@/features/ai/hooks/useMirumAI.js';
+import { IconCollapse, IconCrown, IconRobot, IconSend } from '@/shared/assets/icons.js';
+import { LoadingSpinner, UserProfileImg } from '@/shared/components/index.js';
 
 /**
- * 작업 카드 내 채팅 패널 컴포넌트
- * @param {Object} props
- * @param {string} props.currentUser - 현재 로그인한 사용자 이름
- * @param {string} props.leaderName - 리더 이름 (뱃지 표시용)
+ * 작업 카드 내 통합 채팅 패널 컴포넌트 (TanStack Query + MSW 연동)
+ * @param {object} props
+ * @param {string | number} props.taskId - 현재 작업 ID
+ * @param {Function} props.onChatClose - 패널 닫기 콜백
+ * @param {string} props.currentUser - 현재 사용자 이름
+ * @param {string} props.leaderName - 프로젝트 리더 이름
+ * @param {object} props.taskContext - AI에게 전달할 작업 컨텍스트
  */
-export default function TaskChat({ onChatClose, currentUser, leaderName }) {
+export default function TaskChat({ taskId, onChatClose, currentUser, leaderName, taskContext }) {
   const [newMessage, setNewMessage] = useState('');
-  const chatScrollRef = useRef(null);
+  const [isAiMode, setIsAiMode] = useState(false);
   const chatBottomRef = useRef(null);
 
-  // 임시 메시지 데이터 (나중에 API 연동 시 제거)
-  const [chatMessages, setChatMessages] = useState([
-    {
-      id: 1,
-      author: '김민수',
-      message: '이 작업 진행 상황 어떤가요?',
-      timestamp: '2024-01-15 14:30',
-    },
-    {
-      id: 2,
-      author: '이지영',
-      message: 'UI 디자인 거의 완료되었습니다. 피드백 부탁드려요!',
-      timestamp: '2024-01-15 14:35',
-    },
-    {
-      id: 3,
-      author: '박준호',
-      message: '좋네요! 몇 가지 수정사항이 있는데 노트에 정리해두겠습니다.',
-      timestamp: '2024-01-15 14:40',
-    },
-  ]);
+  // 1. API 훅 및 AI 훅 사용
+  const { data: chatMessages = [], isLoading: isChatLoading } = useGetChatMessages(taskId);
+  const { mutate: sendMessage } = useSendChatMessage(taskId);
+  const { askTaskAI, isLoading: isAiGenerating } = useMirumAI();
 
   const scrollChatToBottom = (behavior = 'smooth') => {
     if (chatBottomRef.current) {
       chatBottomRef.current.scrollIntoView({ behavior, block: 'end' });
-      return;
-    }
-    if (chatScrollRef.current) {
-      chatScrollRef.current.scrollTo({
-        top: chatScrollRef.current.scrollHeight,
-        behavior,
-      });
     }
   };
 
   useEffect(() => {
     scrollChatToBottom('auto');
-  }, []);
+  }, [isChatLoading]);
 
   useEffect(() => {
     scrollChatToBottom('smooth');
   }, [chatMessages]);
 
-  const sendMessage = () => {
+  const handleSendMessage = async () => {
     const trimmed = newMessage.trim();
-    if (!trimmed) return;
+    if (!trimmed || isAiGenerating) return;
 
-    const now = new Date();
-    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
-      now.getDate(),
-    ).padStart(
-      2,
-      '0',
-    )} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        author: currentUser || '나',
-        message: trimmed,
-        timestamp,
-      },
-    ]);
-
+    // 사용자 메시지 서버에 저장
+    sendMessage({
+      author: currentUser || '나',
+      message: trimmed,
+      isAi: false,
+    });
     setNewMessage('');
+
+    // AI 모드일 경우 AI 답변 생성 및 서버 저장
+    if (isAiMode) {
+      try {
+        const aiResponse = await askTaskAI(trimmed, taskContext);
+        sendMessage({
+          author: 'MIRUM AI',
+          message: aiResponse,
+          isAi: true,
+        });
+      } catch (err) {
+        console.error('AI 답변 생성 실패:', err);
+      }
+    }
   };
 
   const handleChatKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
 
+  const getDateKey = (timestamp) => {
+    if (!timestamp) return '';
+    const parsedDate = new Date(timestamp);
+    if (Number.isNaN(parsedDate.getTime())) return String(timestamp).slice(0, 10);
+
+    const year = parsedDate.getFullYear();
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const date = String(parsedDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${date}`;
+  };
+
+  const formatDateDivider = (timestamp) => {
+    if (!timestamp) return '';
+    const parsedDate = new Date(timestamp);
+    if (Number.isNaN(parsedDate.getTime())) return String(timestamp).slice(0, 10);
+
+    const now = new Date();
+    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate(),
+    ).padStart(2, '0')}`;
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    const targetKey = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}-${String(parsedDate.getDate()).padStart(2, '0')}`;
+
+    if (targetKey === todayKey) return '오늘';
+    if (targetKey === yesterdayKey) return '어제';
+
+    const year = parsedDate.getFullYear();
+    const month = parsedDate.getMonth() + 1;
+    const date = parsedDate.getDate();
+    return `${year}. ${month}. ${date}`;
+  };
+
+  const formatMessageTime = (timestamp) => {
+    if (!timestamp) return '';
+    const parsedDate = new Date(timestamp);
+    if (Number.isNaN(parsedDate.getTime())) return String(timestamp).slice(11, 16);
+
+    const hours = String(parsedDate.getHours()).padStart(2, '0');
+    const minutes = String(parsedDate.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
   return (
-    <div className="flex w-80 flex-col border-l border-gray-100 bg-white">
-      <div className="border-b border-gray-100 bg-white px-4 py-4">
+    <div className="flex w-[440px] flex-col border-l border-gray-100 bg-white">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-white px-5 py-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900">채팅</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-black text-gray-900">팀 & AI 소통</h3>
+            {isAiMode && (
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-700 ring-1 ring-blue-200">
+                AI Active
+              </span>
+            )}
+          </div>
           <button
             type="button"
             onClick={onChatClose}
-            className="cursor-pointer rounded-lg p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-            aria-label="close"
+            className="cursor-pointer rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
           >
-            <IconCollapse className="text-lg" />
+            <IconCollapse size={20} />
           </button>
         </div>
-        <p className="mt-1 text-sm text-gray-500">팀원들과 메시지를 주고받아요</p>
       </div>
 
-      <div ref={chatScrollRef} className="flex-1 space-y-3 overflow-y-auto bg-gray-50 px-4 py-4">
-        {chatMessages.map((message) => {
-          const isMe = message.author === (currentUser || '나');
-          const isLeader = message.author === leaderName;
+      {/* Message List */}
+      <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto bg-gray-50 px-5 py-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {isChatLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <LoadingSpinner size="sm" label="대화 이력을 불러오는 중..." />
+          </div>
+        ) : chatMessages.length === 0 ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-sm text-gray-400">대화가 없습니다.</p>
+          </div>
+        ) : (
+          chatMessages.map((msg, index) => {
+            const isMe = msg.author === (currentUser || '나');
+            const isAI = msg.isAi;
+            const isLeader = msg.author === leaderName;
+            const previousMessage = chatMessages[index - 1];
+            const nextMessage = chatMessages[index + 1];
+            const isFirstMessageOfDate =
+              index === 0 || getDateKey(previousMessage?.timestamp) !== getDateKey(msg.timestamp);
+            const isSameAuthorAsPrevious =
+              !!previousMessage &&
+              previousMessage.author === msg.author &&
+              previousMessage.isAi === msg.isAi;
+            const isSameAuthorAsNext =
+              !!nextMessage && nextMessage.author === msg.author && nextMessage.isAi === msg.isAi;
 
-          return (
-            <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ring-1 ring-black/5 ${
-                  isMe ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
-                }`}
-              >
-                <div className="mb-1 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`text-xs font-medium ${isMe ? 'text-blue-100' : 'text-gray-500'}`}
-                    >
-                      {message.author}
+            return (
+              <div key={msg.id}>
+                {isFirstMessageOfDate && (
+                  <div className="mb-4 mt-1 flex items-center gap-3">
+                    <div className="h-px flex-1 bg-gray-200" />
+                    <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-bold text-gray-500">
+                      {formatDateDivider(msg.timestamp)}
                     </span>
-
-                    {isLeader && (
-                      <span
-                        className={`inline-flex items-center justify-center ${
-                          isMe ? 'text-yellow-200' : 'text-yellow-500'
-                        }`}
-                        title="팀장"
-                      >
-                        <i className="ri-vip-crown-fill text-xs"></i>
-                      </span>
-                    )}
+                    <div className="h-px flex-1 bg-gray-200" />
                   </div>
+                )}
+                <div
+                  className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} ${
+                    isSameAuthorAsPrevious ? 'mt-[-6px]' : ''
+                  }`}
+                >
+                  {!isSameAuthorAsPrevious && (
+                    <div className="mb-2 flex items-center gap-2 px-1">
+                      <UserProfileImg
+                        name={msg.author}
+                        size="sm"
+                        radius="soft"
+                        variant="compact"
+                        className={isAI ? 'border-blue-200 bg-blue-50 text-blue-600' : ''}
+                      />
+                      {isAI && <IconRobot size={12} className="text-blue-500" />}
+                      <span className="text-sm font-extrabold uppercase tracking-tight text-gray-700">
+                        {msg.author}
+                      </span>
+                      {isLeader && <IconCrown size={12} className="text-amber-500" />}
+                    </div>
+                  )}
 
-                  <span className={`text-[11px] ${isMe ? 'text-blue-100' : 'text-gray-400'}`}>
-                    {message.timestamp}
+                  <div
+                    className={`max-w-[88%] px-4 py-3 shadow-sm ring-1 ${
+                      isMe
+                        ? `bg-blue-600 text-white ring-blue-700/20 ${
+                            isSameAuthorAsPrevious
+                              ? 'rounded-bl-2xl rounded-br-2xl rounded-tl-2xl rounded-tr-md'
+                              : 'rounded-bl-2xl rounded-br-2xl rounded-tl-2xl rounded-tr-none'
+                          } ${isSameAuthorAsNext ? 'rounded-br-md' : ''}`
+                        : isAI
+                          ? `border-l-4 border-blue-500 bg-white text-gray-900 ring-gray-200 ${
+                              isSameAuthorAsPrevious
+                                ? 'rounded-bl-2xl rounded-br-2xl rounded-tl-md rounded-tr-2xl'
+                                : 'rounded-bl-2xl rounded-br-2xl rounded-tl-none rounded-tr-2xl'
+                            } ${isSameAuthorAsNext ? 'rounded-bl-md' : ''}`
+                          : `border border-gray-200 bg-white text-gray-900 ring-gray-200 ${
+                              isSameAuthorAsPrevious
+                                ? 'rounded-bl-2xl rounded-br-2xl rounded-tl-md rounded-tr-2xl'
+                                : 'rounded-bl-2xl rounded-br-2xl rounded-tl-none rounded-tr-2xl'
+                            } ${isSameAuthorAsNext ? 'rounded-bl-md' : ''}`
+                    }`}
+                  >
+                    <div
+                      className={`prose prose-sm max-w-none text-sm font-medium leading-relaxed ${isMe ? 'prose-invert text-white' : 'text-gray-900'}`}
+                    >
+                      <ReactMarkdown>{msg.message}</ReactMarkdown>
+                    </div>
+                  </div>
+                  <span
+                    className={`px-1 text-[10px] font-bold tracking-tight text-gray-500 ${
+                      isSameAuthorAsPrevious ? 'mt-1' : 'mt-1.5'
+                    }`}
+                  >
+                    {formatMessageTime(msg.timestamp)}
                   </span>
                 </div>
-
-                <p className={`text-sm ${isMe ? 'text-white' : 'text-gray-700'}`}>
-                  {message.message}
-                </p>
               </div>
-            </div>
-          );
-        })}
-
-        {/* 자동 스크롤 도착 지점 */}
+            );
+          })
+        )}
+        {isAiGenerating && (
+          <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+            <IconRobot size={14} className="text-blue-400" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">
+              AI is thinking...
+            </span>
+          </div>
+        )}
         <div ref={chatBottomRef}></div>
       </div>
 
-      <div className="border-t border-gray-100 bg-white p-4">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleChatKeyDown}
-            placeholder="메시지를 입력하세요..."
-            className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-          />
-          <button
-            onClick={sendMessage}
-            className="cursor-pointer rounded-xl bg-blue-600 px-3 py-2.5 text-white shadow-sm hover:bg-blue-700"
-            aria-label="send"
-          >
-            <i className="ri-send-plane-line"></i>
-          </button>
-        </div>
+      {/* Input Area */}
+      <div className="border-t border-gray-200 bg-white p-5">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            {/* AI Toggle Button */}
+            <button
+              onClick={() => setIsAiMode(!isAiMode)}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+                isAiMode
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-100 ring-4 ring-blue-50'
+                  : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+              }`}
+              title={isAiMode ? '일반 모드로 전환' : 'AI에게 질문하기'}
+            >
+              <IconRobot size={22} />
+            </button>
 
-        <p className="mt-2 text-[11px] text-gray-400">Enter 키로 바로 전송됩니다.</p>
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleChatKeyDown}
+                placeholder={isAiMode ? 'AI 팀원에게 물어보세요...' : '팀원들에게 의견 남기기...'}
+                className={`w-full rounded-2xl border px-5 py-3 text-sm font-bold outline-none focus:ring-4 ${
+                  isAiMode
+                    ? 'bg-blue-50/30 focus:bg-white focus:ring-blue-50'
+                    : 'bg-gray-50 focus:bg-white focus:ring-blue-50'
+                }`}
+                disabled={isAiGenerating}
+              />
+            </div>
+
+            <button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim() || isAiGenerating}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-xl ${
+                !newMessage.trim() || isAiGenerating
+                  ? 'cursor-not-allowed bg-gray-200 shadow-none'
+                  : 'bg-blue-600 shadow-blue-100 hover:bg-blue-700'
+              }`}
+            >
+              <IconSend size={20} />
+            </button>
+          </div>
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">
+              {isAiMode ? 'AI Feedback Mode' : 'Press Enter to send'}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

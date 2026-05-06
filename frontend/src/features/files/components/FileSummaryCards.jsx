@@ -1,3 +1,6 @@
+import { IconFileCopy, IconFolder, IconHardDrive, IconTeam } from '@/shared/assets/icons.js';
+import AnimatedBarFill from '@/shared/components/AnimatedBarFill.jsx';
+
 /**
  * @param {{ totalFiles: number, folderCount: number, totalUsageText: string, ownerCount: number }} props
  */
@@ -6,60 +9,78 @@ export default function FileSummaryCards({ totalFiles, folderCount, totalUsageTe
     {
       title: '전체 파일',
       value: totalFiles,
-      icon: 'ri-file-copy-2-line',
-      iconBox: 'bg-blue-50',
-      iconColor: 'text-blue-600',
+      Icon: IconFileCopy,
+      iconBox: 'bg-blue-500/15',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      barClass: 'bg-blue-500 opacity-80',
+      barPct: Math.min(100, 12 + Math.min(totalFiles, 48) * 1.5),
     },
     {
       title: '폴더',
       value: folderCount,
-      icon: 'ri-folder-line',
-      iconBox: 'bg-green-50',
-      iconColor: 'text-green-600',
+      Icon: IconFolder,
+      iconBox: 'bg-emerald-500/15',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      barClass: 'bg-emerald-500 opacity-80',
+      barPct: Math.min(100, 18 + folderCount * 14),
     },
     {
       title: '사용 용량',
       value: totalUsageText,
-      icon: 'ri-hard-drive-3-line',
-      iconBox: 'bg-purple-50',
-      iconColor: 'text-purple-600',
+      Icon: IconHardDrive,
+      iconBox: 'bg-purple-500/15',
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      barClass: 'bg-purple-500 opacity-80',
+      barPct: 52,
     },
     {
       title: '공유자',
       value: ownerCount,
-      icon: 'ri-team-line',
-      iconBox: 'bg-orange-50',
-      iconColor: 'text-orange-600',
+      Icon: IconTeam,
+      iconBox: 'bg-orange-500/15',
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      barClass: 'bg-orange-500 opacity-80',
+      barPct: Math.min(100, 22 + ownerCount * 18),
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {cards.map((card) => (
-        <div
-          key={card.title}
-          className="rounded-2xl border border-gray-200 bg-white px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gray-50">
-              <i className={`${card.icon} text-xl ${card.iconColor}`}></i>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {cards.map((card) => {
+        const { Icon } = card;
+        return (
+          <div
+            key={card.title}
+            className="rounded-[32px] border border-border bg-card px-6 py-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${card.iconBox}`}
+              >
+                <Icon size={24} className={card.iconColor} />
+              </div>
+
+              <div className="flex flex-1 flex-col items-end text-right">
+                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  {card.title}
+                </div>
+                <div className="mt-1 text-2xl font-black leading-none text-foreground">
+                  {card.value}
+                </div>
+              </div>
             </div>
 
-            <div className="ml-auto flex min-w-0 flex-1 flex-col items-end text-right">
-              <div className="text-xs font-medium uppercase tracking-[0.14em] text-gray-400">
-                {card.title}
-              </div>
-              <div className="mt-2 text-[24px] font-semibold leading-none tracking-[-0.03em] text-gray-900">
-                {card.value}
-              </div>
+            <div className="mt-6">
+              <AnimatedBarFill
+                targetPercent={card.barPct}
+                durationMs={1100}
+                trackClassName="h-1.5 w-full rounded-full bg-muted overflow-hidden"
+                barClassName={`rounded-full ${card.barClass}`}
+              />
             </div>
           </div>
-
-          <div className="mt-4 h-1.5 rounded-full bg-gray-100">
-            <div className={`h-1.5 rounded-full ${card.iconBox.replace('bg-', 'bg-')}`}></div>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

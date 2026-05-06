@@ -1,43 +1,67 @@
-export const getStatusText = (status) => {
-  switch (status) {
-    case 'DONE':
-      return '완료';
-    case 'IN_PROGRESS':
-      return '진행중';
-    default:
-      return '대기';
-  }
-};
+import { IconCalendar, IconCheck, IconFileList, IconRefresh } from '@/shared/assets/icons.js';
 
-export const getStatusIcon = (status) => {
+/**
+ * 상태별 아이콘 클래스명을 반환합니다.
+ * @param status
+ * @deprecated 컴포넌트 방식을 권장합니다. getStatusIconComponent를 사용하세요.
+ */
+export function getStatusIcon(status) {
   switch (status) {
     case 'DONE':
-      return 'ri-check-line text-green-600';
+      return 'ri-checkbox-circle-line';
     case 'IN_PROGRESS':
-      return 'ri-time-line text-orange-600';
+      return 'ri-refresh-line';
     default:
-      return 'ri-circle-line text-gray-400';
+      return 'ri-time-line';
   }
-};
+}
 
-export const getStatusColor = (status) => {
+/**
+ * 상태별 Remix Icon 컴포넌트를 반환합니다.
+ * @param status
+ */
+export function getStatusIconComponent(status) {
   switch (status) {
     case 'DONE':
-      return 'bg-green-100 text-green-800';
+      return IconCheck;
     case 'IN_PROGRESS':
-      return 'bg-orange-100 text-orange-800';
+      return IconRefresh;
     default:
-      return 'bg-gray-100 text-gray-800';
+      return IconCalendar;
   }
-};
+}
 
-export const getStatusDotColor = (status) => {
+export function getStatusColor(status) {
   switch (status) {
     case 'DONE':
-      return 'bg-green-500';
+      return 'bg-gray-800 text-white';
     case 'IN_PROGRESS':
-      return 'bg-orange-500';
+      return 'bg-blue-100 text-blue-700';
     default:
-      return 'bg-gray-500';
+      return 'bg-gray-100 text-gray-600';
   }
-};
+}
+
+export function getStatusDotColor(status) {
+  switch (status) {
+    case 'DONE':
+      return 'bg-gray-800';
+    case 'IN_PROGRESS':
+      return 'bg-blue-500';
+    default:
+      return 'bg-gray-400';
+  }
+}
+
+export function getStatusText(status) {
+  switch (status) {
+    case 'DONE':
+      return 'Done';
+    case 'IN_PROGRESS':
+      return 'In Progress';
+    case 'TODO':
+      return 'Todo';
+    default:
+      return status;
+  }
+}

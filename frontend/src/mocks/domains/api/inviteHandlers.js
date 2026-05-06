@@ -2,6 +2,7 @@ import { processToken } from '@/mocks/domains/api/tokenHandlers.js';
 import { http } from 'msw';
 import { errorResponse, successResponse } from '../common.js';
 import { invitationsDB } from '../model/inviteDataModel.js';
+import { projectsDB } from '../model/projectDataModel.js';
 
 /** @typedef {import('@/types/invitation.js').Invitation} Invitation */
 
@@ -16,10 +17,9 @@ export const invitationHandlers = [
 
     const myInvitations = invitationsDB.filter(
       /** @param {Invitation} invitation */
-      (invitation) => invitation.invitedName === user.username,
+      (invitation) => invitation.invitedName === user.username && invitation.status === 'INVITED',
     );
 
-    console.log(`MSW: 받은 초대 목록 조회 (username: ${user.username})`, myInvitations);
     return successResponse(myInvitations, 200);
   }),
 
@@ -33,10 +33,9 @@ export const invitationHandlers = [
 
     const sentInvitations = invitationsDB.filter(
       /** @param {Invitation} invitation */
-      (invitation) => invitation.projectId === id,
+      (invitation) => invitation.projectId === id && invitation.status === 'INVITED',
     );
 
-    console.log(`MSW: 발신 초대 목록 조회 (projectId: ${id})`, sentInvitations);
     return successResponse(sentInvitations, 200);
   }),
 
@@ -58,11 +57,31 @@ export const invitationHandlers = [
     if (invitationsDB[inviteIndex].invitedName !== user.username) {
       return errorResponse('초대 수락 권한이 없습니다.', 403);
     }
+    if (invitationsDB[inviteIndex].status !== 'INVITED') {
+      return errorResponse('이미 처리된 초대입니다.', 400);
+    }
 
     invitationsDB[inviteIndex].status = 'ACCEPTED';
     invitationsDB[inviteIndex].responseDate = new Date().toISOString();
 
-    console.log(`MSW: 초대 수락 (inviteId: ${inviteId})`);
+    // 초대 수락 시 프로젝트 멤버 목록에 현재 유저를 반영해야
+    // /api/projects 조회에서 참여 프로젝트로 노출됩니다.
+    const projectId = invitationsDB[inviteIndex].projectId;
+    const projectIndex = projectsDB.findIndex((project) => project.projectId === Number(projectId));
+    if (projectIndex !== -1) {
+      const project = projectsDB[projectIndex];
+      const alreadyMember = project.members?.some((member) => member.username === user.username);
+      if (!alreadyMember) {
+        project.members.push({
+          username: user.username,
+          nickname: user.nickname || user.username,
+          role: 'MEMBER',
+        });
+        project.memberCount = project.members.length;
+        project.updatedDate = new Date().toISOString();
+      }
+    }
+
     return successResponse(null, 200);
   }),
 
@@ -84,11 +103,13 @@ export const invitationHandlers = [
     if (invitationsDB[inviteIndex].invitedName !== user.username) {
       return errorResponse('초대 거절 권한이 없습니다.', 403);
     }
+    if (invitationsDB[inviteIndex].status !== 'INVITED') {
+      return errorResponse('이미 처리된 초대입니다.', 400);
+    }
 
     invitationsDB[inviteIndex].status = 'DECLINED';
     invitationsDB[inviteIndex].responseDate = new Date().toISOString();
 
-    console.log(`MSW: 초대 거절 (inviteId: ${inviteId})`);
     return successResponse(null, 200);
   }),
 ];

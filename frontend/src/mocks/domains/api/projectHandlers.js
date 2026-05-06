@@ -9,12 +9,24 @@ export const projectHandlers = [
     const currentUser = processToken(request);
     if (currentUser instanceof Response) return currentUser;
 
-    const myProjects = projectsDB.filter(
-      (project) =>
+    const url = new URL(request.url);
+    const isDeletedRequested = url.searchParams.get('deleted') === 'true';
+
+    const myProjects = projectsDB.filter((project) => {
+      if (isDeletedRequested) {
+        // 삭제된 프로젝트: 멤버가 0명이고, 삭제한 사람이 나여야 함
+        const isMemberEmpty =
+          project.memberCount === 0 || !project.members || project.members.length === 0;
+        const isDeletedByMe = project.deleteUsername === currentUser.username;
+        return project.isDeleted && isMemberEmpty && isDeletedByMe;
+      }
+
+      // 활성 프로젝트: 내가 멤버로 포함되어 있어야 함
+      return (
         !project.isDeleted &&
-        project.members.some((member) => member.username === currentUser.username),
-    );
-    console.log('MSW: 참여 중인 프로젝트 목록 조회 (myProjects)', myProjects);
+        project.members.some((member) => member.username === currentUser.username)
+      );
+    });
 
     return successResponse(myProjects, 200);
   }),
@@ -32,7 +44,6 @@ export const projectHandlers = [
     const isMember = project.members.some((m) => m.username === currentUser.username);
     if (!isMember) return errorResponse('프로젝트 접근 권한이 없습니다.', 403);
 
-    console.log(`MSW: 프로젝트 상세 조회 (projectId: ${projectId})`, project);
     return successResponse(project, 200);
   }),
 
@@ -56,8 +67,8 @@ export const projectHandlers = [
       description: newProjectRequest.description,
       taskProgress: 0,
       memberCount: 1,
-      creationDate: new Date().toISOString(),
-      updateDate: new Date().toISOString(),
+      createdDate: new Date().toISOString(),
+      updatedDate: new Date().toISOString(),
       isDeleted: false,
       deleteUsername: null,
       members: [
@@ -70,8 +81,6 @@ export const projectHandlers = [
     };
 
     projectsDB.push(newProject);
-    console.log('MSW: 새 프로젝트 생성', newProject);
-
     return successResponse({ projectId: newProjectId }, 201);
   }),
 
@@ -103,10 +112,9 @@ export const projectHandlers = [
       ...project,
       projectName: updateRequest.projectName,
       description: updateRequest.description,
-      updateDate: new Date().toISOString(),
+      updatedDate: new Date().toISOString(),
     };
 
-    console.log(`MSW: 프로젝트 수정 (projectId: ${projectId})`, projectsDB[projectIndex]);
     return successResponse(null, 200);
   }),
 
@@ -132,7 +140,53 @@ export const projectHandlers = [
     projectsDB[projectIndex].deleteUsername = currentUser.username;
     projectsDB[projectIndex].updatedDate = new Date().toISOString();
 
-    console.log(`MSW: 프로젝트 삭제 처리 (projectId: ${projectId})`);
+    return successResponse(null, 200);
+  }),
+
+  // [POST] 프로젝트 복구
+  http.post('*/api/project/restore/:projectId', ({ params, request }) => {
+    const currentUser = processToken(request);
+    if (currentUser instanceof Response) return currentUser;
+
+    const { projectId } = params;
+    const projectIndex = projectsDB.findIndex((p) => p.projectId === Number(projectId));
+
+    if (projectIndex === -1) return errorResponse('프로젝트를 찾을 수 없습니다.', 404);
+
+    projectsDB[projectIndex].isDeleted = false;
+    projectsDB[projectIndex].deleteUsername = null;
+    projectsDB[projectIndex].updatedDate = new Date().toISOString();
+
+    // 복구 시 본인을 리더로 다시 추가 (비즈니스 로직에 따름)
+    if (!projectsDB[projectIndex].members.some((m) => m.username === currentUser.username)) {
+      projectsDB[projectIndex].members.push({
+        username: currentUser.username,
+        nickname: currentUser.nickname,
+        role: 'LEADER',
+      });
+      projectsDB[projectIndex].memberCount = projectsDB[projectIndex].members.length;
+    }
+
+    return successResponse(null, 200);
+  }),
+
+  // [DELETE] 프로젝트 영구 삭제
+  http.delete('*/api/project/:projectId/permanent', ({ params, request }) => {
+    const currentUser = processToken(request);
+    if (currentUser instanceof Response) return currentUser;
+
+    const { projectId } = params;
+    const projectIndex = projectsDB.findIndex((p) => p.projectId === Number(projectId));
+
+    if (projectIndex === -1) return errorResponse('프로젝트를 찾을 수 없습니다.', 404);
+
+    // 삭제 권한 확인 (본인이 삭제한 프로젝트만 영구 삭제 가능하도록 가정)
+    if (projectsDB[projectIndex].deleteUsername !== currentUser.username) {
+      return errorResponse('영구 삭제 권한이 없습니다.', 403);
+    }
+
+    projectsDB.splice(projectIndex, 1);
+
     return successResponse(null, 200);
   }),
 ];

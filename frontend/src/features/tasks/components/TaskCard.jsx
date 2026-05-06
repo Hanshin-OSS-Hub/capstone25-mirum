@@ -1,11 +1,21 @@
 import { formatDate, isTaskOverdue } from '@/features/tasks/utils/task-format.js';
 import {
   getStatusColor,
-  getStatusIcon,
+  getStatusIconComponent,
   getStatusText,
 } from '@/features/tasks/utils/task-status.js';
+import { IconMore } from '@/shared/assets/icons.js';
 
+/**
+ * 태스크 카드 컴포넌트
+ * @typedef {import('@/types/task.js').TaskData} TaskData
+ * @param {object} props
+ * @param {TaskData} props.task - 표시할 태스크 데이터
+ * @param {() => void} props.onClick - 카드 클릭 시 호출되는 콜백
+ */
 export default function TaskCard({ task, onClick }) {
+  const StatusIcon = getStatusIconComponent(task.status);
+
   return (
     <div
       onClick={onClick}
@@ -13,8 +23,8 @@ export default function TaskCard({ task, onClick }) {
     >
       {/* Task Header */}
       <div className="mb-3 flex items-start justify-between">
-        <div className="-ml-1 flex items-center space-x-2">
-          <i className={`${getStatusIcon(task.status)} -ml-1 text-lg`}></i>
+        <div className="flex items-center gap-2">
+          <StatusIcon size={18} className="text-gray-500" />
           <span
             className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(task.status)}`}
           >
@@ -31,14 +41,14 @@ export default function TaskCard({ task, onClick }) {
         )}
       </div>
 
-      {/* 내용 영역 (짧아져도 푸터는 아래로 고정) */}
+      {/* Content Area */}
       <div className="flex-1">
-        {/* Task Title */}
         <h4 className="mb-2 line-clamp-2 font-medium text-gray-900">{task.title}</h4>
 
-        {/* Task Description */}
         {task.description && (
-          <p className="mb-3 line-clamp-2 text-sm text-gray-600">{task.description}</p>
+          <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-gray-600">
+            {task.description}
+          </p>
         )}
 
         {/* Tags */}
@@ -49,7 +59,7 @@ export default function TaskCard({ task, onClick }) {
                 key={index}
                 className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700"
               >
-                {tag}
+                #{tag}
               </span>
             ))}
             {task.tags.length > 2 && (
@@ -59,11 +69,11 @@ export default function TaskCard({ task, onClick }) {
         )}
       </div>
 
-      {/* Task Footer (항상 카드 맨 아래) */}
+      {/* Task Footer */}
       <div className="mt-auto flex items-center justify-between pt-2 text-xs text-gray-500">
         <span>업데이트: {formatDate(task.updatedDate)}</span>
-        <div className="flex items-center space-x-1">
-          <i className="ri-more-line text-gray-400"></i>
+        <div className="flex items-center">
+          <IconMore size={16} className="text-gray-400" />
         </div>
       </div>
     </div>

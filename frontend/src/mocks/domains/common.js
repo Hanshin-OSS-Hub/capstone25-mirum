@@ -13,6 +13,11 @@
  * @returns {Response} JSON Response (ApiResponse<T> 구조)
  */
 export const successResponse = (data, status = 200) => {
+  // 204/205/304 응답은 HTTP 스펙상 body를 포함할 수 없습니다.
+  if (status === 204 || status === 205 || status === 304) {
+    return new Response(null, { status });
+  }
+
   return Response.json(
     {
       success: true,

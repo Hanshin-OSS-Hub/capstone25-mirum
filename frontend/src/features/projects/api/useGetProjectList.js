@@ -5,7 +5,7 @@ import { api } from '@/api/client.js';
  * 프로젝트 목록 DTO
  * @see ProjectsDTO.java
  * @see ../../../../../backend/src/main/java/backend/dto/project/ProjectsDTO.java
- * @typedef {Object} ProjectListDTO
+ * @typedef {object} ProjectListDTO
  * @property {number} projectId
  * @property {string} projectName
  * @property {string} description
@@ -21,14 +21,16 @@ import { api } from '@/api/client.js';
  */
 
 export const useGetProjectList = () => {
+  const isTokenAvailable =
+    typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
+
   return useQuery({
     queryKey: ['projects'],
     /** @returns {Promise<ProjectListDTO[]>} */
     queryFn: async () => {
       return await api.get('/projects');
     },
-    refetchInterval: 2000,
-    initialData: [],
+    enabled: isTokenAvailable,
     select: (data) => {
       if (!Array.isArray(data)) {
         return [];

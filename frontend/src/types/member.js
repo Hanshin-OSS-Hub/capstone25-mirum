@@ -1,10 +1,16 @@
 /**
- * 프로젝트 멤버 DTO
- * - 백엔드 ProjectMemberDTO / ProjectMember 엔티티를 프론트에서 표현할 때 사용하는 도메인 타입입니다.
- * - API 응답 및 MSW projectsDB.members 요소 구조와 1:1로 매칭됩니다.
- *
- * @typedef {Object} ProjectMemberDTO
- * @property {string} username    - 멤버의 username (User.username)
- * @property {string} nickname    - 멤버의 표시 이름
- * @property {'LEADER'|'MEMBER'} role - 프로젝트 내에서의 역할
+ * @typedef {import('@/constants/memberConstants.js').PROJECT_ROLE} PROJECT_ROLE
  */
+
+/**
+ * 프로젝트 멤버 정보 DTO
+ * @see ProjectMember.java
+ * @see ../../../../../backend/src/main/java/backend/dto/project/ProjectMemberDTO.java
+ * @typedef {object} ProjectMemberDTO
+ * @property {string} username                  - 멤버 사용자 아이디
+ * @property {string} nickname                  - 멤버 사용자 닉네임
+ * @property {PROJECT_ROLE[keyof PROJECT_ROLE]} role - 프로젝트 내 권한 레벨 (Enum 기반)
+ * @property {string} [profileImg]              - 프로필 이미지 URL
+ */
+
+export {};

@@ -1,18 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * 프로젝트 생성 요청 DTO (클라이언트 요청 형식)
  * @see ProjectUpdateDTO.java
  * @see ../../../../../backend/src/main/java/backend/dto/project/ProjectUpdateDTO.java
- * @typedef {Object} CreateProjectRequestDTO
+ * @typedef {object} CreateProjectRequestDTO
  * @property {string} projectName
  * @property {string} description
  */
 
 /**
  * 프로젝트 생성 응답 (서버 응답 형식)
- * @typedef {Object} CreateProjectResponse
+ * @typedef {object} CreateProjectResponse
  * @property {number} projectId
  */
 
@@ -31,22 +33,21 @@ export const useCreateProject = () => {
      * @returns {Promise<CreateProjectResponse>}
      */
     mutationFn: async (variables) => {
-      return await api.post('project', variables);
+      return await api.post('/projects', variables);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
-      alert('프로젝트를 생성했습니다.');
+      notify.success('프로젝트를 생성했습니다.');
     },
     onError: (error) => {
-      console.log('프로젝트 생성 실패: ', error.message);
-      alert(error.message || '프로젝트 생성에 실패했습니다.');
+      notify.error(getErrorMessage(error, '프로젝트 생성에 실패했습니다.'));
     },
   });
 };
 
 // [CreateProject.jsx]
 // const handleCreateProjectApi = async () => {
-//   return api.post('project', {
+//   return api.post('/projects', {
 //     projectName: projectTitle,
 //     description: projectDesc,
 //   });

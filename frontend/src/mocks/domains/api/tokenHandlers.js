@@ -36,7 +36,7 @@ export const parseUsername = (token) => {
     const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     const paddedPayload = payload + '='.repeat((4 - (payload.length % 4)) % 4);
     return JSON.parse(atob(paddedPayload)).username;
-  } catch (error) {
+  } catch {
     return null;
   }
 };

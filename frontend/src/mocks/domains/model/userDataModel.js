@@ -1,4 +1,4 @@
-import rawUsersData from '../../../../../global/data/dummyUsers.json';
+import rawUsersData from '@global/data/dummyUsers.json';
 
 /** @typedef {import('@/types/user.js').UserData} UserData */
 

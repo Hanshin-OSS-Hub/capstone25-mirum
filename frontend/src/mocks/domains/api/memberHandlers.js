@@ -23,7 +23,6 @@ export const memberHandlers = [
     const isMember = project.members.some((m) => m.username === user.username);
     if (!isMember) return errorResponse('프로젝트 접근 권한이 없습니다.', 403);
 
-    console.log(`MSW: 프로젝트 멤버 목록 조회 (projectId: ${projectId})`, project.members);
     return successResponse(project.members, 200);
   }),
 
@@ -79,10 +78,6 @@ export const memberHandlers = [
 
     invitationsDB.push(newInvitation);
 
-    console.log(
-      `MSW: 멤버 초대 발송 (projectId: ${projectId}, to: ${invitedUsername})`,
-      newInvitation,
-    );
     return successResponse(null, 200);
   }),
 
@@ -119,7 +114,6 @@ export const memberHandlers = [
     projectsDB[projectIndex].members.splice(targetMemberIndex, 1);
     projectsDB[projectIndex].memberCount -= 1;
 
-    console.log(`MSW: 멤버 강퇴 처리 (projectId: ${projectId}, target: ${memberUsername})`);
     return successResponse(null, 200);
   }),
 
@@ -156,7 +150,6 @@ export const memberHandlers = [
     projectsDB[projectIndex].members.splice(targetMemberIndex, 1);
     projectsDB[projectIndex].memberCount -= 1;
 
-    console.log(`MSW: 프로젝트 나가기 완료 (projectId: ${projectId}, user: ${user.username})`);
     return successResponse(null, 200);
   }),
 ];

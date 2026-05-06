@@ -1,5 +1,5 @@
-import rawDeletedTasksData from '../../../../../global/data/dummyDeletedTasks.json';
-import rawTasksData from '../../../../../global/data/dummyTasks.json';
+import rawDeletedTasksData from '@global/data/dummyDeletedTasks.json';
+import rawTasksData from '@global/data/dummyTasks.json';
 
 /**
  * @typedef {import('@/types/task.js').TaskData} TaskData
@@ -12,9 +12,9 @@ import rawTasksData from '../../../../../global/data/dummyTasks.json';
 
 export const tasksDB = rawTasksData.map((task) => ({
   // 참조 데이터
-  projectId: task.projectId,
+  projectId: Number(task.projectId),
   // 기본 데이터
-  taskId: task.taskId,
+  taskId: Number(task.taskId),
   title: task.title,
   description: task.description,
   status: /** @type {TaskData['status']} */ (task.status),
@@ -36,9 +36,9 @@ export const tasksDB = rawTasksData.map((task) => ({
 
 export const deletedTasksDB = rawDeletedTasksData.map((task) => ({
   // 참조 데이터
-  projectId: task.projectId,
+  projectId: Number(task.projectId),
   // 기본 데이터
-  taskId: task.taskId,
+  taskId: Number(task.taskId),
   title: task.title,
   description: task.description,
   status: /** @type {TaskData['status']} */ ('DELETED'),

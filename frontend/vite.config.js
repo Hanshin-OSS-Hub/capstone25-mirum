@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { defineConfig } from 'vite';
 
 // ES 모듈에서 __dirname 사용하기 위한 설정
 const __filename = fileURLToPath(import.meta.url);
@@ -12,7 +12,9 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'), // @를 src 폴더로 매핑
+      '@': path.resolve(__dirname, './src'),
+      /** 저장소 루트의 `global/` (공유 JSON 픽스처). 프론트 폴더 기준 상위 */
+      '@global': path.resolve(__dirname, '../global'),
     },
   },
   server: {
@@ -23,7 +25,7 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         ws: true,
-      }
-    }
-  }
-})
+      },
+    },
+  },
+});

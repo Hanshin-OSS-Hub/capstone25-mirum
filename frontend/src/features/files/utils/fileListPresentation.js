@@ -3,7 +3,6 @@ import { getFileExtension } from './fileFormatters.js';
 /**
  * FileListTable 전용 파일 타입/아이콘 표현 유틸리티
  * - 파일명/콘텐츠 타입을 기반으로 리스트 뷰에 필요한 아이콘 타입과 서브 라벨을 계산합니다.
- *
  * @param {string} filename
  * @param {string} contentType
  * @returns {{ iconType: 'ppt' | 'excel' | 'pdf' | 'doc' | 'image' | 'video' | 'file', subLabel: string }}

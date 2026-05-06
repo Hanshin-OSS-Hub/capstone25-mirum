@@ -4,25 +4,284 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * modern-normalize v3 스타일 벤치마크 (Vanilla Extract 없이 Tailwind `@layer base`에 반영).
+ * Tailwind Preflight와 겹치는 부분은 최소화하고, 폼·표·타이포 보정 위주로만 둡니다.
+ * 참고: https://github.com/sindresorhus/modern-normalize
+ */
+@layer base {
+  html {
+    font-family:
+      system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+      'Segoe UI Emoji';
+    line-height: 1.15;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+  }
+
+  b,
+  strong {
+    font-weight: bolder;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 1em;
+  }
+
+  small {
+    font-size: 80%;
+  }
+
+  sub,
+  sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+
+  sub {
+    bottom: -0.25em;
+  }
+
+  sup {
+    top: -0.5em;
+  }
+
+  table {
+    border-color: currentcolor;
+  }
+
+  legend {
+    padding: 0;
+  }
+
+  progress {
+    vertical-align: baseline;
+  }
+
+  ::-webkit-inner-spin-button,
+  ::-webkit-outer-spin-button {
+    height: auto;
+  }
+
+  [type='search'] {
+    -webkit-appearance: textfield;
+    outline-offset: -2px;
+  }
+
+  ::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+
+  ::-webkit-file-upload-button {
+    -webkit-appearance: button;
+    font: inherit;
+  }
+
+  summary {
+    display: list-item;
+  }
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --success: 142.1 76.2% 36.3%;
+  --success-foreground: 355.7 100% 97.3%;
+  --warning: 32.1 94.6% 43.7%;
+  --warning-foreground: 48 96% 89%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: 222.2 47.4% 11.2%;
+  --foreground: 210 40% 98%;
+  --card: 224 36% 16%;
+  --card-foreground: 210 40% 96%;
+  --popover: 224 36% 16%;
+  --popover-foreground: 210 40% 96%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 24%;
+  --input: 217.2 32.6% 24%;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  background-color: #ffffff;
+  font-family: inherit;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.dark body {
+  color-scheme: dark;
+}
+
+/* Tailwind gray/white 유틸 기반 화면을 다크모드에서 읽기 쉽게 보정합니다. */
+.dark .bg-white {
+  background-color: #111827 !important;
+}
+.dark .bg-gray-100 {
+  background-color: #1f2937 !important;
+}
+.dark .bg-gray-50,
+.dark .bg-gray-50\/95,
+.dark .bg-gray-50\/30,
+.dark .bg-gray-50\/20,
+.dark .bg-gray-50\/50 {
+  background-color: #0f172a !important;
+}
+.dark .bg-blue-50,
+.dark .bg-blue-50\/30 {
+  background-color: rgba(30, 58, 138, 0.22) !important;
+}
+.dark .bg-blue-100 {
+  background-color: rgba(30, 64, 175, 0.32) !important;
+}
+.dark .bg-blue-600 {
+  background-color: #2563eb !important;
+}
+.dark .bg-blue-700 {
+  background-color: #1d4ed8 !important;
+}
+.dark .bg-red-500 {
+  background-color: #ef4444 !important;
+}
+.dark .text-gray-900 {
+  color: #f3f4f6 !important;
+}
+.dark .text-gray-700 {
+  color: #d1d5db !important;
+}
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-gray-400 {
+  color: #94a3b8 !important;
+}
+.dark .text-blue-700,
+.dark .text-blue-600 {
+  color: #60a5fa !important;
+}
+.dark .text-amber-600 {
+  color: #fbbf24 !important;
+}
+.dark .text-rose-600 {
+  color: #fb7185 !important;
+}
+.dark .text-violet-600 {
+  color: #a78bfa !important;
+}
+.dark .text-indigo-600 {
+  color: #818cf8 !important;
+}
+.dark .text-emerald-600 {
+  color: #34d399 !important;
+}
+.dark .text-emerald-500 {
+  color: #34d399 !important;
+}
+.dark .text-green-600 {
+  color: #4ade80 !important;
+}
+.dark .text-green-500 {
+  color: #4ade80 !important;
+}
+.dark .text-purple-600 {
+  color: #c084fc !important;
+}
+.dark .text-orange-600 {
+  color: #fb923c !important;
+}
+.dark .border-gray-50,
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: #334155 !important;
+}
+.dark .border-blue-100,
+.dark .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.45) !important;
+}
+.dark .shadow-sm,
+.dark .shadow-lg,
+.dark .shadow-xl {
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.35) !important;
+}
+.dark .hover\:bg-gray-50:hover {
+  background-color: #1f2937 !important;
+}
+.dark .hover\:bg-blue-100:hover {
+  background-color: rgba(37, 99, 235, 0.38) !important;
+}
+.dark .hover\:bg-blue-700:hover {
+  background-color: #1e40af !important;
+}
+.dark .bg-red-50 {
+  background-color: rgba(127, 29, 29, 0.28) !important;
+}
+.dark .hover\:bg-red-50:hover {
+  background-color: rgba(127, 29, 29, 0.38) !important;
+}
+.dark .border-red-200 {
+  border-color: rgba(248, 113, 113, 0.45) !important;
+}
+.dark .border-red-300 {
+  border-color: rgba(252, 165, 165, 0.5) !important;
+}
+.dark .text-red-600,
+.dark .text-red-700 {
+  color: #fca5a5 !important;
+}
+.dark .text-red-500 {
+  color: #f87171 !important;
+}
+.dark .bg-gray-300 {
+  background-color: #475569 !important;
+}
+.dark .text-gray-800 {
+  color: #e5e7eb !important;
+}
+.dark .bg-gray-300 {
+  background-color: #475569 !important;
+}
+.dark .text-gray-800 {
+  color: #e5e7eb !important;
 }
 
 /* 스크롤은 되는데 스크롤바만 숨기는 유틸 */
 .hide-scrollbar {
-    -ms-overflow-style: none; /* IE, Edge 레거시 */
-    scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE, Edge 레거시 */
+  scrollbar-width: none; /* Firefox */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Edge 등 WebKit 기반 */
+  display: none; /* Chrome, Safari, Edge 등 WebKit 기반 */
 }
-
-
-
 
 /*:root {*/
 /*  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;*/

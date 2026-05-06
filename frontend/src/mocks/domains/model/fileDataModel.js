@@ -1,5 +1,5 @@
-import rawDeletedFilesData from '../../../../../global/data/dummyDeletedFiles.json';
-import rawFilesData from '../../../../../global/data/dummyFiles.json';
+import rawDeletedFilesData from '@global/data/dummyDeletedFiles.json';
+import rawFilesData from '@global/data/dummyFiles.json';
 
 /**
  * @typedef {import('@/features/files/types/file.js').FileData} FileData

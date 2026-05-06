@@ -1,5 +1,6 @@
 // import { boardHandlers } from './domains/boards/tokenHandlers.js';
 import { authHandlers } from './domains/api/authHandlers.js';
+import { chatHandlers } from './domains/api/chatHandlers.js';
 import { fileHandlers } from './domains/api/fileHandlers.js';
 import { invitationHandlers } from './domains/api/inviteHandlers.js';
 import { memberHandlers } from './domains/api/memberHandlers.js';
@@ -15,4 +16,5 @@ export const handlers = [
   ...authHandlers,
   ...taskHandlers,
   ...fileHandlers,
+  ...chatHandlers,
 ];

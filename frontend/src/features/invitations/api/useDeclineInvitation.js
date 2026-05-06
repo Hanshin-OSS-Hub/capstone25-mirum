@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * [UPDATE] 프로젝트 초대 거절 API
@@ -15,11 +17,10 @@ export const useDeclineInvitation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['invitations', 'received'] });
-      alert('프로젝트 초대를 거절했습니다.');
+      notify.success('프로젝트 초대를 거절했습니다.');
     },
     onError: (error) => {
-      console.log('초대 처리 실패: ', error);
-      alert(error.message || '초대 처리에 실패했습니다.');
+      notify.error(getErrorMessage(error, '초대 처리에 실패했습니다.'));
     },
   });
 };

@@ -3,7 +3,8 @@
     "checkJs": true,
     "baseUrl": ".",
         "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@global/*": ["../global/*"]
     }
   },
   "include": ["src"]

@@ -1,7 +1,7 @@
 import '@/types/invitation.js';
-import rawInvitationsData from '../../../../../global/data/dummyInvitations.json';
+import rawInvitationsData from '@global/data/dummyInvitations.json';
 
-/** @typedef {import('../../../types/invitation.js').Invitation} Invitation */
+/** @typedef {import('@/types/invitation.js').Invitation} Invitation */
 
 /**
  * invitations.json 원본 데이터를 Invitation 타입 배열로 노출하는 in-memory DB 모델입니다.

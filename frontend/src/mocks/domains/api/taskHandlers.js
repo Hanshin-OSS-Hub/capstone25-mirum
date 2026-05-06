@@ -26,11 +26,13 @@ export const taskHandlers = [
     if (!isMember) return errorResponse('프로젝트 멤버가 아닙니다.', 403);
 
     // 4. 태스크 목록 조회 및 필터링
-    const tasks = tasksDB.filter(
-      (t) => t.projectId === Number(projectId) && t.status !== 'DELETED',
-    );
+    const targetProjectId = Number(projectId);
+    const tasks = tasksDB.filter((t) => {
+      const isProjectMatch = Number(t.projectId) === targetProjectId;
+      const isNotDeleted = t.status !== 'DELETED';
+      return isProjectMatch && isNotDeleted;
+    });
 
-    console.log(`MSW: 태스크 목록 조회 (Project ID: ${projectId}, Count: ${tasks.length})`);
     return successResponse(tasks, 200);
   }),
 
@@ -82,8 +84,6 @@ export const taskHandlers = [
       updatedDate: new Date(newTask.updatedDate),
       dueDate: newTask.dueDate ? new Date(newTask.dueDate) : null,
     });
-    console.log('MSW: 새 태스크 생성', newTask);
-
     return successResponse(newTask, 201);
   }),
 
@@ -109,7 +109,6 @@ export const taskHandlers = [
       updatedDate: new Date(), // Date 객체 유지
     };
     tasksDB[taskIndex] = updatedTask;
-    console.log('MSW: 태스크 수정', updatedTask);
     return successResponse(updatedTask, 200);
   }),
 
@@ -128,7 +127,6 @@ export const taskHandlers = [
     task.status = 'DELETED';
     task.updatedDate = new Date();
 
-    console.log(`MSW: 태스크 삭제(DELETED) 완료 (ID: ${taskId})`);
     return successResponse(null, 204);
   }),
 
@@ -149,8 +147,38 @@ export const taskHandlers = [
     task.status = 'TODO';
     task.updatedDate = new Date();
 
-    console.log(`MSW: 태스크 복구 완료 (ID: ${taskId})`);
     return successResponse(null, 204);
+  }),
+
+  /** {@link usePermanentDeleteTask} */
+  // [DELETE] 태스크 영구 삭제
+  http.delete('*/api/project/:projectId/task/:taskId/permanent', ({ params, request }) => {
+    const currentUser = processToken(request);
+    if (currentUser instanceof Response) return currentUser;
+
+    const { projectId, taskId } = params;
+    if (!projectId || !taskId) return errorResponse('유효하지 않은 요청입니다.', 400);
+
+    const targetProjectId = Number(projectId);
+    const targetTaskId = Number(taskId);
+
+    const softDeletedIndex = tasksDB.findIndex(
+      (task) => Number(task.projectId) === targetProjectId && Number(task.taskId) === targetTaskId,
+    );
+    if (softDeletedIndex !== -1) {
+      tasksDB.splice(softDeletedIndex, 1);
+      return successResponse(null, 204);
+    }
+
+    const deletedIndex = deletedTasksDB.findIndex(
+      (task) => Number(task.projectId) === targetProjectId && Number(task.taskId) === targetTaskId,
+    );
+    if (deletedIndex !== -1) {
+      deletedTasksDB.splice(deletedIndex, 1);
+      return successResponse(null, 204);
+    }
+
+    return errorResponse('작업 카드를 찾을 수 없습니다.', 404);
   }),
 
   /** {@link useGetTasksByStatus} */
@@ -188,11 +216,6 @@ export const taskHandlers = [
       result = tasksDB.filter((t) => t.projectId === Number(projectId));
     }
 
-    console.log(
-      `MSW: 상태별 태스크 목록 조회 (Project ID: ${projectId}, status: ${status}, Count: ${
-        result.length
-      })`,
-    );
     return successResponse(result, 200);
   }),
 ];

@@ -1,10 +1,20 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/api/client.js';
-import { AuthContext } from '../hooks/useAuth';
+import { AuthContext } from '@/features/auth/hooks/useAuth.js';
 
 export default function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+
+  const clearAuthState = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('username');
+    localStorage.removeItem('nickname');
+    localStorage.removeItem('email');
+    setIsAuthenticated(false);
+    setUser(null);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -22,6 +32,16 @@ export default function AuthProvider({ children }) {
         email: email && email !== 'null' ? email : null,
       });
     }
+  }, []);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      clearAuthState();
+    };
+    window.addEventListener('openLoginModal', handleSessionExpired);
+    return () => {
+      window.removeEventListener('openLoginModal', handleSessionExpired);
+    };
   }, []);
 
   const login = async (userData) => {
@@ -60,9 +80,7 @@ export default function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.clear();
-    setIsAuthenticated(false);
-    setUser(null);
+    clearAuthState();
   };
 
   const updateUser = (updatedData) => {

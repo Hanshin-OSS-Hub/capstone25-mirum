@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * [DELETE] 파일 소프트 삭제 API 훅
@@ -11,20 +13,18 @@ export const useDeleteFiles = () => {
 
   return useMutation({
     // params: { selectedFiles: NormalizedFileItem[], projectId: number }
-    mutationFn: ({ selectedFiles, projectId }) => {
+    mutationFn: ({ selectedFiles }) => {
       if (!selectedFiles || selectedFiles.length <= 0) return;
 
       const uuids = selectedFiles.map((file) => file.uuid);
       return api.post(`/files/softDelete`, uuids);
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['files', variables.projectId] });
-      console.log('첨부파일 삭제 완료:', data);
-      alert('삭제가 완료되었습니다.');
+      notify.success('삭제가 완료되었습니다.');
     },
-    onError: () => {
-      console.error('첨부파일 삭제 실패');
-      alert('삭제에 실패하였습니다.');
+    onError: (error) => {
+      notify.error(getErrorMessage(error, '삭제에 실패하였습니다.'));
     },
   });
 };

@@ -1,25 +1,38 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fileCategory, fileViewMode, folderContentType } from '@/types/file.js';
+import { FILE_CATEGORY, FILE_VIEW_MODE, FOLDER_CONTENT_TYPE } from '@/constants/fileConstants.js';
 import { useDeleteFiles } from '@/features/files/api/useDeleteFiles.js';
 import { useDownloadFiles } from '@/features/files/api/useDownloadFiles.js';
-import { useUploadFiles } from '@/features/files/api/useUploadFiles.js';
-import FileFolderGridCard from '@/features/files/components/FileFolderGridCard.jsx';
+import { useGetProjectFiles } from '@/features/files/api/useGetProjectFiles.js';
+import { useGetTaskList } from '@/features/tasks/api/useGetTaskList.js';
 import FileGridCard from '@/features/files/components/FileGridCard.jsx';
 import FileListTable from '@/features/files/components/FileListTable.jsx';
 import FileToolbar from '@/features/files/components/FileToolbar.jsx';
+import {
+  IconArrowLeft,
+  IconChevronRight,
+  IconFileCopy,
+  IconFolderFill,
+  IconFolderOpen,
+  IconFolders,
+} from '@/shared/assets/icons.js';
 
-/** @param {{ tasks: any[]; projectId: number | string }} props */
-export default function FilePanel(props) {
-  const { tasks, projectId, rawFiles } = props;
-  // const { data: rawFiles = [], isLoading } = useGetProjectFiles(projectId);
+/** @param {{ projectId: number | string }} props */
+export default function FilePanel({ projectId }) {
+  const {
+    data: rawFiles = [],
+    isLoading,
+    isError,
+    error,
+    refetch: refetchFiles,
+  } = useGetProjectFiles(projectId);
+  const { data: tasks = [] } = useGetTaskList({ projectId: Number(projectId) });
+
   const { mutate: deleteFiles } = useDeleteFiles();
-  const { mutate: downloadFiles } = useDownloadFiles();
-  // 업로드 버튼의 onClick에 uploadFiles를 달면 됨
-  const { mutate: uploadFiles } = useUploadFiles();
+  const { mutate: downloadFilesApi } = useDownloadFiles();
 
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [activeFilter, setActiveFilter] = useState(fileCategory.all);
-  const [viewMode, setViewMode] = useState(fileViewMode.list);
+  const [activeFilter, setActiveFilter] = useState(FILE_CATEGORY.ALL);
+  const [viewMode, setViewMode] = useState(FILE_VIEW_MODE.LIST);
   const [selectedFileIds, setSelectedFileIds] = useState(/** @type {string[]} */ ([]));
   const [sortKey, setSortKey] = useState(
     /** @type {'uploadedDate' | 'size' | 'name' | 'taskName' | 'uploadedBy'} */ ('uploadedDate'),
@@ -27,7 +40,7 @@ export default function FilePanel(props) {
   const [sortOrder, setSortOrder] = useState(/** @type {'desc' | 'asc'} */ ('desc'));
 
   // 탐색기 폴더 진입용 상태
-  const [currentFolder, setCurrentFolder] = useState(/** @type {string | null} */ (null));
+  const [currentFolder, setCurrentFolder] = useState(/** @type {number | null} */ (null));
 
   useEffect(() => {
     setSelectedFileIds([]);
@@ -53,22 +66,22 @@ export default function FilePanel(props) {
   }, [rawFiles, tasks]);
 
   const counts = useMemo(() => {
-    const folderCount = files.filter((item) => item.category === fileCategory.folder).length;
-    const mediaCount = files.filter((item) => item.category === fileCategory.media).length;
-    const documentCount = files.filter((item) => item.category === fileCategory.document).length;
+    const folderCount = files.filter((item) => item.category === FILE_CATEGORY.FOLDER).length;
+    const mediaCount = files.filter((item) => item.category === FILE_CATEGORY.MEDIA).length;
+    const documentCount = files.filter((item) => item.category === FILE_CATEGORY.DOCUMENT).length;
 
     return {
-      [fileCategory.all]: files.length,
-      [fileCategory.folder]: folderCount,
-      [fileCategory.media]: mediaCount,
-      [fileCategory.document]: documentCount,
+      [FILE_CATEGORY.ALL]: files.length,
+      [FILE_CATEGORY.FOLDER]: folderCount,
+      [FILE_CATEGORY.MEDIA]: mediaCount,
+      [FILE_CATEGORY.DOCUMENT]: documentCount,
     };
   }, [files]);
 
   const filteredFiles = useMemo(() => {
     let result = files;
 
-    if (activeFilter !== fileCategory.all) {
+    if (activeFilter !== FILE_CATEGORY.ALL) {
       result = result.filter((item) => item.category === activeFilter);
     }
 
@@ -89,7 +102,7 @@ export default function FilePanel(props) {
 
     /** @param {any} item */
     const getSizeValue = (item) => {
-      if (item.contentType === folderContentType) return -1;
+      if (item.contentType === FOLDER_CONTENT_TYPE) return -1;
       return item.size || 0;
     };
 
@@ -129,11 +142,15 @@ export default function FilePanel(props) {
       if (!file.taskId || file.taskName === '-') {
         standalone.push(file);
       } else {
-        const key = file.taskName || `작업 #${file.taskId}`;
+        const key = Number(file.taskId);
         if (!groups[key]) {
-          groups[key] = [];
+          groups[key] = {
+            taskId: key,
+            taskName: file.taskName || `작업 #${file.taskId}`,
+            files: [],
+          };
         }
-        groups[key].push(file);
+        groups[key].files.push(file);
       }
     });
 
@@ -146,32 +163,30 @@ export default function FilePanel(props) {
   );
 
   const downloadableSelectedFiles = useMemo(
-    () => selectedFiles.filter((item) => item.contentType !== folderContentType),
+    () => selectedFiles.filter((item) => item.contentType !== FOLDER_CONTENT_TYPE),
     [selectedFiles],
   );
 
   const selectedCount = selectedFiles.length;
+  const currentFolderFiles = useMemo(
+    () => (currentFolder ? taskFolders[currentFolder]?.files || [] : []),
+    [currentFolder, taskFolders],
+  );
+  const currentFolderSelectableIds = useMemo(
+    () =>
+      currentFolderFiles
+        .filter((item) => !item.expiredDate || new Date(item.expiredDate) >= new Date())
+        .map((item) => item.uuid),
+    [currentFolderFiles],
+  );
+  const allCurrentFolderSelected =
+    currentFolderSelectableIds.length > 0 &&
+    currentFolderSelectableIds.every((uuid) => selectedFileIds.includes(uuid));
 
   /** @param {any} item */
   const downloadFile = (item) => {
-    if (!item || item.contentType === folderContentType) return;
-
-    // 백엔드 연동 전의 임시 다운로드 로직 (프리뷰 URL로 이동하거나 더미 데이터 생성)
-    // const href = item.downloadUrl || item.previewUrl;
-    // const fallbackText = `파일명: ${item.originalFilename}\n크기: ${item.displaySize}\n업로드한 사람: ${item.createdBy}`;
-    // const downloadHref =
-    //   href || `data:text/plain;charset=utf-8,${encodeURIComponent(fallbackText)}`;
-    //
-    // const link = document.createElement('a');
-    // link.href = downloadHref;
-    // link.download = item.originalFilename || 'download';
-    // link.rel = 'noopener';
-    // document.body.appendChild(link);
-    // link.click();
-    // link.remove();
-
-    // S3 연동된 실제 API 훅 사용
-    downloadFiles({ selectedFiles: [item] });
+    if (!item || item.contentType === FOLDER_CONTENT_TYPE) return;
+    downloadFilesApi({ selectedFiles: [item] });
   };
 
   /** @param {any} item */
@@ -204,12 +219,21 @@ export default function FilePanel(props) {
 
   const clearSelection = () => setSelectedFileIds([]);
 
+  const toggleCurrentFolderSelection = () => {
+    if (currentFolderSelectableIds.length === 0) return;
+    setSelectedFileIds((current) => {
+      if (allCurrentFolderSelected) {
+        return current.filter((uuid) => !currentFolderSelectableIds.includes(uuid));
+      }
+      return Array.from(new Set([...current, ...currentFolderSelectableIds]));
+    });
+  };
+
   const downloadSelectedFiles = () => {
-    // downloadableSelectedFiles.forEach(downloadFile);
     if (downloadableSelectedFiles.length === 0) return;
 
     // API 훅을 한 번만 호출하여 모든 선택된 파일을 다운로드
-    downloadFiles({ selectedFiles: downloadableSelectedFiles });
+    downloadFilesApi({ selectedFiles: downloadableSelectedFiles });
   };
 
   const handleDeleteSelected = () => {
@@ -237,25 +261,6 @@ export default function FilePanel(props) {
     }
   };
 
-  /** @param {'desc' | 'asc'} nextOrder */
-  // const changeSortOrder = (nextOrder) => {
-  //   setSortOrder(nextOrder);
-  // };
-  //
-  // const summary = useMemo(() => {
-  //   const pureFiles = files.filter((item) => item.contentType !== folderContentType);
-  //   const folders = files.filter((item) => item.contentType === folderContentType);
-  //   const totalSize = pureFiles.reduce((acc, cur) => acc + (cur.size || 0), 0);
-  //   const ownerCount = new Set(files.map((item) => item.uploadedBy)).size;
-  //
-  //   return {
-  //     totalFiles: pureFiles.length,
-  //     folderCount: folders.length,
-  //     totalUsageText: formatFileSize(totalSize),
-  //     ownerCount,
-  //   };
-  // }, [files]);
-
   return (
     <div className="space-y-4">
       <FileToolbar
@@ -270,69 +275,71 @@ export default function FilePanel(props) {
         clearSelection={clearSelection}
         downloadSelectedFiles={downloadSelectedFiles}
         handleDeleteSelected={handleDeleteSelected}
-        // sortOrder={sortOrder}
-        // onSortOrderChange={changeSortOrder}
       />
 
-      {/*<FileSummaryCards*/}
-      {/*  totalFiles={summary.totalFiles}*/}
-      {/*  folderCount={summary.folderCount}*/}
-      {/*  totalUsageText={summary.totalUsageText}*/}
-      {/*  ownerCount={summary.ownerCount}*/}
-      {/*/>*/}
-
-      {/*<div className="rounded-2xl border border-gray-200 bg-white shadow-sm">*/}
-      {/*  /!*<div className="border-b border-gray-200 px-6 py-5">*!/*/}
-      {/*  /!*  <h3 className="text-2xl font-bold text-gray-900">파일 목록</h3>*!/*/}
-      {/*  /!*</div>*!/*/}
-      {/*  {selectedCount > 0 && (*/}
-      {/*    <div className="border-b border-gray-100 px-6 py-4">*/}
-      {/*      <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">*/}
-      {/*        <div className="text-sm font-medium text-blue-800">선택된 파일 {selectedCount}개</div>*/}
-
-      {/*        <div className="flex items-center gap-2">*/}
-      {/*          <button*/}
-      {/*            type="button"*/}
-      {/*            onClick={downloadSelectedFiles}*/}
-      {/*            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"*/}
-      {/*          >*/}
-      {/*            <i className="ri-download-2-line text-base"></i>*/}
-      {/*            선택 다운로드*/}
-      {/*          </button>*/}
-
-      {/*          <button*/}
-      {/*            type="button"*/}
-      {/*            onClick={clearSelection}*/}
-      {/*            className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"*/}
-      {/*          >*/}
-      {/*            선택 해제*/}
-      {/*          </button>*/}
-
-      {/*          <div className="ml-1 border-l border-blue-200 pl-3">*/}
-      {/*            <button*/}
-      {/*              type="button"*/}
-      {/*              onClick={handleDeleteSelected}*/}
-      {/*              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"*/}
-      {/*            >*/}
-      {/*              <i className="ri-delete-bin-line text-base"></i>*/}
-      {/*              파일 삭제*/}
-      {/*            </button>*/}
-      {/*          </div>*/}
-      {/*        </div>*/}
-      {/*      </div>*/}
-      {/*    </div>*/}
-      {/*  )}*/}
-
-      <div className="min-h-[400px] rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="p-6">
-          {sortedFiles.length === 0 ? (
-            <div className="flex h-72 flex-col items-center justify-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                <i className="ri-folder-open-line text-2xl text-gray-400"></i>
-              </div>
-              <div className="text-base text-gray-500">조건에 맞는 파일이 없습니다.</div>
+      <div className="min-h-[500px] overflow-hidden rounded-[28px] border border-border bg-card shadow-sm sm:rounded-[40px]">
+        <div className="p-4 sm:p-6">
+          {isLoading ? (
+            <div className="flex h-72 items-center justify-center text-muted-foreground">
+              파일을 불러오는 중입니다...
             </div>
-          ) : viewMode === fileViewMode.grid ? (
+          ) : isError ? (
+            <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 text-center shadow-sm sm:p-12">
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -left-12 -top-10 h-44 w-44 rounded-full bg-blue-100/50 blur-3xl" />
+                <div className="absolute -bottom-10 -right-12 h-48 w-48 rounded-full bg-indigo-100/50 blur-3xl" />
+              </div>
+
+              <div className="relative mx-auto max-w-xl">
+                <div className="mb-3 text-6xl font-black tracking-[-0.04em] text-muted-foreground/20">
+                  404
+                </div>
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                  <IconFolderOpen size={28} />
+                </div>
+                <h3 className="text-2xl font-black tracking-tight text-foreground">
+                  파일 데이터를 불러오지 못했습니다
+                </h3>
+                <p className="mt-3 text-sm font-medium leading-relaxed text-muted-foreground">
+                  {error?.message || '파일 정보가 없거나 접근 권한이 없습니다.'}
+                </p>
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => refetchFiles()}
+                    className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95"
+                  >
+                    다시 시도
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchKeyword('');
+                      setActiveFilter(FILE_CATEGORY.ALL);
+                      setCurrentFolder(null);
+                    }}
+                    className="rounded-2xl border border-border bg-card px-6 py-3 text-sm font-bold text-foreground transition-all hover:bg-muted/50 active:scale-95"
+                  >
+                    필터 초기화
+                  </button>
+                </div>
+              </div>
+            </section>
+          ) : sortedFiles.length === 0 ? (
+            <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 text-center shadow-sm sm:p-12">
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -left-12 -top-10 h-44 w-44 rounded-full bg-blue-100/40 blur-3xl" />
+                <div className="absolute -bottom-10 -right-12 h-48 w-48 rounded-full bg-indigo-100/40 blur-3xl" />
+              </div>
+
+              <div className="relative mx-auto max-w-xl">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                  <IconFolderOpen size={30} />
+                </div>
+                <p className="text-base font-medium text-muted-foreground">파일이 없습니다</p>
+              </div>
+            </section>
+          ) : viewMode === FILE_VIEW_MODE.GRID ? (
             // 🔥 진짜 파일 탐색기 UX 렌더링
             currentFolder === null ? (
               // 1. 최상위 뷰 (가상 폴더 목록 + 개별 파일)
@@ -340,18 +347,34 @@ export default function FilePanel(props) {
                 {/* 1-1. 작업별 폴더 (폴더가 있을 때만 렌더링) */}
                 {Object.keys(taskFolders).length > 0 && (
                   <div className="mb-8">
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-800">
-                      <i className="ri-folders-line text-blue-500"></i>
+                    <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-foreground">
+                      <IconFolders size={20} className="text-primary" />
                       작업별 폴더
                     </h3>
                     <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-                      {Object.entries(taskFolders).map(([taskName, taskFiles]) => (
-                        <FileFolderGridCard
-                          key={taskName}
-                          title={taskName}
-                          itemCount={taskFiles.length}
-                          onClick={() => setCurrentFolder(taskName)}
-                        />
+                      {Object.values(taskFolders).map((folder) => (
+                        <button
+                          key={folder.taskId}
+                          type="button"
+                          onClick={() => setCurrentFolder(folder.taskId)}
+                          className="group flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"
+                        >
+                          <IconFolderFill
+                            size={60}
+                            className="text-primary transition-transform group-hover:scale-110"
+                          />
+                          <div className="w-full text-center">
+                            <p
+                              className="w-full truncate px-2 font-semibold text-foreground"
+                              title={folder.taskName}
+                            >
+                              {folder.taskName}
+                            </p>
+                            <p className="mt-1 text-xs font-medium text-muted-foreground">
+                              항목 {folder.files.length}개
+                            </p>
+                          </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -360,13 +383,22 @@ export default function FilePanel(props) {
                 {/* 1-2. 개별 파일 (taskId가 없는 파일들) */}
                 {standaloneFiles.length > 0 && (
                   <div>
-                    <h3 className="mb-6 flex items-center gap-2 border-t border-gray-100 pt-8 text-lg font-bold text-gray-800">
-                      <i className="ri-file-copy-2-line text-blue-500"></i>
+                    <h3 className="mb-6 flex items-center gap-2 border-t border-border pt-8 text-lg font-bold text-foreground">
+                      <IconFileCopy size={20} className="text-primary" />
                       공용 파일
                     </h3>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                       {standaloneFiles.map((item) => (
-                        <FileGridCard key={item.uuid} item={item} onDownload={downloadFile} />
+                        <FileGridCard
+                          key={item.uuid}
+                          item={item}
+                          onDownload={downloadFile}
+                          isSelected={selectedFileIds.includes(item.uuid)}
+                          onToggleSelect={toggleFileSelection}
+                          isExpired={Boolean(
+                            item.expiredDate && new Date(item.expiredDate) < new Date(),
+                          )}
+                        />
                       ))}
                     </div>
                   </div>
@@ -376,37 +408,63 @@ export default function FilePanel(props) {
               // 2. 폴더 내부 뷰 (해당 작업에 속한 파일들)
               <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                 {/* 빵판(Breadcrumb) 형태의 뒤로가기 헤더 */}
-                <div className="mb-6 flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                <div className="mb-6 flex items-center gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3">
                   <button
                     type="button"
                     onClick={() => setCurrentFolder(null)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all hover:border-blue-200 hover:bg-card hover:text-blue-600 hover:shadow-md"
                     title="상위 폴더로 이동"
                   >
-                    <i className="ri-arrow-left-line text-lg"></i>
+                    <IconArrowLeft size={18} />
                   </button>
 
                   <div className="flex items-center gap-2 text-sm font-semibold">
                     <span
-                      className="cursor-pointer text-gray-500 transition hover:text-gray-900"
+                      className="cursor-pointer text-muted-foreground transition hover:text-foreground"
                       onClick={() => setCurrentFolder(null)}
                     >
                       전체 폴더
                     </span>
-                    <i className="ri-arrow-right-s-line text-gray-400"></i>
-                    <span className="text-gray-900">{currentFolder}</span>
+                    <IconChevronRight size={16} className="text-muted-foreground" />
+                    <span className="text-foreground">
+                      {taskFolders[currentFolder]?.taskName || '-'}
+                    </span>
                   </div>
 
                   <div className="ml-auto">
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
-                      총 {taskFolders[currentFolder]?.length || 0}개
-                    </span>
+                    <button
+                      type="button"
+                      onClick={toggleCurrentFolderSelection}
+                      disabled={currentFolderSelectableIds.length === 0}
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                        allCurrentFolderSelected
+                          ? 'border-primary bg-primary/15 text-primary'
+                          : 'border-border bg-card text-muted-foreground hover:bg-muted'
+                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                    >
+                      {allCurrentFolderSelected ? '파일 전체 선택 해제' : '파일 전체 선택'}
+                    </button>
                   </div>
                 </div>
 
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="rounded-full border border-primary/35 bg-primary/15 px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-primary shadow-sm">
+                    총 {taskFolders[currentFolder]?.files?.length || 0}개
+                  </span>
+                </div>
+
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  {taskFolders[currentFolder]?.map((item) => (
-                    <FileGridCard key={item.uuid} item={item} onDownload={downloadFile} />
+                  {currentFolderFiles.map((item) => (
+                    <FileGridCard
+                      key={item.uuid}
+                      item={item}
+                      onDownload={downloadFile}
+                      isSelected={selectedFileIds.includes(item.uuid)}
+                      onToggleSelect={toggleFileSelection}
+                      isExpired={Boolean(
+                        item.expiredDate && new Date(item.expiredDate) < new Date(),
+                      )}
+                    />
                   ))}
                 </div>
               </div>

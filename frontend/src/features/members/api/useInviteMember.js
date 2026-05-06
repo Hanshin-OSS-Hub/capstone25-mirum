@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * [CREATE] 프로젝트 초대 API
@@ -20,11 +22,10 @@ export const useInviteMember = () => {
     },
     onSuccess: async (_data, { projectId, invitedName }) => {
       await queryClient.invalidateQueries({ queryKey: ['project-invitations', projectId] });
-      alert(`${invitedName} 님을 초대했습니다`);
+      notify.success(`${invitedName} 님을 초대했습니다`);
     },
     onError: (error) => {
-      console.log('초대 실패: ', error);
-      alert(error.message || '초대 전송에 실패했습니다.');
+      notify.error(getErrorMessage(error, '초대 전송에 실패했습니다.'));
     },
   });
 };
@@ -41,6 +42,5 @@ export const useInviteMember = () => {
 //       })
 //       .catch((error) => {
 //         alert(error.message || "초대에 실패했습니다.");
-//         console.log(error);
 //       });
 // };

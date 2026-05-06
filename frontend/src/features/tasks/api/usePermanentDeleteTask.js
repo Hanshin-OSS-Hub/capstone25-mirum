@@ -10,27 +10,31 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 export const usePermanentDeleteTask = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    /** @param {requestPermanentDeleteTask} */
+    /**
+     * @param root0
+     * @param root0.projectId
+     * @param root0.taskId
+     */
     mutationFn: ({ projectId, taskId }) => {
       /** @type {{ void }} */
-      return api.delete(`project/${projectId}/tasks/${taskId}/permanent`, {});
+      return api.delete(`project/${projectId}/task/${taskId}/permanent`, {});
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       // 특정 프로젝트의 작업 목록과 상세 정보 캐시 무효화
       await queryClient.invalidateQueries({ queryKey: ['tasks', variables.projectId] });
       await queryClient.invalidateQueries({
         queryKey: ['task', variables.projectId, variables.taskId],
       });
-      console.log('Task 영구 삭제 완료:', data);
-      alert('작업 카드가 영구 삭제되었습니다.');
+      notify.success('작업 카드가 영구 삭제되었습니다.');
     },
     onError: (error) => {
-      console.log('Task 영구 삭제 실패:', error);
-      alert('작업 카드 삭제에 실패하였습니다.');
+      notify.error(getErrorMessage(error, '작업 카드 삭제에 실패하였습니다.'));
     },
   });
 };

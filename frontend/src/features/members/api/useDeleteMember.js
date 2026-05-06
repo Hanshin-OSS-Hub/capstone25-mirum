@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * [DELETE] 멤버 탈퇴/방출 API
@@ -15,18 +17,13 @@ export const useDeleteMember = () => {
       return await api.delete(`/member/${projectId}?targetName=${targetName}`);
     },
 
-    onSuccess: async (data, variables) => {
-      if (!data?.success) {
-        alert(data?.message || '멤버 삭제에 실패했습니다.');
-        return;
-      }
+    onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['members', variables.projectId] });
-      alert('프로젝트 멤버가 삭제되었습니다.');
+      notify.success('프로젝트 멤버가 삭제되었습니다.');
     },
 
     onError: (error) => {
-      console.error('멤버 삭제 실패:', error);
-      alert(error.message || '멤버 삭제에 실패했습니다.');
+      notify.error(getErrorMessage(error, '멤버 삭제에 실패했습니다.'));
     },
   });
 };

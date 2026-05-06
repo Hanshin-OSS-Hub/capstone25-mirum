@@ -1,23 +1,44 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { askProjectAssistant } from '@/features/ai/api/askProjectAssistant.js';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
 import { useGetProjectFiles } from '@/features/files/api/useGetProjectFiles.js';
 import { useGetInvitees } from '@/features/invitations/api/useGetInvitees.js';
 import { useGetMemberList } from '@/features/members/api/useGetMemberList.js';
 import { useGetProjectDetails } from '@/features/projects/api/useGetProjectDetails.js';
 import { useGetTaskList } from '@/features/tasks/api/useGetTaskList.js';
+import { useMirumAI } from '@/features/ai/hooks/useMirumAI.js';
 import { useAuth } from '@/features/auth/hooks/useAuth.js';
-import FilePanel from '@/features/files/components/FilePanel.jsx';
-import ProjectMemberModal from '@/features/members/components/ProjectInvitationModal.jsx';
-import ProjectConfigPanel from '@/features/projects/components/ProjectConfigPanel.jsx';
-import CreateTaskModal from '@/features/tasks/components/CreateTaskModal.jsx';
 import TaskCard from '@/features/tasks/components/TaskCard.jsx';
-import TaskModal from '@/features/tasks/components/TaskModal.jsx';
 import TaskSummaryCard from '@/features/tasks/components/TaskSummaryCard.jsx';
-import TaskTimeline from '@/features/tasks/components/TaskTimeline.jsx';
-import { IconSettings, IconTrash, IconUserAdd } from '@/shared/assets/icons.js';
-import Header from '@/shared/components/Header.jsx';
-import UserProfileImg from '@/shared/components/userProfileImg.jsx';
+import {
+  IconCheckbox,
+  IconRefresh,
+  IconRobot,
+  IconSettings,
+  IconUnassigned,
+  IconUserAdd,
+} from '@/shared/assets/icons.js';
+// 공통 컴포넌트 (정적 임포트)
+import {
+  Header,
+  LoadingSpinner,
+  NotFoundState,
+  UserProfileImg,
+} from '@/shared/components/index.js';
+import { EmptyState, ErrorState } from '@/shared/components/ui/index.js';
+
+// 무거운 컴포넌트 (지연 로딩 - React.lazy)
+const FilePanel = lazy(() => import('@/features/files/components/FilePanel.jsx'));
+const InviteMembersModal = lazy(
+  () => import('@/features/members/components/InviteMembersModal.jsx'),
+);
+const ProjectConfigPanel = lazy(
+  () => import('@/features/projects/components/ProjectConfigPanel.jsx'),
+);
+const ProjectReportView = lazy(() => import('@/features/ai/components/ProjectReportView.jsx'));
+const CreateTaskModal = lazy(() => import('@/features/tasks/components/CreateTaskModal.jsx'));
+const TaskModal = lazy(() => import('@/features/tasks/components/TaskModal.jsx'));
+const TaskTimeline = lazy(() => import('@/features/tasks/components/TaskTimeline.jsx'));
 
 const TASK_COLOR_PALETTE = [
   '#5B8DEF',
@@ -32,37 +53,69 @@ const TASK_COLOR_PALETTE = [
   '#14B8A6',
 ];
 
-const AI_EXAMPLE_QUESTIONS = [
-  '이 프로젝트 마감일 언제야?',
-  '진행중인 작업 몇 개야?',
-  '내가 맡은 작업 뭐야?',
+const TASK_STATUS_ORDER = {
+  IN_PROGRESS: 0,
+  TODO: 1,
+  DONE: 2,
+};
+
+const TASK_FILTER_OPTIONS = [
+  { key: 'ALL', label: 'ALL' },
+  { key: 'TODO', label: 'TODO' },
+  { key: 'IN_PROGRESS', label: 'IN PROGRESS' },
+  { key: 'DONE', label: 'DONE' },
 ];
 
+const sortTasksForLane = (taskList) => {
+  return [...taskList].sort((left, right) => {
+    const leftOrder = TASK_STATUS_ORDER[left.status] ?? 99;
+    const rightOrder = TASK_STATUS_ORDER[right.status] ?? 99;
+    if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+
+    const leftUpdated = new Date(left.updatedDate).getTime();
+    const rightUpdated = new Date(right.updatedDate).getTime();
+    return rightUpdated - leftUpdated;
+  });
+};
+
+/**
+ * 프로젝트 상세 및 태스크 관리 페이지 컴포넌트
+ */
 export default function Task() {
+  const getWeekLabel = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const week = Math.ceil(date.getDate() / 7);
+    return `${year}년 ${month}월 ${week}주차`;
+  };
+
   const { projectId } = useParams();
-  // const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { generateProjectReport, isLoading: isReportLoading } = useMirumAI();
 
   const myUsername = user?.username || '';
 
-  // const [activeBoardId, setActiveBoardId] = useState(null);
   const [defaultAssigneeId, setDefaultAssigneeId] = useState(myUsername);
   const [selectedTask, setSelectedTask] = useState(null);
   const [topTab, setTopTab] = useState('project');
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
-
-  const [isAiOpen, setIsAiOpen] = useState(false);
-  const [aiQuestion, setAiQuestion] = useState('');
-  const [aiAnswer, setAiAnswer] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState('');
+  const [projectReport, setProjectReport] = useState('');
+  const [reportHistory, setReportHistory] = useState([]);
+  const [activeReportId, setActiveReportId] = useState(null);
+  const [taskStatusFilter, setTaskStatusFilter] = useState('ALL');
+  const [memberStatusFilters, setMemberStatusFilters] = useState({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dragState, setDragState] = useState({
+    laneKey: null,
+    startX: 0,
+    startScrollLeft: 0,
+  });
 
   const openTask = (task) => setSelectedTask(task);
   const closeTask = () => setSelectedTask(null);
 
-  // 상단 새 작업 버튼 클릭 시 기본 담당자를 로그인한 유저로 고정
   const openCreateTask = () => {
     setDefaultAssigneeId(myUsername);
     setIsCreateTaskModalOpen(true);
@@ -72,17 +125,39 @@ export default function Task() {
     navigate('/dashboard');
   };
 
-  /** @param {'project' | 'timeline' | 'file'} tabKey */
   const openMainTab = (tabKey) => {
     setTopTab(tabKey);
-    navigate(`/project/${projectId}`);
   };
 
-  const { data: project = null } = useGetProjectDetails(Number(projectId));
-  const { data: members = [] } = useGetMemberList(Number(projectId), myUsername);
-  const { data: pendingInvites = [] } = useGetInvitees(Number(projectId));
-  const { data: tasks = [] } = useGetTaskList({ projectId: Number(projectId) });
-  const { data: files = [] } = useGetProjectFiles(Number(projectId));
+  const {
+    data: project = null,
+    isLoading: isProjectLoading,
+    isError: isProjectError,
+    error: projectError,
+    refetch: refetchProject,
+  } = useGetProjectDetails(Number(projectId));
+  const {
+    data: members = [],
+    isLoading: isMembersLoading,
+    isFetching: isMembersFetching,
+    refetch: refetchMembers,
+  } = useGetMemberList(Number(projectId), myUsername);
+  const { data: pendingInvites = [], refetch: refetchInvitees } = useGetInvitees(Number(projectId));
+  const {
+    data: tasks = [],
+    isLoading: isTasksLoading,
+    isFetching: isTasksFetching,
+    isError: isTasksError,
+    error: tasksError,
+    refetch: refetchTasks,
+  } = useGetTaskList({ projectId: Number(projectId) });
+  const isBoardBootstrapping =
+    isMembersLoading ||
+    isTasksLoading ||
+    (isMembersFetching && members.length === 0) ||
+    (isTasksFetching && tasks.length === 0);
+
+  const { data: files = [], refetch: refetchFiles } = useGetProjectFiles(Number(projectId));
 
   const title = project?.projectName || '프로젝트 이름';
   const desc = project?.description || '프로젝트 설명';
@@ -93,31 +168,11 @@ export default function Task() {
     return TASK_COLOR_PALETTE[Math.abs(Number(taskId)) % TASK_COLOR_PALETTE.length];
   };
 
-  const normalizeTaskForTimeline = (task) => {
-    // const createdBase =
-    //   task.createdDate || task.updatedDate || new Date().toISOString().split('T')[0];
-
-    return {
-      ...task,
-      id: task.taskId,
-      title: task.title || '',
-      assigneeId: task.assigneeId || '',
-      assigneeName: task.assigneeName || '',
-      startDate: task.startDate || null,
-      dueDate: task.dueDate || null,
-      createdDate: task.createdDate,
-      color: getTaskColor(task.taskId),
-      tags: Array.isArray(task.tags) ? task.tags : [],
-      notes: task.notes || '',
-    };
-  };
-
   const stats = useMemo(() => {
     const total = tasks.length;
     const todo = tasks.filter((t) => t.status === 'TODO').length;
     const inProgress = tasks.filter((t) => t.status === 'IN_PROGRESS').length;
     const completed = tasks.filter((t) => t.status === 'DONE').length;
-
     return { total, todo, inProgress, completed };
   }, [tasks]);
 
@@ -127,576 +182,598 @@ export default function Task() {
     return myMember ? [myMember, ...others] : others;
   }, [members, myUsername]);
 
-  const myProjectRole = useMemo(() => {
-    const myMember = members.find((member) => member.username === myUsername);
-    // role 값을 항상 대문자로 통일
-    return String(myMember?.role || 'MEMBER').toUpperCase();
+  const isLeader = useMemo(() => {
+    const myMember = members.find((m) => m.username === myUsername);
+    return myMember?.role === 'LEADER';
   }, [members, myUsername]);
 
-  const isLeader = myProjectRole === 'LEADER';
-
-  // useEffect(() => {
-  //   if (location.pathname.endsWith('/admin')) {
-  //     setTopTab('settings');
-  //     return;
-  //   }
-  //
-  //   if (location.pathname.endsWith('/trash')) {
-  //     setTopTab('trash');
-  //     return;
-  //   }
-  //
-  //   if (topTab === 'settings' || topTab === 'trash') {
-  //     setTopTab('project');
-  //   }
-  // }, [location.pathname]);
-
-  // useEffect(() => {
-  //   if (!isLeader && topTab === 'settings') {
-  //     setTopTab('project');
-  //   }
-  // }, [isLeader, topTab]);
-
-  // useEffect(() => {
-  //   if (!isLeader && location.pathname.endsWith('/admin')) {
-  //     navigate(`/project/${projectId}`, { replace: true });
-  //   }
-  // }, [isLeader, location.pathname, navigate, projectId]);
-
   const tasksByMember = useMemo(() => {
-    const map = {};
-
-    sortedMembers.forEach((m) => {
-      map[m.username] = [];
-    });
-    // 담당자 없는 태스크를 담을 특수 버킷 추가
-    map['UNASSIGNED'] = [];
-
+    const map = { UNASSIGNED: [] };
+    sortedMembers.forEach((m) => (map[m.username] = []));
     tasks.forEach((t) => {
-      // assigneeId가 없으면 'UNASSIGNED' 버킷으로
-      const key = t.assigneeId ? t.assigneeId : 'UNASSIGNED';
+      const key = t.assigneeId || 'UNASSIGNED';
       if (!map[key]) map[key] = [];
       map[key].push(t);
     });
-
     return map;
   }, [tasks, sortedMembers]);
 
+  const getEffectiveFilter = (laneKey) => {
+    if (taskStatusFilter !== 'ALL') return taskStatusFilter;
+    return memberStatusFilters[laneKey] || 'ALL';
+  };
+
+  const getFilteredTaskList = (taskList, laneKey = 'GLOBAL') => {
+    const activeFilter = getEffectiveFilter(laneKey);
+    if (activeFilter === 'ALL') return taskList;
+    return taskList.filter((task) => task.status === activeFilter);
+  };
+
+  const applyMemberFilter = (laneKey, filterKey) => {
+    setMemberStatusFilters((prev) => ({ ...prev, [laneKey]: filterKey }));
+  };
+
+  const filteredUnassignedTasks = sortTasksForLane(
+    getFilteredTaskList(tasksByMember.UNASSIGNED || [], 'UNASSIGNED'),
+  );
+
+  const isGlobalFilterForced = taskStatusFilter !== 'ALL';
+
+  const FilterBadgeRow = ({ activeKey, onSelect, disabled = false }) => (
+    <div className="flex flex-wrap items-center gap-2">
+      {TASK_FILTER_OPTIONS.map((option) => {
+        const isActive = activeKey === option.key;
+        return (
+          <button
+            key={option.key}
+            type="button"
+            disabled={disabled}
+            onClick={() => onSelect(option.key)}
+            className={`rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide transition-all ${
+              isActive
+                ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                : 'border-border bg-card text-muted-foreground hover:bg-muted'
+            } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const onLaneMouseDown = (laneKey, event) => {
+    const container = event.currentTarget;
+    setDragState({
+      laneKey,
+      startX: event.pageX,
+      startScrollLeft: container.scrollLeft,
+    });
+  };
+
+  const onLaneMouseMove = (laneKey, event) => {
+    if (dragState.laneKey !== laneKey) return;
+    event.preventDefault();
+    const container = event.currentTarget;
+    const deltaX = event.pageX - dragState.startX;
+    container.scrollLeft = dragState.startScrollLeft - deltaX;
+  };
+
+  const endLaneDrag = () => {
+    if (!dragState.laneKey) return;
+    setDragState({ laneKey: null, startX: 0, startScrollLeft: 0 });
+  };
+
   const timelineMembers = useMemo(() => {
-    return sortedMembers.map((member) => ({
-      username: member.username,
-      displayName: member.nickname || member.username,
-      role: member.role,
+    return sortedMembers.map((m) => ({
+      username: m.username,
+      displayName: m.nickname || m.username,
+      role: m.role,
     }));
   }, [sortedMembers]);
 
   const timelineTasks = useMemo(() => {
-    return tasks.map(normalizeTaskForTimeline);
+    return tasks.map((t) => ({
+      ...t,
+      id: t.taskId,
+      startDate: t.startDate || t.createdDate,
+      dueDate: t.dueDate || t.updatedDate,
+      color: getTaskColor(t.taskId),
+      tags: Array.isArray(t.tags) ? t.tags : [],
+    }));
   }, [tasks]);
 
-  const aiContext = useMemo(() => {
-    const validDueDates = tasks
-      .map((task) => task?.dueDate)
-      .filter(Boolean)
-      .sort();
-
-    const nearestDueDate = validDueDates[0] || '';
-    const latestDueDate = validDueDates[validDueDates.length - 1] || '';
-
-    return {
-      project: {
-        projectId: projectId || '',
-        title: project?.projectName || '',
-        description: project?.description || '',
-        startDate: project?.createdDate || '',
-      },
-      summary: {
-        totalTaskCount: tasks.length,
-        todoCount: tasks.filter((task) => task.status === 'TODO').length,
-        inProgressCount: tasks.filter((task) => task.status === 'IN_PROGRESS').length,
-        doneCount: tasks.filter((task) => task.status === 'DONE').length,
-        nearestDueDate,
-        latestDueDate,
-      },
-      members: members.map((member) => ({
-        name: member.username || member.nickname || '',
-        role: member.role || '',
+  const aiContext = useMemo(
+    () => ({
+      project: { projectId, title, description: desc, startDate: project?.createdDate || '' },
+      summary: stats,
+      members: members.map((m) => ({ name: m.username, role: m.role })),
+      tasks: tasks.map((t) => ({
+        taskId: t.taskId,
+        title: t.title,
+        status: t.status,
+        assigneeId: t.assigneeId,
+        dueDate: t.dueDate,
+        createdDate: t.createdDate,
+        updatedDate: t.updatedDate,
       })),
-      tasks: tasks.map((task) => ({
-        title: task.title || '',
-        assigneeId: task.assigneeId || '',
-        status: task.status || '',
-        dueDate: task.dueDate || '',
-        tags: Array.isArray(task.tags) ? task.tags : [],
-      })),
-      requester: {
-        username: myUsername,
-      },
-    };
-  }, [projectId, project, members, tasks, myUsername]);
+      requester: { username: myUsername },
+    }),
+    [projectId, project, members, tasks, myUsername, title, desc, stats],
+  );
 
-  // 현재 선택된 작업 카드에 속한 파일만 필터링 (TaskModal 등에 전달)
-  const taskFiles = useMemo(() => {
-    if (!selectedTask) return [];
-    return files.filter((file) => file.taskId === selectedTask.taskId);
-  }, [files, selectedTask]);
-
-  const handleAskProjectAI = async () => {
-    const trimmedQuestion = aiQuestion.trim();
-    if (!trimmedQuestion || aiLoading) return;
-
-    setAiLoading(true);
-    setAiError('');
-    setAiAnswer('');
-
+  const handleGenerateReport = async () => {
     try {
-      const answer = await askProjectAssistant(trimmedQuestion, aiContext);
-      setAiAnswer(answer);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : '미룸 AI 응답을 불러오지 못했습니다.';
-      setAiError(message);
+      const report = await generateProjectReport(aiContext);
+      const now = new Date();
+      const reportId = `${now.getTime()}`;
+      const entry = {
+        id: reportId,
+        label: getWeekLabel(now),
+        createdAt: now.toISOString(),
+        report,
+      };
+      setProjectReport(report);
+      setActiveReportId(reportId);
+      setReportHistory((prev) => [entry, ...prev].slice(0, 12));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSelectReport = (reportId) => {
+    const target = reportHistory.find((item) => item.id === reportId);
+    if (!target) return;
+    setActiveReportId(reportId);
+    setProjectReport(target.report);
+  };
+
+  const handleRefreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refetchProject(),
+        refetchMembers(),
+        refetchInvitees(),
+        refetchTasks(),
+        refetchFiles(),
+      ]);
     } finally {
-      setAiLoading(false);
+      setIsRefreshing(false);
     }
   };
 
-  /** @param {import('react').KeyboardEvent<HTMLTextAreaElement>} event */
-  const handleAiQuestionKeyDown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleAskProjectAI();
+  useEffect(() => {
+    if (!selectedTask) return;
+    const stillExists = tasks.some(
+      (taskItem) => Number(taskItem.taskId) === Number(selectedTask.taskId),
+    );
+    if (!stillExists) {
+      setSelectedTask(null);
     }
-  };
+  }, [selectedTask, tasks]);
 
-  if (!project) {
+  if (isProjectLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="relative z-50 border-b border-gray-200 bg-white">
-          <div className="mx-auto w-full max-w-7xl px-6">
-            <Header />
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-7xl px-6 py-10">
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-            <h1 className="text-xl font-bold text-gray-900">프로젝트 정보를 불러올 수 없습니다.</h1>
-            <button
-              onClick={handleBack}
-              className="mt-4 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50"
-            >
-              ← 전체 프로젝트로 돌아가기
-            </button>
-          </div>
-        </div>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <LoadingSpinner size="lg" label="프로젝트 데이터를 불러오는 중..." />
       </div>
     );
   }
 
+  if (isProjectError || !project) {
+    return (
+      <NotFoundState
+        message={getErrorMessage(projectError, '접근 권한이 없거나 프로젝트가 존재하지 않습니다.')}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="relative z-50 border-b border-gray-200 bg-white">
-        <div className="mx-auto w-full max-w-7xl px-6">
+    <div className="animate-in fade-in min-h-screen bg-background pb-20 duration-700">
+      <div className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <Header />
         </div>
       </div>
 
-      <div className="bg-white">
-        <div className="mx-auto flex max-w-7xl items-start justify-between px-6 py-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-            <ul className="mt-1 text-sm text-gray-500">
-              <li>{desc}</li>
-              <li>생성일: {day}</li>
-            </ul>
+      {/* Hero Section */}
+      <div className="border-b border-border bg-background shadow-sm">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+          <div className="min-w-0 space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+              {title}
+            </h1>
+            <p className="max-w-2xl text-base font-medium leading-relaxed text-muted-foreground sm:text-lg">
+              {desc}
+            </p>
+            <div className="flex flex-wrap items-center gap-2 pt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground sm:gap-3 sm:pt-4 sm:text-[11px]">
+              <span className="rounded-lg border border-border bg-muted px-2 py-1">
+                Created: {day}
+              </span>
+              <span
+                className="hidden h-1.5 w-1.5 rounded-full bg-blue-500 sm:inline-block"
+                aria-hidden
+              />
+              <span>{members.length} Team Members</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
             <button
-              className="cursor-pointer rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 transition hover:bg-gray-50"
+              type="button"
+              className="rounded-2xl border border-border bg-background px-5 py-3 text-sm font-bold text-foreground shadow-sm transition-all hover:bg-muted active:scale-95 sm:px-6"
               onClick={handleBack}
             >
               나가기
             </button>
-
             <button
+              type="button"
               onClick={openCreateTask}
-              className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-white shadow-sm transition hover:bg-blue-700"
+              className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-xl shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95 sm:px-6"
             >
-              + 새 작업
+              + 새 작업 추가
             </button>
           </div>
         </div>
       </div>
 
-      {/*작업 카드 상태 요약 카드*/}
-      <TaskSummaryCard stats={stats} />
-
-      {/* 버튼 모음 */}
-      <div className="bg-white">
-        <div className="mx-auto flex max-w-7xl items-start justify-between px-6 py-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => openMainTab('project')}
-              className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
-                topTab === 'project'
-                  ? 'border-blue-200 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              프로젝트
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openMainTab('timeline')}
-              className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
-                topTab === 'timeline'
-                  ? 'border-blue-200 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              타임라인
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openMainTab('file')}
-              className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
-                topTab === 'file'
-                  ? 'border-blue-200 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              파일
-            </button>
-          </div>
-
-          <div className="relative flex items-center gap-3">
-            <button
-              type="button"
-              className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
-                isAiOpen
-                  ? 'border-blue-200 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-              onClick={() => setIsAiOpen((prev) => !prev)}
-            >
-              <span className="flex flex-col items-center justify-center text-[11px] font-semibold leading-none">
-                <span>미룸</span>
-                <span>AI</span>
-              </span>
-            </button>
-
-            <button
-              className="cursor-pointer rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 transition hover:bg-gray-50"
-              onClick={() => setIsMemberModalOpen(!isMemberModalOpen)}
-            >
-              <IconUserAdd size={24} />
-            </button>
-
-            {isMemberModalOpen && (
-              <ProjectMemberModal
-                projectId={projectId}
-                members={sortedMembers || []}
-                myUsername={myUsername}
-                pendingInvites={pendingInvites || []}
-                onClose={() => setIsMemberModalOpen(false)}
-              />
-            )}
-
-            {
+      {/* Navigation Tabs */}
+      <div className="sticky top-14 z-40 border-b border-border bg-background/95 backdrop-blur-sm sm:top-[73px]">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+          <div className="flex min-w-0 flex-wrap gap-2">
+            {[
+              { id: 'project', label: '보드' },
+              { id: 'timeline', label: '타임라인' },
+              { id: 'file', label: '파일' },
+              { id: 'ai-report', label: 'AI 리포트', isAi: true },
+            ].map((tab) => (
               <button
-                className={`cursor-pointer rounded-lg border px-4 py-2 transition ${
-                  topTab === 'settings'
-                    ? 'border-blue-200 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  setTopTab('settings');
-                  // navigate(`/project/${projectId}/admin`);
-                }}
-              >
-                <IconSettings size={24} />
-              </button>
-            }
-          </div>
-        </div>
-      </div>
-
-      {/* project ai 입력창*/}
-      <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
-        {isAiOpen && (
-          <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">미룸 AI</h3>
-              <p className="mt-1 text-sm text-gray-600">
-                프로젝트 정보, 작업 상태, 담당자 기준으로 질문할 수 있습니다.
-              </p>
-            </div>
-
-            <div className="mb-4 flex flex-wrap gap-2">
-              {AI_EXAMPLE_QUESTIONS.map((exampleQuestion) => (
-                <button
-                  key={exampleQuestion}
-                  type="button"
-                  onClick={() => setAiQuestion(exampleQuestion)}
-                  className="cursor-pointer rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-700 transition hover:bg-blue-100"
-                >
-                  {exampleQuestion}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-col gap-3 md:flex-row md:items-start">
-              <textarea
-                value={aiQuestion}
-                onChange={(event) => setAiQuestion(event.target.value)}
-                onKeyDown={handleAiQuestionKeyDown}
-                placeholder="예: user1이 맡은 작업 뭐야?"
-                className="min-h-[88px] w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-              />
-
-              <button
+                key={tab.id}
                 type="button"
-                onClick={handleAskProjectAI}
-                disabled={aiLoading || !aiQuestion.trim()}
-                className="w-full cursor-pointer whitespace-nowrap rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 md:w-auto md:min-w-[112px] md:shrink-0"
+                onClick={() => openMainTab(tab.id)}
+                className={`flex flex-shrink-0 items-center gap-1.5 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all sm:gap-2 sm:px-6 sm:py-3 sm:text-sm ${
+                  topTab === tab.id
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-blue-100'
+                    : tab.isAi
+                      ? 'border border-primary/20 bg-primary/10 text-primary hover:bg-primary/15'
+                      : 'border border-border bg-card text-muted-foreground shadow-sm hover:bg-muted'
+                }`}
               >
-                {aiLoading ? '답변 생성 중...' : '질문하기'}
+                {tab.isAi && <IconRobot size={16} className="sm:h-[18px] sm:w-[18px]" />}
+                {tab.label}
               </button>
-            </div>
-
-            {aiLoading && (
-              <p className="mt-3 text-sm text-blue-600">미룸 AI가 답변을 준비하고 있습니다...</p>
-            )}
-            {aiError && <p className="mt-3 text-sm text-red-500">{aiError}</p>}
-
-            {aiAnswer && (
-              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="mb-2 text-xs font-semibold tracking-wide text-gray-500">AI 답변</p>
-                <p className="whitespace-pre-wrap text-sm text-gray-800">{aiAnswer}</p>
-              </div>
-            )}
+            ))}
           </div>
-        )}
 
-        {topTab === 'project' && (
-          <>
-            {/*<div className="flex items-center justify-between border-b border-gray-100 px-7 py-6">*/}
-            {/*  <div>*/}
-            {/*    <h2 className="text-[24px] font-bold text-gray-900">팀 진행 타임라인</h2>*/}
-            {/*    <p className="mt-1 text-sm text-gray-500">*/}
-            {/*      작업 기간과 완료 상태를 사람별로 한눈에 볼 수 있어요.*/}
-            {/*    </p>*/}
-            {/*  </div>*/}
-            {/*</div>*/}
-            <div className="space-y-6">
-              {/* 1. 멤버별 담당 태스크 */}
-              {sortedMembers.map((member) => {
-                const taskList = tasksByMember[member.username] || [];
-                const doneCount = taskList.filter((t) => t.status === 'DONE').length;
+          <div className="flex items-center justify-end gap-2 sm:gap-3">
+            <button
+              className="rounded-2xl border border-border bg-card p-3 text-muted-foreground shadow-sm transition-all hover:bg-muted active:scale-90"
+              onClick={handleRefreshAll}
+              disabled={isRefreshing}
+              title="새로고침"
+            >
+              {isRefreshing ? (
+                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+              ) : (
+                <IconRefresh size={22} />
+              )}
+            </button>
+            <button
+              className="rounded-2xl border border-border bg-card p-3 text-muted-foreground shadow-sm transition-all hover:bg-muted active:scale-90"
+              onClick={() => setIsMemberModalOpen(true)}
+              title="멤버 관리"
+            >
+              <IconUserAdd size={22} />
+            </button>
 
-                return (
-                  <div
-                    key={member.username}
-                    className="rounded-2xl border border-gray-200 bg-white shadow-sm"
-                  >
-                    <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
-                      <div className="flex min-w-0 items-center gap-4">
-                        {/*<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] font-semibold text-white">*/}
-                        {/*  {member.nickname?.slice(0, 1).toUpperCase() || '?'}*/}
-                        {/*</div>*/}
-                        <UserProfileImg name={member.nickname} />
+            <button
+              className={`rounded-2xl border p-3 shadow-sm transition-all active:scale-90 ${
+                topTab === 'settings'
+                  ? 'border-primary/30 bg-primary/10 text-primary'
+                  : 'border-border bg-card text-muted-foreground hover:bg-muted'
+              }`}
+              onClick={() => openMainTab('settings')}
+              title="설정"
+            >
+              <IconSettings size={22} />
+            </button>
+          </div>
+        </div>
+      </div>
 
-                        <div className="min-w-0">
-                          <div className="text-lg font-semibold text-gray-900">
-                            {member.nickname}
-                          </div>
-                          <div className="truncate text-sm text-gray-500">
-                            {member.username} · {member.role}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="text-gray-600">
-                          작업{' '}
-                          <span className="font-semibold text-gray-900">{taskList.length}</span>개
-                        </div>
-                        <div className="text-green-700">
-                          완료 <span className="font-semibold">{doneCount}</span>개
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-6 py-6">
-                      {taskList.length === 0 ? (
-                        <div className="flex h-44 flex-col items-center justify-center text-center">
-                          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-                            <i className="ri-checkbox-line text-xl text-gray-400"></i>
-                          </div>
-
-                          <p className="text-base text-gray-400">아직 할당된 작업이 없습니다.</p>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDefaultAssigneeId(member.username);
-                              setIsCreateTaskModalOpen(true);
-                            }}
-                            className="mt-3 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
-                          >
-                            새 작업 추가
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                          {taskList.map((task) => (
-                            <TaskCard
-                              key={task.taskId}
-                              task={{
-                                ...task,
-                                tags: Array.isArray(task.tags) ? task.tags : [],
-                              }}
-                              onClick={() => openTask(task)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* 2. 담당자 없음 버킷 */}
-              {(() => {
-                const unassignedTasks = tasksByMember['UNASSIGNED'] || [];
-                const doneCount = unassignedTasks.filter((t) => t.status === 'DONE').length;
-
-                return (
-                  <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-                    <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
-                      <div className="flex min-w-0 items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 font-semibold text-gray-500">
-                          <i className="ri-user-unfollow-line text-xl"></i>
-                        </div>
-
-                        <div className="min-w-0">
-                          <div className="text-lg font-semibold text-gray-900">담당자 없음</div>
-                          <div className="truncate text-sm text-gray-500">배정 대기 중인 작업</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="text-gray-600">
-                          작업{' '}
-                          <span className="font-semibold text-gray-900">
-                            {unassignedTasks.length}
-                          </span>
-                          개
-                        </div>
-                        <div className="text-green-700">
-                          완료 <span className="font-semibold">{doneCount}</span>개
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-6 py-6">
-                      {unassignedTasks.length === 0 ? (
-                        <div className="flex h-44 flex-col items-center justify-center text-center">
-                          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-                            <i className="ri-inbox-line text-xl text-gray-400"></i>
-                          </div>
-                          <p className="text-base text-gray-400">작업이 없습니다.</p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDefaultAssigneeId('');
-                              setIsCreateTaskModalOpen(true);
-                            }}
-                            className="mt-3 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
-                          >
-                            새 작업 추가
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                          {unassignedTasks.map((task) => (
-                            <TaskCard
-                              key={task.taskId}
-                              task={{
-                                ...task,
-                                tags: Array.isArray(task.tags) ? task.tags : [],
-                              }}
-                              onClick={() => openTask(task)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        <Suspense
+          fallback={
+            <div className="py-20">
+              <LoadingSpinner size="lg" label="컴포넌트를 준비 중입니다..." />
             </div>
-          </>
-        )}
+          }
+        >
+          {topTab === 'project' && (
+            <div className="space-y-10">
+              <TaskSummaryCard
+                stats={stats}
+                activeFilter={taskStatusFilter}
+                onFilterChange={setTaskStatusFilter}
+              />
 
-        {topTab === 'file' && (
-          <FilePanel rawFiles={files} tasks={tasks} projectId={Number(projectId)} />
-        )}
+              {isBoardBootstrapping ? (
+                <div className="py-20">
+                  <LoadingSpinner size="lg" label="작업 보드를 불러오는 중..." />
+                </div>
+              ) : isTasksError ? (
+                <ErrorState
+                  title="작업 목록을 불러오지 못했습니다"
+                  message={getErrorMessage(tasksError, '알 수 없는 오류가 발생했습니다.')}
+                  onRetry={() => window.location.reload()}
+                />
+              ) : tasks.length === 0 ? (
+                <EmptyState
+                  title="작업이 없습니다"
+                  actionLabel="+ 새 작업 추가"
+                  onAction={openCreateTask}
+                />
+              ) : sortedMembers.length === 0 ? (
+                <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                  <div className="border-b border-border bg-muted/40 px-8 py-5">
+                    <h3 className="text-xl font-bold tracking-tight text-foreground">작업 카드</h3>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">
+                      멤버 정보를 불러오는 중이거나 동기화가 지연되어, 우선 전체 카드를 표시합니다.
+                    </p>
+                  </div>
+                  <div className="p-10">
+                    <div
+                      className="flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
+                      onMouseDown={(event) => onLaneMouseDown('FALLBACK', event)}
+                      onMouseMove={(event) => onLaneMouseMove('FALLBACK', event)}
+                      onMouseUp={endLaneDrag}
+                      onMouseLeave={endLaneDrag}
+                    >
+                      {sortTasksForLane(getFilteredTaskList(tasks, 'FALLBACK')).map((task) => (
+                        <div
+                          key={task.taskId}
+                          className="w-[min(320px,calc(100vw-2rem))] max-w-[320px] flex-shrink-0 sm:w-[320px]"
+                        >
+                          <TaskCard task={task} onClick={() => openTask(task)} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              ) : (
+                <>
+                  {sortedMembers.map((member) => {
+                    const memberAllTasks = tasksByMember[member.username] || [];
+                    const taskList = sortTasksForLane(
+                      getFilteredTaskList(memberAllTasks, member.username),
+                    );
+                    const totalCount = memberAllTasks.length;
+                    const doneCount = memberAllTasks.filter((t) => t.status === 'DONE').length;
+                    const laneFilterKey = getEffectiveFilter(member.username);
 
-        {topTab === 'timeline' && (
-          <TaskTimeline
-            tasks={timelineTasks}
-            members={timelineMembers}
-            onTaskClick={(task) => {
-              const originalTask = tasks.find((item) => item.taskId === task.id);
-              if (originalTask) openTask(originalTask);
-            }}
+                    return (
+                      <section
+                        key={member.username}
+                        className="animate-in slide-in-from-bottom-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm duration-500"
+                      >
+                        <div className="relative flex items-center justify-between border-b border-border bg-muted/40 px-8 py-5">
+                          <div className="flex items-center gap-4">
+                            <UserProfileImg name={member.nickname} profileImg={member.profileImg} />
+                            <div>
+                              <h3 className="text-xl font-bold tracking-tight text-foreground">
+                                {member.nickname}
+                              </h3>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                @{member.username} · {member.role}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-10">
+                            <div className="text-center">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                Total
+                              </p>
+                              <p className="text-lg font-bold text-foreground">{totalCount}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 dark:text-emerald-400">
+                                Done
+                              </p>
+                              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                {doneCount}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-10">
+                          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                            <FilterBadgeRow
+                              activeKey={laneFilterKey}
+                              disabled={isGlobalFilterForced}
+                              onSelect={(filterKey) =>
+                                applyMemberFilter(member.username, filterKey)
+                              }
+                            />
+                            {isGlobalFilterForced && (
+                              <p className="text-[10px] font-semibold text-muted-foreground">
+                                전역 필터 적용 중
+                              </p>
+                            )}
+                          </div>
+                          {taskList.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/25 py-16 text-center">
+                              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted shadow-inner">
+                                <IconCheckbox size={32} className="text-muted-foreground/50" />
+                              </div>
+                              <p className="text-sm font-semibold italic text-muted-foreground">
+                                아직 할당된 작업이 없습니다.
+                              </p>
+                              <button
+                                onClick={() => {
+                                  setDefaultAssigneeId(member.username);
+                                  setIsCreateTaskModalOpen(true);
+                                }}
+                                className="mt-4 text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:underline"
+                              >
+                                + Assign New Task
+                              </button>
+                            </div>
+                          ) : (
+                            <div
+                              className="flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
+                              onMouseDown={(event) => onLaneMouseDown(member.username, event)}
+                              onMouseMove={(event) => onLaneMouseMove(member.username, event)}
+                              onMouseUp={endLaneDrag}
+                              onMouseLeave={endLaneDrag}
+                            >
+                              {taskList.map((task) => (
+                                <div
+                                  key={task.taskId}
+                                  className="w-[min(320px,calc(100vw-2rem))] max-w-[320px] flex-shrink-0 sm:w-[320px]"
+                                >
+                                  <TaskCard task={task} onClick={() => openTask(task)} />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </section>
+                    );
+                  })}
+
+                  {/* Unassigned Tasks */}
+                  <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="flex items-center justify-between border-b border-border bg-muted/40 px-8 py-5">
+                      <div className="flex items-center gap-5">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground">
+                          <IconUnassigned size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold tracking-tight text-foreground">
+                            담당자 없음
+                          </h3>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            배정 대기 중인 리스트
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-10">
+                      {filteredUnassignedTasks.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/25 py-16 text-center">
+                          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted shadow-inner">
+                            <IconCheckbox size={32} className="text-muted-foreground/50" />
+                          </div>
+                          <p className="text-sm font-semibold italic text-muted-foreground">
+                            모든 작업이 배정되었습니다.
+                          </p>
+                        </div>
+                      ) : (
+                        <div
+                          className="flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
+                          onMouseDown={(event) => onLaneMouseDown('UNASSIGNED', event)}
+                          onMouseMove={(event) => onLaneMouseMove('UNASSIGNED', event)}
+                          onMouseUp={endLaneDrag}
+                          onMouseLeave={endLaneDrag}
+                        >
+                          {filteredUnassignedTasks.map((task) => (
+                            <div
+                              key={task.taskId}
+                              className="w-[min(320px,calc(100vw-2rem))] max-w-[320px] flex-shrink-0 sm:w-[320px]"
+                            >
+                              <TaskCard task={task} onClick={() => openTask(task)} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                </>
+              )}
+            </div>
+          )}
+
+          {topTab === 'timeline' && (
+            <TaskTimeline
+              tasks={timelineTasks}
+              members={timelineMembers}
+              onTaskClick={(task) => {
+                const originalTask = tasks.find((item) => item.taskId === task.id);
+                if (originalTask) openTask(originalTask);
+              }}
+            />
+          )}
+
+          {topTab === 'file' && (
+            <FilePanel rawFiles={files} tasks={tasks} projectId={Number(projectId)} />
+          )}
+
+          {topTab === 'ai-report' && (
+            <ProjectReportView
+              report={projectReport}
+              isLoading={isReportLoading}
+              onGenerate={handleGenerateReport}
+              context={aiContext}
+              reportHistory={reportHistory}
+              activeReportId={activeReportId}
+              onSelectReport={handleSelectReport}
+              previewMode={true}
+            />
+          )}
+
+          {topTab === 'settings' && (
+            <ProjectConfigPanel
+              isLeader={isLeader}
+              myUsername={myUsername}
+              project={project}
+              projectId={projectId}
+              members={sortedMembers}
+              pendingInvites={pendingInvites}
+              onBack={() => setTopTab('project')}
+            />
+          )}
+        </Suspense>
+      </div>
+
+      {/* Modals with Suspense */}
+      <Suspense fallback={null}>
+        {isCreateTaskModalOpen && (
+          <CreateTaskModal
+            projectId={projectId}
+            isOpen={isCreateTaskModalOpen}
+            onClose={() => setIsCreateTaskModalOpen(false)}
+            members={members}
+            defaultAssigneeId={defaultAssigneeId}
           />
         )}
 
-        {/*{topTab === 'trash' && (*/}
-        {/*  <ProjectTrashPanel deletedTasks={deletedTasks} deletedFiles={deletedFiles} />*/}
-        {/*)}*/}
+        {selectedTask && (
+          <TaskModal
+            task={{
+              ...selectedTask,
+              tags: Array.isArray(selectedTask.tags) ? selectedTask.tags : [],
+            }}
+            onClose={closeTask}
+            files={files.filter((f) => f.taskId === selectedTask.taskId)}
+            members={members}
+            myUserName={myUsername}
+            projectId={projectId}
+            leaderName={members.find((m) => m.role === 'LEADER')?.nickname}
+          />
+        )}
 
-        {topTab === 'settings' && (
-          <ProjectConfigPanel
-            isLeader={isLeader}
-            myUsername={myUsername}
-            project={project}
+        {isMemberModalOpen && (
+          <InviteMembersModal
             projectId={projectId}
             members={sortedMembers}
+            myUsername={myUsername}
             pendingInvites={pendingInvites}
-            // deletedCards={deletedTasks} - ProjectConfigPanel 내부에서 호출하므로 불필요해짐
-            onBack={() => setTopTab('project')}
+            onClose={() => setIsMemberModalOpen(false)}
           />
         )}
-      </div>
-
-      <CreateTaskModal
-        projectId={projectId}
-        isOpen={isCreateTaskModalOpen}
-        onClose={() => setIsCreateTaskModalOpen(false)}
-        members={members}
-        defaultAssigneeId={defaultAssigneeId}
-        // boardId={activeBoardId}
-      />
-
-      {selectedTask && (
-        <TaskModal
-          task={{
-            ...selectedTask,
-            tags: Array.isArray(selectedTask.tags) ? selectedTask.tags : [],
-          }}
-          onClose={closeTask}
-          files={taskFiles}
-          members={members}
-          myUserName={myUsername}
-        />
-      )}
+      </Suspense>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { folderContentType } from '@/types/file';
+import { FOLDER_CONTENT_TYPE } from '@/constants/fileConstants.js';
 
 export function getFileExtension(filename = '') {
   const parts = filename.split('.');
@@ -7,7 +7,7 @@ export function getFileExtension(filename = '') {
 }
 
 export function formatFileSize(size = 0, contentType = '') {
-  if (contentType === folderContentType) return '-';
+  if (contentType === FOLDER_CONTENT_TYPE) return '-';
   if (!size || size <= 0) return '0 B';
 
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];

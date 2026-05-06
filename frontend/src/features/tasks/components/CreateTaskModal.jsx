@@ -1,10 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
-// import { taskStatus } from '@/features/tasks/types/task.js';
 import { useCreateTask } from '@/features/tasks/api/useCreateTask.js';
+import { IconClose, /*IconAdd,*/ IconHashtag } from '@/shared/assets/icons.js';
+import {
+  Button,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogTitle,
+  IconButton,
+  Input,
+} from '@/shared/components/ui/index.js';
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock.js';
 
+/**
+ * 새 작업 생성 모달 컴포넌트
+ * @param props
+ */
 export default function CreateTaskModal(props) {
   const { projectId, isOpen, onClose, defaultAssigneeId, members = [] } = props;
-
   const { mutate: createTask } = useCreateTask();
 
   const sortedMembers = useMemo(() => {
@@ -14,9 +31,6 @@ export default function CreateTaskModal(props) {
   }, [members, defaultAssigneeId]);
 
   const todayISO = new Date().toISOString().split('T')[0];
-
-  // initialTaskData를 useEffect 밖으로 빼거나 Memoize하지 않아도 되도록 설정
-  // 하지만 useEffect에서 접근하기 위해 상태 초기화 용도로만 사용합니다.
 
   const [taskData, setTaskData] = useState({
     title: '',
@@ -29,27 +43,16 @@ export default function CreateTaskModal(props) {
   });
   const [newTag, setNewTag] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.documentElement.style.overflow = 'auto';
-      document.body.style.overflow = 'auto';
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (isOpen) {
-      // 모달이 열릴 때마다 초기화 + 기본 담당자 지정
       setTaskData({
         title: '',
         description: '',
         status: 'TODO',
         tags: [],
-        assignee: defaultAssigneeId || '',
+        assigneeId: defaultAssigneeId || '',
         startDate: todayISO,
         dueDate: todayISO,
       });
@@ -64,20 +67,10 @@ export default function CreateTaskModal(props) {
     if (!taskData.title.trim()) return;
 
     const selectedMember = sortedMembers.find((m) => m.username === taskData.assigneeId);
-
-    const normalizedStartDate = taskData.startDate || todayISO;
-    const normalizedDueDate =
-      taskData.dueDate && taskData.dueDate >= normalizedStartDate
-        ? taskData.dueDate
-        : normalizedStartDate;
-
     const requestData = {
       ...taskData,
       title: taskData.title.trim(),
-      startDate: normalizedStartDate,
-      dueDate: normalizedDueDate,
       projectId: Number(projectId),
-      // 유저 엔티티의 id가 제거되고 username으로 대체되었으므로 수정합니다.
       assigneeId: selectedMember ? selectedMember.username : null,
       assigneeName: selectedMember ? selectedMember.nickname : null,
     };
@@ -85,249 +78,201 @@ export default function CreateTaskModal(props) {
     createTask(
       { requestBody: requestData, projectId: Number(projectId) },
       {
-        onSuccess: () => {
-          handleClose();
-        },
+        onSuccess: () => onClose(),
       },
     );
-  };
-
-  const handleClose = () => {
-    onClose();
   };
 
   const addTag = () => {
     const trimmed = newTag.trim();
     if (trimmed && !taskData.tags.includes(trimmed)) {
-      setTaskData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, trimmed],
-      }));
+      setTaskData((prev) => ({ ...prev, tags: [...prev.tags, trimmed] }));
       setNewTag('');
     }
   };
 
   const removeTag = (tagToRemove) => {
-    setTaskData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }));
+    setTaskData((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tagToRemove) }));
   };
 
   const inputBase =
-    'w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 ' +
-    'focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500';
+    'w-full rounded-2xl border border-border bg-muted/50 px-5 py-3 text-sm font-bold text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary/50 focus:bg-card focus:ring-4 focus:ring-primary/15';
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
-
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-4">
-        <div className="flex h-[min(92vh,820px)] w-full max-w-[920px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl ring-1 ring-black/5">
-          {/* 헤더 */}
-          <div className="flex items-start justify-between border-b border-gray-100 px-8 py-5">
-            <div>
-              <h2 className="text-[18px] font-bold text-gray-900">새 작업 만들기</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                팀원에게 할 일을 배정하고 진행을 관리하세요.
-              </p>
-            </div>
-
-            <button
-              onClick={handleClose}
-              className="cursor-pointer rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-              aria-label="close"
-            >
-              <i className="ri-close-line text-xl"></i>
-            </button>
+    <Dialog open={isOpen}>
+      <DialogOverlay onClick={onClose} />
+      <DialogContent className="max-w-[min(800px,calc(100vw-2rem))] duration-300">
+        {/* Header */}
+        <DialogHeader className="flex items-center justify-between px-5 py-6 sm:px-10 sm:py-8">
+          <div>
+            <DialogTitle>새 작업 만들기</DialogTitle>
+            <DialogDescription>팀의 목표를 달성하기 위한 첫 걸음입니다.</DialogDescription>
           </div>
+          <IconButton
+            onClick={onClose}
+            className="rounded-full text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <IconClose size={28} />
+          </IconButton>
+        </DialogHeader>
 
-          {/* 본문 */}
-          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-            <div className="min-h-0 flex-1 overflow-y-auto px-8 py-5">
-              <div className="space-y-5">
+        <form onSubmit={handleSubmit} className="flex max-h-[70vh] flex-col">
+          <DialogBody className="custom-scrollbar flex-1 space-y-6 overflow-y-auto p-5 sm:space-y-8 sm:p-10">
+            <section className="space-y-6">
+              <div>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  작업 제목 <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  value={taskData.title}
+                  onChange={(e) => setTaskData({ ...taskData, title: e.target.value })}
+                  placeholder="무엇을 해야 하나요?"
+                  className={inputBase}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  작업 설명
+                </label>
+                <textarea
+                  value={taskData.description}
+                  onChange={(e) => setTaskData({ ...taskData, description: e.target.value })}
+                  placeholder="팀원들이 이해할 수 있게 자세히 적어주세요."
+                  rows={3}
+                  className={`${inputBase} resize-none`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800">
-                    작업 제목 <span className="text-red-500">*</span>
+                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    담당자
+                  </label>
+                  <select
+                    value={taskData.assigneeId}
+                    onChange={(e) => setTaskData({ ...taskData, assigneeId: e.target.value })}
+                    className={inputBase}
+                  >
+                    <option value="">미지정 (나중에 배정)</option>
+                    {sortedMembers.map((m) => (
+                      <option key={m.username} value={m.username}>
+                        {m.nickname} (@{m.username})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    초기 상태
+                  </label>
+                  <select
+                    value={taskData.status}
+                    onChange={(e) => setTaskData({ ...taskData, status: e.target.value })}
+                    className={inputBase}
+                  >
+                    <option value="TODO">대기 중 (TODO)</option>
+                    <option value="IN_PROGRESS">진행 중 (IN PROGRESS)</option>
+                    <option value="DONE">완료 (DONE)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    시작일
                   </label>
                   <input
-                    type="text"
-                    value={taskData.title}
-                    onChange={(event) => setTaskData({ ...taskData, title: event.target.value })}
-                    placeholder="예) 로그인 UI 마무리"
+                    type="date"
+                    value={taskData.startDate}
                     className={inputBase}
-                    required
+                    onChange={(e) => setTaskData({ ...taskData, startDate: e.target.value })}
                   />
                 </div>
-
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800">설명</label>
-                  <textarea
-                    value={taskData.description}
-                    onChange={(event) =>
-                      setTaskData({ ...taskData, description: event.target.value })
-                    }
-                    placeholder="작업에 대한 설명을 입력하세요"
-                    rows={4}
-                    className={`${inputBase} min-h-[110px] resize-none`}
+                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    마감일
+                  </label>
+                  <input
+                    type="date"
+                    min={taskData.startDate}
+                    value={taskData.dueDate}
+                    className={inputBase}
+                    onChange={(e) => setTaskData({ ...taskData, dueDate: e.target.value })}
                   />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800">담당자</label>
-                    <select
-                      value={taskData.assigneeId}
-                      onChange={(event) =>
-                        setTaskData({ ...taskData, assigneeId: event.target.value })
-                      }
-                      className={inputBase}
-                    >
-                      <option value="">담당자 없음</option>
-                      {sortedMembers.map((member) => (
-                        <option key={member.username} value={member.username}>
-                          {member.nickname} ({member.role})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800">상태</label>
-                    <select
-                      value={taskData.status}
-                      onChange={(event) => setTaskData({ ...taskData, status: event.target.value })}
-                      className={inputBase}
-                    >
-                      <option value={'TODO'}>대기</option>
-                      <option value={'IN_PROGRESS'}>진행중</option>
-                      <option value={'DONE'}>완료</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800">시작일</label>
-                    <input
-                      type="date"
-                      value={taskData.startDate}
-                      onChange={(event) => {
-                        const nextStartDate = event.target.value;
-                        setTaskData((prev) => ({
-                          ...prev,
-                          startDate: nextStartDate,
-                          dueDate:
-                            prev.dueDate && prev.dueDate >= nextStartDate
-                              ? prev.dueDate
-                              : nextStartDate,
-                        }));
-                      }}
-                      className={inputBase}
+              <div>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  태그
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <IconHashtag
+                      size={18}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    />
+                    <Input
+                      type="text"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                      placeholder="태그 입력..."
+                      className={`${inputBase} pl-11`}
                     />
                   </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800">마감일</label>
-                    <input
-                      type="date"
-                      min={taskData.startDate}
-                      value={taskData.dueDate}
-                      onChange={(event) =>
-                        setTaskData({ ...taskData, dueDate: event.target.value })
-                      }
-                      className={inputBase}
-                    />
-                  </div>
+                  <Button
+                    type="button"
+                    onClick={addTag}
+                    variant="secondary"
+                    className="rounded-2xl bg-foreground px-6 text-background hover:bg-foreground/90"
+                  >
+                    추가
+                  </Button>
                 </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800">태그</label>
-
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        value={newTag}
-                        onChange={(event) => setNewTag(event.target.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter') {
-                            event.preventDefault();
-                            addTag();
-                          }
-                        }}
-                        placeholder="예) 디자인, UI/UX"
-                        className={`${inputBase} pr-10`}
-                      />
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {taskData.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-bold text-primary"
+                    >
+                      #{tag}
                       <button
                         type="button"
-                        onClick={addTag}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                        aria-label="add tag"
+                        onClick={() => removeTag(tag)}
+                        className="transition-colors hover:text-red-500"
                       >
-                        <i className="ri-add-line text-lg"></i>
+                        <IconClose size={14} />
                       </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={addTag}
-                      className="cursor-pointer rounded-xl bg-blue-600 px-5 py-2.5 text-white shadow-sm hover:bg-blue-700"
-                    >
-                      추가
-                    </button>
-                  </div>
-
-                  {taskData.tags.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {taskData.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-sm text-blue-700 ring-1 ring-blue-100"
-                        >
-                          <i className="ri-hashtag text-base"></i>
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tag)}
-                            className="ml-1 cursor-pointer rounded-full p-1 text-blue-600 hover:bg-blue-100 hover:text-blue-800"
-                            aria-label="remove tag"
-                          >
-                            <i className="ri-close-line text-sm"></i>
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="mt-3 text-xs text-gray-400">
-                      태그를 추가하면 필터링/탐색이 쉬워요.
-                    </p>
-                  )}
+                    </span>
+                  ))}
                 </div>
               </div>
-            </div>
+            </section>
+          </DialogBody>
 
-            {/* 하단 버튼 고정 */}
-            <div className="border-t border-gray-100 bg-white px-8 py-4">
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="flex-1 cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-700 hover:bg-gray-50"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 cursor-pointer rounded-xl bg-blue-600 px-4 py-3 text-white shadow-sm hover:bg-blue-700"
-                >
-                  생성
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          <DialogFooter className="flex gap-3 p-5 sm:gap-4 sm:p-10">
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="outline"
+              className="h-auto flex-1 rounded-[20px] py-4 font-bold text-muted-foreground"
+            >
+              취소
+            </Button>
+            <Button
+              type="submit"
+              className="h-auto flex-1 rounded-[20px] py-4 font-bold shadow-xl shadow-blue-100"
+            >
+              작업 생성하기
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

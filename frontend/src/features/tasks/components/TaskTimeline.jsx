@@ -21,37 +21,26 @@ const BAR_HEIGHT = 38;
 const BAR_GAP = 10;
 const ROW_BASE_HEIGHT = 82;
 
+/**
+ * 태스크 타임라인 컴포넌트
+ * @typedef {import('@/types/task.js').TaskData} TaskData
+ * @typedef {import('@/types/member.js').ProjectMember} ProjectMember
+ * @param {object} props
+ * @param {TaskData[]} props.tasks - 타임라인에 표시할 태스크 목록
+ * @param {ProjectMember[]} props.members - 프로젝트 멤버 목록
+ * @param {(taskId: number) => void} props.onTaskClick - 태스크 클릭 시 호출되는 콜백
+ */
 export default function TaskTimeline({ tasks = [], members: members = [], onTaskClick }) {
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [autoAligned, setAutoAligned] = useState(false);
-  // // tasks가 로드된 뒤, 최초 한 번 현재 월을 task의 날짜에 맞춰 보정
-  // // (예: mock 데이터가 과거/미래에 있어도 해당 달로 자동 스크롤)
-  // if (tasks.length > 0) {
-  //   const datedTask = tasks.find((task) => task.startDate || task.dueDate || task.createdAt);
-  //   const baseDate =
-  //     datedTask && parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdAt);
-  //   if (baseDate && !Number.isNaN(baseDate.getTime())) {
-  //     const baseMonth = startOfMonth(baseDate);
-  //     if (
-  //       currentMonth.getFullYear() === new Date().getFullYear() &&
-  //       currentMonth.getMonth() === new Date().getMonth()
-  //     ) {
-  //       // 초기값이 아직 오늘 기준인 경우에만 보정 적용
-  //       // (사용자가 화살표로 월을 이동한 뒤에는 유지)
-  //
-  //       setCurrentMonth(baseMonth);
-  //     }
-  //   }
-  // }
 
   useEffect(() => {
-    if (autoAligned) return;
-    if (tasks.length === 0) return;
+    if (autoAligned || tasks.length === 0) return;
+
     const today = new Date();
     const todayMonthStart = startOfMonth(today);
     const todayMonthEnd = endOfMonth(today);
 
-    // 오늘이 포함된 달에 속한 task만 auto-align 대상
     const datedTask = tasks.find((task) => {
       const raw = task.startDate || task.dueDate || task.createdDate;
       const d = parseDate(raw);
@@ -59,18 +48,12 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
       return d >= todayMonthStart && d <= todayMonthEnd;
     });
 
-    // const datedTask = tasks.find((task) => task.startDate || task.dueDate || task.createdDate);
-    // const baseDate =
-    //   datedTask && parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdDate);
-    //
     if (!datedTask) return;
 
     const baseDate = parseDate(datedTask.startDate || datedTask.dueDate || datedTask.createdDate);
-
     if (!baseDate || Number.isNaN(baseDate.getTime())) return;
 
     const baseMonth = startOfMonth(baseDate);
-    // const today = new Date();
     const isStillTodayMonth =
       currentMonth.getFullYear() === today.getFullYear() &&
       currentMonth.getMonth() === today.getMonth();
@@ -99,7 +82,6 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
   const rows = useMemo(() => {
     return members.map((member) => {
       const memberTasks = tasks.filter((task) => task.assigneeId === member.username);
-
       const lanes = buildLanes(memberTasks, monthStart, monthEnd);
 
       const laneBars = lanes.flatMap((lane, laneIndex) =>
@@ -120,8 +102,6 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
         }),
       );
 
-      console.log('[TaskTimeline] bars for', member.username, ':', laneBars);
-
       const rowHeight =
         Math.max(1, lanes.length) * (BAR_HEIGHT + BAR_GAP) + (ROW_BASE_HEIGHT - BAR_HEIGHT);
 
@@ -136,29 +116,28 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
   const totalGridWidth = daysInMonth * DAY_WIDTH;
 
   return (
-    <div className="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-gray-100 px-7 py-6">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border bg-card px-8 py-6">
         <div>
-          <h2 className="text-[24px] font-bold text-gray-900">팀 진행 타임라인</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            작업 기간과 완료 상태를 사람별로 한눈에 볼 수 있어요.
+          <h2 className="text-2xl font-bold text-foreground">팀 진행 타임라인</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            작업 기간과 완료 상태를 멤버별로 분석합니다.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() =>
               setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
             }
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm transition-all hover:bg-gray-50"
           >
-            <i className="ri-arrow-left-s-line text-xl"></i>
-            {/*<IconChevronLeft className="text-xl" />*/}
+            <IconChevronLeft size={20} />
           </button>
 
           <div
-            className="min-w-[120px] cursor-pointer rounded-xl border border-gray-200 bg-white p-2 text-center text-sm font-semibold text-gray-800 hover:bg-gray-50"
+            className="min-w-[120px] cursor-pointer rounded-lg border border-border bg-card py-2 text-center text-sm font-semibold text-foreground shadow-sm"
             onClick={() => {
               setCurrentMonth(new Date());
               setAutoAligned(false);
@@ -172,184 +151,216 @@ export default function TaskTimeline({ tasks = [], members: members = [], onTask
             onClick={() =>
               setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
             }
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm transition-all hover:bg-gray-50"
           >
-            <i className="ri-arrow-right-s-line text-xl"></i>
-            {/*<IconChevronRight className="text-xl" />*/}
+            <IconChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="min-w-max" style={{ width: NAME_COL_WIDTH + totalGridWidth }}>
-          <div className="sticky top-0 z-20 flex border-b border-gray-100 bg-white">
-            <div
-              className="shrink-0 border-r border-gray-100 bg-white px-5 py-4"
-              style={{ width: NAME_COL_WIDTH }}
-            >
-              <div className="text-sm font-semibold text-gray-800">팀원</div>
-            </div>
-
-            <div className="relative shrink-0" style={{ width: totalGridWidth }}>
-              <div className="flex">
-                {monthDays.map((day) => {
-                  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                  const isToday = isCurrentMonth && day.getDate() === today.getDate();
-
-                  return (
-                    <div
-                      key={formatISO(day)}
-                      className={`flex h-[70px] flex-col items-center justify-center border-r border-gray-100 ${
-                        isWeekend ? 'bg-gray-50/80' : 'bg-white'
-                      } ${isToday ? 'bg-red-50' : ''}`}
-                      style={{ width: DAY_WIDTH }}
-                    >
-                      <div className="text-[11px] text-gray-400">
-                        {['일', '월', '화', '수', '목', '금', '토'][day.getDay()]}
-                      </div>
-                      <div
-                        className={`text-sm font-semibold ${
-                          isToday ? 'text-red-700' : 'text-gray-800'
-                        }`}
-                      >
-                        {day.getDate()}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {rows.map((row) => (
-            <div
-              key={row.member.username}
-              className="flex border-b border-gray-100 last:border-b-0"
-            >
-              <div
-                className="flex shrink-0 items-start border-r border-gray-100 bg-white px-5 py-5"
-                style={{ width: NAME_COL_WIDTH, minHeight: row.rowHeight }}
+      <div className="custom-scrollbar overflow-x-auto">
+        {tasks.length === 0 ? (
+          <div className="p-16 text-center">
+            <div className="mx-auto mb-8 flex w-full max-w-[320px] justify-center">
+              <svg
+                viewBox="0 0 320 180"
+                className="h-auto w-full"
+                role="img"
+                aria-label="타임라인 비어있음 일러스트"
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] text-sm font-semibold text-white">
-                    {(row.member.displayName || row.member.username).slice(0, 1)}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-gray-900">
-                      {row.member.displayName || row.member.username}
-                    </div>
-                    <div className="truncate text-xs text-gray-500">{row.member.role}</div>
-                  </div>
+                <defs>
+                  <linearGradient id="timelineEmptyGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#EFF6FF" />
+                    <stop offset="100%" stopColor="#EEF2FF" />
+                  </linearGradient>
+                </defs>
+                <rect
+                  x="22"
+                  y="24"
+                  width="276"
+                  height="132"
+                  rx="20"
+                  fill="url(#timelineEmptyGradient)"
+                  stroke="#C7D2FE"
+                />
+                <rect x="46" y="48" width="98" height="12" rx="6" fill="#93C5FD" />
+                <rect x="46" y="74" width="224" height="8" rx="4" fill="#BFDBFE" />
+                <rect x="46" y="94" width="210" height="8" rx="4" fill="#BFDBFE" />
+                <rect x="46" y="114" width="178" height="8" rx="4" fill="#BFDBFE" />
+                <circle cx="250" cy="62" r="16" fill="#C7D2FE" />
+                <path
+                  d="M244 62h12M250 56v12"
+                  stroke="#4F46E5"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-black tracking-tight text-foreground">작업이 없습니다</h3>
+            <p className="mt-3 text-sm font-semibold text-muted-foreground">
+              작업이 생성되면 타임라인이 표시됩니다.
+            </p>
+          </div>
+        ) : (
+          <div className="min-w-max" style={{ width: NAME_COL_WIDTH + totalGridWidth }}>
+            <div className="sticky top-0 z-20 flex border-b border-border bg-muted">
+              <div
+                className="shrink-0 border-r border-border px-8 py-4"
+                style={{ width: NAME_COL_WIDTH }}
+              >
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Team Member
                 </div>
               </div>
 
-              <div
-                className="relative shrink-0"
-                style={{ width: totalGridWidth, minHeight: row.rowHeight }}
-              >
-                <div className="pointer-events-none absolute inset-0 flex">
+              <div className="relative shrink-0" style={{ width: totalGridWidth }}>
+                <div className="flex">
                   {monthDays.map((day) => {
                     const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                    const isToday = isCurrentMonth && day.getDate() === today.getDate();
+
                     return (
                       <div
                         key={formatISO(day)}
-                        className={`h-full border-r border-gray-100 ${
-                          isWeekend ? 'bg-gray-50/70' : 'bg-white'
-                        }`}
+                        className={`flex h-[72px] flex-col items-center justify-center border-r border-border ${
+                          isWeekend ? 'bg-muted/30' : ''
+                        } ${isToday ? 'bg-primary/10' : ''}`}
                         style={{ width: DAY_WIDTH }}
-                      />
+                      >
+                        <div className="text-[9px] font-black uppercase text-gray-400">
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day.getDay()]}
+                        </div>
+                        <div
+                          className={`mt-0.5 text-sm font-black ${
+                            isToday ? 'text-primary' : 'text-foreground'
+                          }`}
+                        >
+                          {day.getDate()}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
+              </div>
+            </div>
 
-                {todayOffset >= 0 && (
-                  <>
-                    {/* 소프트 글로우 (거의 투명한 pure red) */}
+            {rows.map((row) => (
+              <div
+                key={row.member.username}
+                className="group flex border-b border-border last:border-b-0"
+              >
+                <div
+                  className="flex shrink-0 items-start border-r border-border bg-card px-8 py-6 transition-colors group-hover:bg-muted/30"
+                  style={{ width: NAME_COL_WIDTH, minHeight: row.rowHeight }}
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-indigo-50 text-sm font-black text-indigo-600 shadow-sm">
+                      {(row.member.displayName || row.member.username).slice(0, 1).toUpperCase()}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-black text-foreground">
+                        {row.member.displayName || row.member.username}
+                      </div>
+                      <div className="truncate text-[10px] font-bold uppercase text-muted-foreground">
+                        {row.member.role}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="relative shrink-0 transition-colors group-hover:bg-muted/20"
+                  style={{ width: totalGridWidth, minHeight: row.rowHeight }}
+                >
+                  <div className="pointer-events-none absolute inset-0 flex">
+                    {monthDays.map((day) => {
+                      const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                      return (
+                        <div
+                          key={formatISO(day)}
+                          className={`h-full border-r border-border ${
+                            isWeekend ? 'bg-muted/10' : ''
+                          }`}
+                          style={{ width: DAY_WIDTH }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {todayOffset >= 0 && (
                     <div
                       className="pointer-events-none absolute bottom-0 top-0 z-10"
                       style={{
                         left: todayOffset * DAY_WIDTH + DAY_WIDTH / 2 - 1,
-                        width: 4,
-                        background:
-                          'linear-gradient(to bottom, rgba(255,0,0,0.04), rgba(255,0,0,0.16), rgba(255,0,0,0.04))',
-                      }}
-                    />
-                    {/* 중앙 얇은 라인 (윗부분은 살짝 연한 red, 아래는 pure red에 근접) */}
-                    <div
-                      className="pointer-events-none absolute bottom-0 top-0 z-20"
-                      style={{
-                        left: todayOffset * DAY_WIDTH + DAY_WIDTH / 2,
                         width: 2,
-                        background:
-                          'linear-gradient(to bottom, rgba(255,80,80,1), rgba(255,0,0,1))',
+                        backgroundColor: '#ef4444',
                       }}
                     />
-                  </>
-                )}
+                  )}
 
-                {row.bars.map((task) => {
-                  const visual = getTaskVisual(task);
+                  {row.bars.map((task) => {
+                    const visual = getTaskVisual(task);
 
-                  return (
-                    <button
-                      key={task.id}
-                      type="button"
-                      onClick={() => onTaskClick?.(task)}
-                      className="absolute cursor-pointer rounded-full border px-3 text-left transition-transform duration-150 hover:-translate-y-0.5"
-                      style={{
-                        left: task.startOffset * DAY_WIDTH + 4,
-                        top: 20 + task.laneIndex * (BAR_HEIGHT + BAR_GAP),
-                        width: task.span * DAY_WIDTH - 8,
-                        height: BAR_HEIGHT,
-                        background: visual.background,
-                        borderColor: visual.border,
-                        color: visual.text,
-                        boxShadow: visual.shadow,
-                      }}
-                      title={`${task.title} · ${formatShortDate(task._taskStart)} ~ ${formatShortDate(
-                        task._taskEnd,
-                      )}`}
-                    >
-                      <div className="flex w-full items-center justify-between gap-2">
-                        <span className="truncate text-xs font-semibold">{task.title}</span>
-                        <span className="whitespace-nowrap text-[10px] opacity-90">
-                          {task.status === 'DONE'
-                            ? '완료'
-                            : task.status === 'IN_PROGRESS'
-                              ? '진행'
-                              : '대기'}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={task.id}
+                        type="button"
+                        onClick={() => onTaskClick?.(task)}
+                        className="absolute cursor-pointer rounded-xl border px-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
+                        style={{
+                          left: task.startOffset * DAY_WIDTH + 4,
+                          top: 20 + task.laneIndex * (BAR_HEIGHT + BAR_GAP),
+                          width: task.span * DAY_WIDTH - 8,
+                          height: BAR_HEIGHT,
+                          background: visual.background,
+                          borderColor: visual.border,
+                          color: visual.text,
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                        }}
+                        title={`${task.title} · ${formatShortDate(task._taskStart)} ~ ${formatShortDate(
+                          task._taskEnd,
+                        )}`}
+                      >
+                        <div className="flex w-full items-center justify-between gap-2 overflow-hidden">
+                          <span className="truncate text-[11px] font-black">{task.title}</span>
+                          <span className="shrink-0 rounded-full bg-black/5 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-tighter opacity-70">
+                            {task.status === 'DONE'
+                              ? 'Done'
+                              : task.status === 'IN_PROGRESS'
+                                ? 'Ing'
+                                : 'Todo'}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
 
-                {row.bars.length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center whitespace-nowrap px-4 text-xs font-semibold text-gray-300">
-                    배정된 작업이 없습니다.
-                  </div>
-                )}
+                  {row.bars.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center whitespace-nowrap px-4 text-[10px] font-black uppercase italic tracking-widest text-muted-foreground/50">
+                      No Tasks Assigned
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 border-t border-gray-100 bg-gray-50 px-6 py-4 text-sm">
-        <div className="flex items-center gap-2 text-gray-600">
-          <span className="h-4 w-4 rounded-full border border-gray-300 bg-gray-200/60"></span>
-          대기
+      <div className="flex flex-wrap items-center gap-6 border-t border-border bg-muted/50 px-8 py-5 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full border-2 border-background bg-muted shadow-sm"></span>
+          Todo
         </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <span className="h-4 w-4 rounded-full border border-gray-300 bg-gray-400/40"></span>
-          진행중
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full border-2 border-background bg-blue-300 shadow-sm"></span>
+          In Progress
         </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <span className="h-4 w-4 rounded-full bg-gray-700"></span>
-          완료
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full border-2 border-background bg-gray-800 shadow-sm"></span>
+          Done
         </div>
-        <div className="text-gray-400"> 작업 진행도에 따라 색이 점점 진해져요. </div>
       </div>
     </div>
   );

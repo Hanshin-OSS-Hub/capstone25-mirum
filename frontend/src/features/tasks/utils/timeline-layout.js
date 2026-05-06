@@ -4,6 +4,9 @@ import { intersectsMonth, parseDate } from './timeline-date.js';
 /**
  * 멤버에게 할당된 작업 목록을 받아, 월 단위로 겹침이 없는 lane 배열을 계산한다.
  * 각 task에는 `_taskStart`, `_taskEnd`가 Date 형태로 추가된다.
+ * @param tasks
+ * @param monthStart
+ * @param monthEnd
  */
 export function buildLanes(tasks, monthStart, monthEnd) {
   const sorted = [...tasks]

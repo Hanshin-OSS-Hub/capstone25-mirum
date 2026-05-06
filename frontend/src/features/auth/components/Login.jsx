@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { api } from '@/api/client.js';
-import { useAuth } from '../hooks/useAuth';
-import './modal.css';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
+import { useAuth } from '@/features/auth/hooks/useAuth.js';
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock.js';
 
 function Login(props) {
   const { login } = useAuth();
@@ -9,6 +11,8 @@ function Login(props) {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  useBodyScrollLock(true);
 
   // ------------------------------------------------------------------------
   // 참고 자료:
@@ -39,7 +43,6 @@ function Login(props) {
 
   /**
    * 로그인 API
-   *
    * @param {Event} event - 폼 제출 이벤트
    * @returns {Promise<void>} POST /login API 호출 후 인증 토큰 및 사용자 정보를 AuthContext에 저장
    * @description username과 password를 서버에 전송하여 인증 후, 토큰과 사용자 정보를 받아 login() 호출
@@ -104,53 +107,65 @@ function Login(props) {
 
       if (props.onLoginSuccess) props.onLoginSuccess();
     } catch (error) {
-      alert(error.message || '알 수 없는 오류가 발생했습니다.');
+      notify.error(getErrorMessage(error, '알 수 없는 오류가 발생했습니다.'));
     }
   };
 
+  const submitPrimary =
+    'mt-3 w-full rounded-[20px] border-none bg-[#594adc] py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#3f2edc] disabled:pointer-events-none disabled:opacity-50';
+  const secondaryBtn =
+    'mt-2.5 w-full rounded-[20px] border-none bg-muted py-3.5 text-[15px] font-semibold text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground';
+
   return (
     <>
-      <div className="login-overlay" onMouseDown={handleOverlayClick} data-testid="overlay">
-        <div className="login-card">
-          {/* 닫기 버튼 */}
-          <button type="button" className="login-close-btn" onClick={handleCancel}>
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/45 p-4 font-sans"
+        onMouseDown={handleOverlayClick}
+        data-testid="overlay"
+      >
+        <div className="relative w-full max-w-[440px] rounded-[32px] border border-border bg-card px-10 pb-10 pt-12 shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
+          <button
+            type="button"
+            className="absolute right-[22px] top-[18px] border-none bg-transparent text-xl text-muted-foreground transition-colors hover:text-foreground"
+            onClick={handleCancel}
+          >
             ✕
           </button>
 
-          <h1 className="login-title">로그인</h1>
+          <h1 className="mb-10 text-[32px] font-bold tracking-tight text-foreground">로그인</h1>
 
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="login-field">
-              <label className="login-label">아이디</label>
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm text-muted-foreground">아이디</label>
               <input
                 type="text"
-                className="login-input"
+                className="rounded-2xl border-[1.5px] border-border bg-muted/40 px-4 py-3.5 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary/50 focus:bg-card focus:ring-4 focus:ring-primary/15"
                 placeholder="아이디를 입력하세요"
                 value={userName}
                 onChange={(event) => setUserName(event.target.value)}
               />
             </div>
-            <div className="login-field">
-              <label className="login-label">비밀번호</label>
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm text-muted-foreground">비밀번호</label>
               <input
                 type="password"
-                className="login-input"
+                className="rounded-2xl border-[1.5px] border-border bg-muted/40 px-4 py-3.5 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary/50 focus:bg-card focus:ring-4 focus:ring-primary/15"
                 placeholder="비밀번호를 입력하세요"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
-              {error && <div className="login-error">{error}</div>}
+              {error && <div className="mt-1.5 text-xs text-red-600">{error}</div>}
             </div>
 
             <button
               disabled={!userName || !password}
               type="submit"
-              className={!userName || !password ? 'login-secondary-button' : 'login-button'}
+              className={!userName || !password ? secondaryBtn : submitPrimary}
             >
               로그인
             </button>
 
-            <button type="button" className="login-secondary-button" onClick={handleCancel}>
+            <button type="button" className={secondaryBtn} onClick={handleCancel}>
               닫기
             </button>
           </form>

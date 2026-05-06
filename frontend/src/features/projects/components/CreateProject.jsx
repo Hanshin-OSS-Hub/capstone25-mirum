@@ -1,7 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useCreateProject } from '@/features/projects/api/useCreateProject.js';
-import '../../auth/components/modal.css';
+import { IconClose } from '@/shared/assets/icons.js';
+import {
+  Button,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogOverlay,
+  IconButton,
+  Input,
+} from '@/shared/components/ui/index.js';
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock.js';
 
+/**
+ * @typedef {object} CreateProjectProps
+ * @property {boolean} isOpen - 모달 열림 상태
+ * @property {() => void} onClose - 모달 닫기 함수
+ */
+
+/**
+ * 프로젝트 생성을 위한 모달 컴포넌트입니다.
+ * @param {CreateProjectProps} props
+ * @returns {JSX.Element | null}
+ */
 export default function CreateProject(props) {
   const { isOpen, onClose } = props;
   const [projectTitle, setProjectTitle] = useState('');
@@ -10,28 +31,18 @@ export default function CreateProject(props) {
 
   const { mutate: createProject } = useCreateProject();
 
-  useEffect(() => {
-    if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
-    } else {
-      document.documentElement.style.overflow = 'auto';
-    }
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 
   const handleClose = () => {
-    setProjectTitle(''); // 제목 비우기
-    setProjectDesc(''); // 설명 비우기
-
+    setProjectTitle('');
+    setProjectDesc('');
+    setError('');
     if (onClose) {
-      props.onClose();
+      onClose();
     }
   };
-
-  // const handleOverlayClick = (event) => {
-  //   if (event.target === event.currentTarget && props.onClose) handleClose();
-  // };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -55,87 +66,76 @@ export default function CreateProject(props) {
     );
   };
 
-  // const fakeCreateProjectAPI = (projectData) => {
-  //     return new Promise((resolve) => {
-  //         setTimeout(() => {
-  //             const newProject = {
-  //                 id: Math.floor(Math.random() * 1000) + 1, // 임의의 프로젝트 ID 생성
-  //                 projectName: projectData.title,
-  //                 description: projectData.description,
-  //                 progress: 0,
-  //                 // 생성한 유저를 리더로 추가 (임의로 userId 1 사용)
-  //                 members: [
-  //                     { userId: 1, username: "qwer", role: "LEADER", name: "미룸 데모 유저", profileImg: null, email: "demo@mirum.com" }
-  //                 ],
-  //                 created_at: new Date().toISOString(),
-  //                 updated_at: new Date().toISOString(),
-  //             };
-  //
-  //             resolve({
-  //                 success: true,
-  //                 message: "프로젝트가 (데모) 생성되었습니다.",
-  //                 data: newProject,
-  //             });
-  //         }, 100); // 0.1초 지연을 시뮬레이션하여 로딩 상태를 확인
-  //     });
-  // };
-
-  // const handleCreateProject = USE_Mock ? fakeCreateProjectAPI : handleCreateProjectApi;
-
   return (
-    <>
-      <div className="login-overlay" /*onMouseDown={handleOverlayClick}*/ data-testid="overlay">
-        <div className="login-card">
+    <Dialog open={isOpen}>
+      <DialogOverlay onClick={handleClose} className="z-[9998] bg-slate-900/45" />
+      <DialogContent className="z-[9999] max-w-[440px] rounded-[32px]">
+        <DialogBody className="p-12">
           {/* 닫기 버튼 */}
-          <button type="button" className="login-close-btn" onClick={props.onClose}>
-            ✕
-          </button>
+          <IconButton
+            type="button"
+            className="absolute right-6 top-6 rounded-full text-gray-400 hover:text-gray-600"
+            onClick={handleClose}
+          >
+            <IconClose size={24} />
+          </IconButton>
 
-          <h1 className="login-title">프로젝트 생성</h1>
+          <header className="mb-10 text-center">
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
+              New Workspace
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">프로젝트 생성</h1>
+          </header>
 
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="login-field">
-              <label className="login-label">프로젝트 이름</label>
-              <input
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Project Title
+              </label>
+              <Input
                 type="text"
-                className="login-input"
+                className="h-auto bg-gray-50 py-3 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                 placeholder="프로젝트 이름을 입력하세요"
                 value={projectTitle}
                 onChange={(event) => setProjectTitle(event.target.value)}
+                autoFocus
               />
             </div>
-            <div className="login-field">
-              <label className="login-label">설명</label>
-              <input
-                type="text"
-                className="login-input"
+
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Description (Optional)
+              </label>
+              <textarea
+                className="min-h-[100px] w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10"
                 placeholder="프로젝트를 간단히 설명해주세요"
                 value={projectDesc}
                 onChange={(event) => setProjectDesc(event.target.value)}
               />
-              {error && <div className="login-error">{error}</div>}
+              {error && <p className="mt-1 text-xs font-medium text-red-500">{error}</p>}
             </div>
 
-            <button
-              disabled={!projectTitle.trim()}
-              type="submit"
-              className={!projectTitle.trim() ? 'login-secondary-button' : 'login-button'}
-            >
-              생성하기
-            </button>
+            <div className="flex flex-col gap-3 pt-2">
+              <Button
+                disabled={!projectTitle.trim()}
+                type="submit"
+                className="h-auto w-full py-3.5 shadow-blue-500/20 hover:shadow-blue-500/30"
+              >
+                생성하기
+              </Button>
 
-            <button
-              type="button"
-              className="login-secondary-button"
-              onClick={() => {
-                props.onClose();
-              }}
-            >
-              취소
-            </button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-auto w-full py-3.5 text-gray-600"
+                onClick={handleClose}
+              >
+                취소
+              </Button>
+            </div>
           </form>
-        </div>
-      </div>
-    </>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 }

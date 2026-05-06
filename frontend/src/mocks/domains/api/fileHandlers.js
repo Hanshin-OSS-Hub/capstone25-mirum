@@ -38,10 +38,6 @@ export const fileHandlers = [
       expiredDate: file.expiredDate ? file.expiredDate.toISOString() : null,
     }));
 
-    console.log(
-      `MSW: 프로젝트 ${projectId}의 첨부 파일 조회 완료 - 총 ${fileDtoList.length}개 파일`,
-    );
-
     // useGetProjectFiles는 배열을 기대하므로 그대로 반환
     return successResponse(fileDtoList, 200);
   }),
@@ -79,8 +75,6 @@ export const fileHandlers = [
       uploadedFilesMeta.push({ uuid, projectId, originalFilename: filename });
     });
 
-    console.log(`MSW: 단체 임시 주소 발급 완료 - 총 ${filesnames.length}개 파일`);
-
     return successResponse({ uuids, urls }, 200);
   }),
 
@@ -99,8 +93,6 @@ export const fileHandlers = [
     if (!Array.isArray(uuids)) {
       return errorResponse('잘못된 요청입니다. uuids 배열이 필요합니다.', 400);
     }
-
-    console.log(`MSW: 업로드 완료 보고 수신 - 파일 수: ${uuids.length}개`);
 
     uuids.forEach((uuid) => {
       const meta = uploadedFilesMeta.find((m) => m.uuid === uuid);
@@ -147,8 +139,6 @@ export const fileHandlers = [
       url: `https://mock-download-server.com/files/${uuid}`,
     }));
 
-    console.log(`MSW: 다운로드 URL 발급 완료 - 총 ${result.length}개 파일`);
-
     return successResponse(result, 200);
   }),
 
@@ -175,8 +165,6 @@ export const fileHandlers = [
       }
     });
 
-    console.log(`MSW: 소프트 삭제 처리 완료 - 총 ${uuids.length}개 파일`);
-
     return successResponse({ message: '파일이 논리 삭제되었습니다.' }, 200);
   }),
 
@@ -202,8 +190,6 @@ export const fileHandlers = [
       }
     });
 
-    console.log(`MSW: 영구 삭제 처리 완료 - 총 ${uuids.length}개 파일`);
-
     return successResponse({ message: '파일이 영구 삭제되었습니다.' }, 200);
   }),
 
@@ -228,8 +214,6 @@ export const fileHandlers = [
         file.deletedDate = null;
       }
     });
-
-    console.log(`MSW: 삭제 파일 복구 처리 완료 - 총 ${uuids.length}개 파일`);
 
     return successResponse({ message: '파일이 복구되었습니다.' }, 200);
   }),
@@ -268,10 +252,6 @@ export const fileHandlers = [
       expiredDate: file.expiredDate ? file.expiredDate.toISOString() : null,
       deletedDate: file.deletedDate ? file.deletedDate.toISOString() : null,
     }));
-
-    console.log(
-      `MSW: 프로젝트 ${projectId}의 삭제된 첨부 파일 조회 완료 - 총 ${dtoList.length}개 파일`,
-    );
 
     return successResponse(dtoList, 200);
   }),

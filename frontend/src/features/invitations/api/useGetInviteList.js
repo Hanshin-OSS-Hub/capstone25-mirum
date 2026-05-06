@@ -5,21 +5,32 @@ import { api } from '@/api/client.js';
 
 /**
  * [READ] 나(로그인 사용자)에게 온 초대 목록 조회 API
+ * @param {number | false} [refetchInterval]
+ * @param {boolean} [enabled]
  * @returns {import('@tanstack/react-query').UseQueryResult<Invitation[], import('@tanstack/react-query').DefaultError>}
  */
-export const useGetInviteList = () => {
+export const useGetInviteList = (refetchInterval = false, enabled = true) => {
+  const isTokenAvailable =
+    typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
+
   return useQuery({
     queryKey: ['invitations', 'received'],
     queryFn: async () => {
       /** @type {Invitation[]} */
       return await api.get('/invitations/received');
     },
+    refetchInterval,
+    refetchIntervalInBackground: false,
+    enabled: enabled && isTokenAvailable,
+    staleTime: 5000,
+    refetchOnMount: 'always',
     select: (data) => {
       if (!Array.isArray(data)) {
         return [];
       }
+      const pendingOnly = data.filter((invite) => invite.status === 'INVITED');
       // 날짜 최신순 정렬 (inviteDate 기준)
-      return [...data].sort((a, b) => {
+      return [...pendingOnly].sort((a, b) => {
         const dateA = new Date(a.inviteDate);
         const dateB = new Date(b.inviteDate);
         return dateB - dateA;

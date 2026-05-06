@@ -2,6 +2,7 @@
 
 /**
  * HEX 색상 문자열(3자리 또는 6자리)을 RGB 객체로 변환한다.
+ * @param hex
  */
 export function hexToRgb(hex) {
   const clean = hex.replace('#', '');
@@ -23,6 +24,8 @@ export function hexToRgb(hex) {
 
 /**
  * HEX 색상과 alpha 값을 받아 rgba() 문자열을 생성한다.
+ * @param hex
+ * @param alpha
  */
 export function rgba(hex, alpha) {
   const { r, g, b } = hexToRgb(hex);
@@ -31,6 +34,7 @@ export function rgba(hex, alpha) {
 
 /**
  * Task 상태/색상 정보를 기반으로 타임라인 바의 시각적 스타일을 계산한다.
+ * @param task
  */
 export function getTaskVisual(task) {
   const base = task.color || '#4F46E5';
@@ -61,4 +65,3 @@ export function getTaskVisual(task) {
       };
   }
 }
-

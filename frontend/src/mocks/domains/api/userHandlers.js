@@ -52,7 +52,7 @@ export const userHandlers = [
   http.get('*/api/user', ({ request }) => {
     const loginUserData = processToken(request);
     // 비밀번호는 일부러 제외하고 반환 (비정상적인 방법으로 새 비밀번호가 입력되더라도 무시)
-    const { password, ...userInfo } = loginUserData;
+    const { password: _password, ...userInfo } = loginUserData;
     return successResponse(userInfo, 200);
   }),
 
@@ -65,7 +65,7 @@ export const userHandlers = [
     const index = usersDB.findIndex((u) => u.username === loginUserData.username);
     if (index === -1) return errorResponse('유효하지 않은 사용자입니다.', 401);
     // 비밀번호는 일부러 제외하고 반환 (비정상적인 방법으로 새 비밀번호가 입력되더라도 무시)
-    const { password, ...safeUpdateData } = updateData;
+    const { password: _password, ...safeUpdateData } = updateData;
 
     usersDB[index] = {
       ...usersDB[index],

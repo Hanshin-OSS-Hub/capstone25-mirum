@@ -1,5 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * [READ] 파일 다운로드 API 훅
@@ -32,7 +34,7 @@ export const useDownloadFiles = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`${originalFile?.name || '파일'} 다운로드 실패`);
+          throw new Error(`${originalFile?.originalFilename || '파일'} 다운로드 실패`);
         }
 
         const blob = await response.blob();
@@ -41,7 +43,7 @@ export const useDownloadFiles = () => {
         const downloadUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.download = originalFile?.name || 'downloaded_file'; // 다운로드될 파일명
+        link.download = originalFile?.originalFilename || 'downloaded_file'; // 다운로드될 파일명
         document.body.appendChild(link);
         link.click();
 
@@ -53,12 +55,9 @@ export const useDownloadFiles = () => {
       // 모든 다운로드 작업이 완료될 때까지 대기
       await Promise.all(downloadPromises);
     },
-    onSuccess: () => {
-      console.log('파일 다운로드 성공');
-    },
+    onSuccess: () => {},
     onError: (error) => {
-      console.error('다운로드 중 오류 발생:', error);
-      alert(error.message || '파일 다운로드에 실패했습니다.');
+      notify.error(getErrorMessage(error, '파일 다운로드에 실패했습니다.'));
     },
   });
 };

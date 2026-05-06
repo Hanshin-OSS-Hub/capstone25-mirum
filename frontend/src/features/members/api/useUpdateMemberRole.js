@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
 
 /**
  * todo 리더 양도 기능 지원할건지 논의
@@ -18,11 +20,10 @@ export const useUpdateMemberRole = () => {
     },
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['members', variables.projectId] });
-      alert('멤버 권한이 변경되었습니다.');
+      notify.success('멤버 권한이 변경되었습니다.');
     },
     onError: (error) => {
-      console.error('멤버 권한 변경 실패:', error);
-      alert(error.message || '멤버 권한 변경에 실패했습니다.');
+      notify.error(getErrorMessage(error, '멤버 권한 변경에 실패했습니다.'));
     },
   });
 };
