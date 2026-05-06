@@ -1,0 +1,55 @@
+[
+  {
+    "uuid": "deleted-folder-001",
+    "projectId": 1,
+    "taskId": 101,
+    "originalFilename": "구버전 디자인 시안",
+    "size": 0,
+    "contentType": "application/x-folder",
+    "uploadedDate": "2026-02-27T10:15:30",
+    "uploadedBy": "박민수",
+    "previewUrl": null,
+    "expiredDate": null,
+    "deletedDate": "2026-03-01T09:00:00",
+    "itemCount": 3
+  },
+  {
+    "uuid": "deleted-8d3x-132k-1123-pdf",
+    "projectId": 2,
+    "taskId": 201,
+    "originalFilename": "초기_통일 설문조사 결과.pdf",
+    "size": 3105443,
+    "contentType": "application/pdf",
+    "uploadedDate": "2026-02-21T17:50:00",
+    "uploadedBy": "최지은",
+    "previewUrl": null,
+    "expiredDate": null,
+    "deletedDate": "2026-02-25T10:00:00"
+  },
+  {
+    "uuid": "deleted-8d3x-132k-1123-jpg",
+    "projectId": 3,
+    "taskId": 301,
+    "originalFilename": "잘못찍힌 사진.jpg",
+    "size": 1502009,
+    "contentType": "image/jpeg",
+    "uploadedDate": "2026-02-20T08:10:00",
+    "uploadedBy": "정우성",
+    "previewUrl": "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=400&q=80",
+    "expiredDate": null,
+    "deletedDate": "2026-02-22T09:30:00"
+  },
+  {
+    "uuid": "deleted-zip-4444",
+    "projectId": 1,
+    "taskId": null,
+    "originalFilename": "구버전_에셋_모음.zip",
+    "size": 12345678,
+    "contentType": "application/zip",
+    "uploadedDate": "2026-01-15T11:00:00",
+    "uploadedBy": "이영희",
+    "previewUrl": null,
+    "expiredDate": null,
+    "deletedDate": "2026-01-20T10:00:00"
+  }
+]
