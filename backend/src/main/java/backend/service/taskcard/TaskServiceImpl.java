@@ -154,7 +154,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public void changeAssigneeToLeader(Long projectId, Long removedMemberId) {
+    public void changeAssigneeToNULL(Long projectId, Long taskId) {
 
         ProjectMember leader = projectMemberRepository
                 .findByProjectIdAndRole(projectId, ProjectMemberRoleType.LEADER)
@@ -164,12 +164,12 @@ public class TaskServiceImpl implements TaskService {
 
         // 2. 해당 멤버가 담당자인 task 조회
         List<Task> tasks = taskRepository.findAllByProjectIdAndAssigneeIdAndStatusNot(
-                projectId, removedMemberId, TaskStatus.DELETED
+                projectId, taskId, TaskStatus.DELETED
         );
 
-        // 3. 담당자 전부 리더로 변경
+        // 3. 담당자 null로 변경
         for (Task task : tasks) {
-            task.changeAssignee(leaderId, LocalDateTime.now());
+            task.changeAssignee(null, LocalDateTime.now());
         }
     }
 

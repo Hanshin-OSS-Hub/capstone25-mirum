@@ -34,9 +34,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     //Task 되살리기
     Optional<Task> findByProjectIdAndTaskIdAndStatus(Long projectId, Long TaskId, TaskStatus status);
 
-    //Project 삭제시 task 삭제
-    void changeAssigneeToLeader(Long projectId, Long removedmemberId);
+    //member삭제 시 담당자는 NULL
+    void changeAssigneeToNULL(Long projectId, Long taskId);
 
+    //Project 삭제시 task 삭제
     @Modifying
     @Query("""
         update Task t

@@ -30,7 +30,7 @@ public interface TaskService {
 
     void restoreTask(Long projectId, Long taskId);
 
-    //담당자가 삭제되었을 때 LEADER로 교체
-    void changeAssigneeToLeader(Long projectId, Long username);
+    //담당자가 삭제되었을 때 NULL로 교체
+    void changeAssigneeToNULL(Long projectId, Long taskId);
 }
 

@@ -73,7 +73,7 @@ public class ProjectMemberService {
         }
 
         //Task 담당자 삭제 시 Task 담당자를 LEADER에게 자동 이관
-        taskService.changeAssigneeToLeader(projectId, Long.valueOf(username));
+        taskService.changeAssigneeToNULL(projectId, null);
     }
 
     // 관리자 권한 확인
