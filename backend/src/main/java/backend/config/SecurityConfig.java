@@ -6,6 +6,7 @@ import backend.security.JWT.JwtService;
 import backend.security.Filter.JWTFilter;
 import backend.security.Filter.LoginFilter;
 import backend.security.Handler.RefreshTokenLogoutHandler;
+import backend.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -92,7 +93,7 @@ public class SecurityConfig {
 
     // SecurityFilterChain
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, UserService userService) throws Exception {
 
 
         // CSRF 보안 필터 disable
@@ -143,7 +144,11 @@ public class SecurityConfig {
         // OAuth2 인증용
         http
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(socialSuccessHandler));
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(userService)
+                        )
+                        .successHandler(socialSuccessHandler)
+                );
 
 
 

@@ -258,14 +258,16 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         Optional<User> entity = userRepository.findByUsernameAndIsSocial(username, true);
 
         if (entity.isPresent()) {
-            role = entity.get().getRoleType().name();
+            User user = entity.get();
+
+            role = user.getRoleType().name();
 
             UserRequestDTO dto = new UserRequestDTO();
             dto.setNickname(nickname);
             dto.setEmail(email);
 
-            entity.get().updateUser(dto);
-            userRepository.save(entity.get());
+            user.updateUser(dto);
+            userRepository.save(user);
 
         } else {
             User newUserEntity = User.builder()
@@ -282,7 +284,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
             userRepository.save(newUserEntity);
         }
 
-        authorities = List.of(new SimpleGrantedAuthority(role));
+        authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
         // 최종 attributes는 원본 전체를 넣는 쪽이 안전
         return new CustomOAuth2User(attributes, authorities, username);
