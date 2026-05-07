@@ -97,7 +97,7 @@ export default function TaskEditor(props) {
 
               <div className="space-y-5">
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                     담당자 변경
                   </label>
                   <select
@@ -124,7 +124,7 @@ export default function TaskEditor(props) {
 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                       시작일
                     </label>
                     <input
@@ -135,7 +135,7 @@ export default function TaskEditor(props) {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                       마감일
                     </label>
                     <input
@@ -149,7 +149,7 @@ export default function TaskEditor(props) {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                     현재 상태
                   </label>
                   <select
@@ -224,7 +224,7 @@ export default function TaskEditor(props) {
                 type="text"
                 value={editedTask.title || ''}
                 onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
-                className="w-full border-none bg-transparent p-0 text-2xl font-black text-gray-900 outline-none placeholder:text-gray-200"
+                className="w-full border-none bg-transparent p-0 text-2xl font-black text-foreground outline-none placeholder:text-muted-foreground/50"
                 placeholder="작업 제목을 입력하세요"
               />
             </div>

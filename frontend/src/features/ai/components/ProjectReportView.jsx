@@ -318,7 +318,7 @@ export default function ProjectReportView({
   const completedTasks = summary.completed || 0;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const unassignedCount = tasks.filter((task) => !task.assigneeId).length;
-  const analysisPeriodDays = 14;
+  const analysisPeriodDays = 7;
   const analysisStartTime = Date.now() - analysisPeriodDays * 24 * 60 * 60 * 1000;
   const completedWithDueDate = tasks.filter((task) => {
     if (task.status !== 'DONE') return false;
@@ -642,17 +642,17 @@ export default function ProjectReportView({
           </div>
         </div>
         {[
-          { label: '완료율', value: `${completionRate}%`, tone: 'text-blue-600' },
-          { label: '지연 완료', value: `${delayedDoneCount}건`, tone: 'text-amber-600' },
-          { label: '미배정 작업', value: `${unassignedCount}건`, tone: 'text-rose-600' },
-          { label: '작업 진척률 (2주)', value: `${statusChangeRate}%`, tone: 'text-sky-600' },
+          { label: '전체 완료율', value: `${completionRate}%`, tone: 'text-blue-600' },
+          { label: '주간 진척률', value: `${statusChangeRate}%`, tone: 'text-sky-600' },
+          { label: '마감 지연 작업', value: `${delayedDoneCount}건`, tone: 'text-amber-600' },
           {
-            label: '평균 일정 여유일',
-            value: `${averageScheduleMargin}일`,
+            label: '평균 마감 여유일',
+            value: `${averageScheduleMargin > 0 ? '+' : ''}${averageScheduleMargin}일`,
             tone: 'text-indigo-600',
           },
+          { label: '담당자 미배정', value: `${unassignedCount}건`, tone: 'text-rose-600' },
           {
-            label: '업데이트 감지 작업',
+            label: '최근 업데이트됨',
             value: `${statusChangedTasks}건`,
             tone: 'text-violet-600',
           },
@@ -726,7 +726,7 @@ export default function ProjectReportView({
             </li>
             <li>- 지연 완료 작업은 {delayedDoneCount}건입니다.</li>
             <li>
-              - 최근 2주 작업 진척률은 {statusChangeRate}%로, 병목 가능 구간 점검이 필요합니다.
+              - 주간 작업 진척률은 {statusChangeRate}%로, 병목 가능 구간 점검이 필요합니다.
             </li>
           </ul>
         </div>
