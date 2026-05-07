@@ -23,6 +23,11 @@ import java.util.Map;
 public class JWTFilter extends OncePerRequestFilter {
 
     @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String authorization = request.getHeader("Authorization");
@@ -51,8 +56,7 @@ public class JWTFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } else {
-            Map<String, String> data = Map.of("error", "Invalid token");
-            ApiResponse<Map<String, String>> apiResponse = ApiResponse.exception(data);
+            ApiResponse<Map<String, String>> apiResponse = ApiResponse.exception("유효하지 않은 토큰입니다.");
             ObjectMapper mapper = new ObjectMapper();
             String result = mapper.writeValueAsString(apiResponse);
 

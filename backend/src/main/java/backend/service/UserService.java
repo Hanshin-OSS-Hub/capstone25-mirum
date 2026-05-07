@@ -1,26 +1,37 @@
 package backend.service;
 
+import backend.dto.user.CustomOAuth2User;
 import backend.dto.user.UserRequestDTO;
 import backend.dto.user.UserResponseDTO;
+import backend.entity.SocialProviderType;
 import backend.entity.User;
 import backend.entity.UserRoleType;
 import backend.security.JWT.JwtService;
 import backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.AccessDeniedException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UserService implements UserDetailsService {
+public class UserService extends DefaultOAuth2UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -113,6 +124,179 @@ public class UserService implements UserDetailsService {
 
 
     // 소셜 로그인 (매 로그인시 : 신규 = 가입, 기존 = 업데이트)
+//    @Override
+//    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+//
+//        // 부모 메소드 호출
+//        OAuth2User oAuth2User = super.loadUser(userRequest);
+//
+//        // 데이터
+//        Map<String, Object> attributes;
+//        List<GrantedAuthority> authorities;
+//
+//        String username;
+//        String role = UserRoleType.USER.name();
+//        String email;
+//        String nickname;
+//
+//        // provider 제공자별 데이터 획득
+//        String registrationId = userRequest.getClientRegistration().getRegistrationId().toUpperCase();
+//        if (registrationId.equals(SocialProviderType.KAKAO.name())) {
+//
+//            attributes = (Map<String, Object>) oAuth2User.getAttributes().get("response");
+//            username = registrationId + "_" + attributes.get("id");
+//            email = attributes.get("email").toString();
+//            nickname = attributes.get("nickname").toString();
+//
+//        } else if (registrationId.equals(SocialProviderType.GOOGLE.name())) {
+//
+//            attributes = (Map<String, Object>) oAuth2User.getAttributes();
+//            username = registrationId + "_" + attributes.get("sub");
+//            email = attributes.get("email").toString();
+//            nickname = attributes.get("name").toString();
+//
+//        } else {
+//            throw new OAuth2AuthenticationException("지원하지 않는 소셜 로그인입니다.");
+//        }
+//
+//        // 데이터베이스 조회 -> 존재하면 업데이트, 없으면 신규 가입
+//        Optional<UserEntity> entity = userRepository.findByUsernameAndIsSocial(username, true);
+//        if (entity.isPresent()) {
+//            // role 조회
+//            role = entity.get().getRoleType().name();
+//
+//            // 기존 유저 업데이트
+//            UserRequestDTO dto = new UserRequestDTO();
+//            dto.setNickname(nickname);
+//            dto.setEmail(email);
+//            entity.get().updateUser(dto);
+//
+//            userRepository.save(entity.get());
+//        } else {
+//            // 신규 유저 추가
+//            UserEntity newUserEntity = UserEntity.builder()
+//                    .username(username)
+//                    .password("")
+//                    .isLock(false)
+//                    .isSocial(true)
+//                    .socialProviderType(SocialProviderType.valueOf(registrationId))
+//                    .roleType(UserRoleType.USER)
+//                    .nickname(nickname)
+//                    .email(email)
+//                    .build();
+//
+//            userRepository.save(newUserEntity);
+//        }
+//
+//        authorities = List.of(new SimpleGrantedAuthority(role));
+//
+//        return new CustomOAuth2User(attributes, authorities, username);
+//    }
+    @Override
+    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+
+        OAuth2User oAuth2User = super.loadUser(userRequest);
+
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+        List<GrantedAuthority> authorities;
+
+        String username;
+        String role = UserRoleType.USER.name();
+        String email = null;
+        String nickname = null;
+
+        String registrationId = userRequest.getClientRegistration()
+                .getRegistrationId()
+                .toUpperCase();
+
+        if (registrationId.equals(SocialProviderType.KAKAO.name())) {
+
+            // 최상위 attributes
+            Object idObj = attributes.get("id");
+            if (idObj == null) {
+                throw new OAuth2AuthenticationException("카카오 사용자 식별값(id)이 없습니다.");
+            }
+
+            username = registrationId + "_" + idObj.toString();
+
+            // kakao_account
+            Map<String, Object> kakaoAccount = castToMap(attributes.get("kakao_account"));
+
+            if (kakaoAccount != null) {
+                Object emailObj = kakaoAccount.get("email");
+                if (emailObj != null) {
+                    email = emailObj.toString();
+                }
+
+                Map<String, Object> profile = castToMap(kakaoAccount.get("profile"));
+                if (profile != null) {
+                    Object nicknameObj = profile.get("nickname");
+                    if (nicknameObj != null) {
+                        nickname = nicknameObj.toString();
+                    }
+                }
+            }
+
+        } else if (registrationId.equals(SocialProviderType.GOOGLE.name())) {
+
+            username = registrationId + "_" + String.valueOf(attributes.get("sub"));
+
+            Object emailObj = attributes.get("email");
+            if (emailObj != null) {
+                email = emailObj.toString();
+            }
+
+            Object nameObj = attributes.get("name");
+            if (nameObj != null) {
+                nickname = nameObj.toString();
+            }
+
+        } else {
+            throw new OAuth2AuthenticationException("지원하지 않는 소셜 로그인입니다.");
+        }
+
+        Optional<User> entity = userRepository.findByUsernameAndIsSocial(username, true);
+
+        if (entity.isPresent()) {
+            User user = entity.get();
+
+            role = user.getRoleType().name();
+
+            UserRequestDTO dto = new UserRequestDTO();
+            dto.setNickname(nickname);
+            dto.setEmail(email);
+
+            user.updateUser(dto);
+            userRepository.save(user);
+
+        } else {
+            User newUserEntity = User.builder()
+                    .username(username)
+                    .password("")
+                    .isLock(false)
+                    .isSocial(true)
+                    .socialProviderType(SocialProviderType.valueOf(registrationId))
+                    .roleType(UserRoleType.USER)
+                    .nickname(nickname)
+                    .email(email)
+                    .build();
+
+            userRepository.save(newUserEntity);
+        }
+
+        authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+        // 최종 attributes는 원본 전체를 넣는 쪽이 안전
+        return new CustomOAuth2User(attributes, authorities, username);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> castToMap(Object obj) {
+        if (obj instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
+        return null;
+    }
 
     // 자체/소셜 유저 정보 조회
     @Transactional(readOnly = true)

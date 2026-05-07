@@ -1,586 +1,283 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../features/auth/hooks/useAuth";
-import { HiOutlineBell } from "react-icons/hi2";
-import { api } from '../api/client';
-import CreateProjectModal from '../features/projects/components/CreateProject';
-import ProjectInvitationModal from '../features/invitations/components/ProjectInvitationModal';
-import ProfileModal from '../features/auth/components/ProfileModal';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { useGetDeletedProject } from '@/features/projects/api/useGetDeletedProject.js';
+import { useGetProjectList } from '@/features/projects/api/useGetProjectList.js';
+import { usePermanentDeleteProject } from '@/features/projects/api/usePermanentDeleteProject.js';
+import { useRestoreProject } from '@/features/projects/api/useRestoreProject.js';
+import { useAuth } from '@/features/auth/hooks/useAuth.js';
+import CreateProjectModal from '@/features/projects/components/CreateProject.jsx';
+import {
+  IconFolder,
+  IconFolder5,
+  IconGroup,
+  IconRefresh,
+  IconTrash,
+} from '@/shared/assets/icons.js';
+import LoadingSpinner from '@/shared/components/LoadingSpinner.jsx';
+import { Header } from '@/shared/components/index.js';
+import { EmptyState, ErrorState } from '@/shared/components/ui/index.js';
 
-// 환경 변수로 테스트/API 모드 선택
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+/**
+ * 대시보드 홈 페이지 컴포넌트
+ */
+export default function Home() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isManualLoading, setIsManualLoading] = useState(false); // 수동 갱신 체크용
 
-function Home() {
-    const navigate = useNavigate();
-    const { user, isAuthenticated } = useAuth();
+  const myNickname = user?.nickname || '사용자';
 
-    const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
-    const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
-    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
+  // 1. 프로젝트 목록 조회
+  const {
+    data: projects,
+    isLoading: isProjectsLoading,
+    isFetching: isProjectsFetching,
+    isError: isProjectsError,
+    error: projectsError,
+    refetch: refetchProjects,
+  } = useGetProjectList();
 
-    const [receivedInvitations, setReceivedInvitations] = useState([]);
-    const [sentInvitations, setSentInvitations] = useState([]);
-    const [projects, setProjects] = useState(() => {
-        if (USE_MOCK) {
-            const saved = localStorage.getItem("projects");
-            return saved ? JSON.parse(saved) : [];
-        }
-        return [];
-    });
+  // 2. 삭제된 프로젝트 목록 조회
+  const {
+    data: deletedProjects = [],
+    isLoading: isDeletedLoading,
+    isFetching: isDeletedFetching,
+    isError: isDeletedError,
+    error: deletedError,
+    refetch: refetchDeleted,
+  } = useGetDeletedProject();
 
-    // const location = useLocation();
+  const { mutate: restoreProject } = useRestoreProject();
+  const { mutate: permanentDeleteProject } = usePermanentDeleteProject();
 
-    // // 서버 연결 전, mockProjects에서 삭제된 프로젝트를 필터링하여 초기값으로 사용 (테스트용)
-    // const [projects, setProjects] = useState(() => {
-    //     if (location.state?.deletedProjectId) {
-    //         return mockProjects.filter(p => p.id !== Number(location.state.deletedProjectId));
-    //     }
-    //     return mockProjects;
-    // });
-
-    // // 삭제 후 state 정리만 담당 (필요시)
-    // useEffect(() => {
-    //     if (location.state?.deletedProjectId) {
-    //         navigate(location.pathname, { replace: true, state: null });
-    //     }
-    // }, [location, navigate]);
-
-    const handleGetProjectInvitationsApi2 = useCallback(() => {
-      api.get(`invitations/sent`)
-          .then((data) => {
-            setSentInvitations(data);
-          })
-          .catch((error) => {
-            alert(error.message || "초대 목록을 불러오는데 실패했습니다.");
-          })
-    }, [])
-
-    /**
-     * [READ] 프로젝트 목록 조회 API
-     * 
-     * @returns {Promise<void>} GET /projects API 호출 후 프로젝트 목록을 setProjects로 업데이트
-     * @description 서버에서 프로젝트 목록을 가져와 상태를 업데이트. 실패 시 alert 표시
-     * 
-     * 서버 응답 예시:
-     * [
-     *   {
-     *     "id": "uuid-or-projectId",    // 프로젝트 고유 ID (지금은 서버에서 제공하지 않음)
-     *     "projectName": "프로젝트 이름",
-     *     "description": "프로젝트 설명",
-     *     "taskProgress": 65,           // 진행률 (0-100)
-     *     "memberCount": 3,             // 멤버 수
-     *     "creationDate": "2024-01-15T00:00:00Z"  // ISO 8601 날짜
-     *   },
-     *   ...
-     * ]
-     */
-
-    const handleGetProjectList = async () => {
-        api.get('projects')
-        .then(response => {
-            setProjects(response);
-            localStorage.setItem("projects", JSON.stringify(response));
-        })
-        .catch(error => {
-            alert(error.message || '프로젝트 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
-        });
-    };
-    
-    
-    /**
-     * [READ] 초대 목록 조회 API
-     * 
-     * 현재 상태:
-     * @returns {Array} 서버가 기본 초대 정보만 반환
-     * 서버 응답 예시:
-     * [
-     *   {
-     *     "projectName": "프로젝트 이름",
-     *     "inviterName": "초대한 사용자명",
-     *     "inviteeName": "초대받은 사용자명",
-     *     "status": "INVITED" // INVITED, ACCEPTED, DECLINED
-     *   },
-     *   ...
-     * ]
-     * 문제점: 초대를 식별하기 위해 projectName + inviterName 조합 사용 필요, API 호출 시 ID가 없음
-     * 
-     * 개선된 상태 (권장):
-     * @returns {Array} 서버가 고유 ID와 projectId 포함하여 반환
-     * 서버 응답 예시:
-     * [
-     *   {
-     *     "id": "inv-uuid-1234",                    // 초대 고유 ID (UUID)
-     *     "projectName": "프로젝트 이름",
-     *     "inviterName": "초대한 사용자명",
-     *     "inviteeName": "초대받은 사용자명",
-     *     "status": "INVITED",                      // INVITED, ACCEPTED, DECLINED
-     *     "createdAt": "2024-01-15T10:30:00Z"       // 초대 생성 시각
-     *     "projectId": "proj-uuid-5678",            // (선택사항) 프로젝트 고유 ID (UUID) 특정 프로젝트의 초대만 필터링하고 싶을 때 / 초대 수락 시 곧바로 그 프로젝트로 이동하고 싶을 때
-     *   },
-     *   ...
-     * ]
-     * 장점: 
-     * - 초대를 명확하게 식별 가능 (단순 id 사용)
-     * - API 호출 시 POST /invitations/{id}/accept 형태로 깔끔함
-     * - projectId로 어느 프로젝트의 초대인지 명확함
-     * - 프론트엔드에서 composite key 불필요
-     */
-
-    const handleGetInvitationsApi = async () => {
-        api.get('invitations/received')
-        .then(response => {
-            setReceivedInvitations(response);
-        })
-        .catch(error => {
-            alert(error.message || '초대 목록을 불러오는 데 실패했습니다. 다시 시도해주세요.');
-        });
-    };
-
-
-
-
-    /**
-     * [CREATE] 초대 수락 API
-     * 
-     * @param {string} invitationId - 수락할 초대의 ID
-     * @returns {Promise<void>} POST /invitations/{id}/accept API 호출, 성공 시 invitations 상태 업데이트 및 프로젝트 목록 갱신
-     * @description 초대를 수락하면 해당 초대는 제거되고 프로젝트 목록에 추가됨
-     */
-    const handleAcceptInvitationApi = async (invitationId) => {
-        return api.post(`/invitations/${invitationId}/accept`)
-        .then(() => {
-            setReceivedInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
-            alert('프로젝트 초대를 수락했습니다.');
-            // 초대 수락 후 프로젝트 목록 갱신
-            handleGetProjectList();
-        })
-        .catch(error => {
-            alert(error.message || '초대 수락에 실패했습니다. 다시 시도해주세요.');
-        });
-    };
-
-    /**
-     * [DELETE] 초대 거절 API
-     * 
-     * @param {string} invitationId - 거절할 초대의 ID
-     * @returns {Promise<void>} POST /invitations/{id}/reject API 호출, 성공 시 invitations 상태에서 제거
-     * @description 초대를 거절하면 해당 초대는 목록에서 제거됨
-     */
-    const handleRejectInvitationApi = async (invitationId) => {
-        return api.put(`/invitations/${invitationId}/decline`)
-        .then(() => {
-            setReceivedInvitations(prev => prev.filter(inv => inv.inviteId !== invitationId));
-            alert('프로젝트 초대를 거절했습니다.');
-        })
-        .catch(error => {
-            alert(error.message || '초대 거절에 실패했습니다. 다시 시도해주세요.');
-        });
-    };
-
-    // ==================== [테스트용 함수들] ====================
-
-    // [READ] 초대 목록 조회 (테스트용)
-    // 전체 초대 이력을 저장하되, 렌더링 시에는 INVITED 상태만 표시
-    const getInvitationsTest = () => {
-        const mockInvitations = [
-            {
-                "inviteId": 101,
-                "projectName": "프로젝트 A",
-                "inviterName": "inviter_user",
-                "inviteeName": "me",
-                "status": "INVITED"
-            },
-            {
-                "inviteId": 102,
-                "projectName": "프로젝트 B",
-                "inviterName": "another_user",
-                "inviteeName": "me",
-                "status": "INVITED"
-            },
-            {
-                "inviteId": 103,
-                "projectName": "프로젝트 C",
-                "inviterName": "team_lead",
-                "inviteeName": "me",
-                "status": "INVITED"
-            }
-        ];
-        setReceivedInvitations(mockInvitations);
-    };
-
-    // [CREATE] 초대 수락 (테스트용)
-    // status를 INVITED → ACCEPTED로 변경 (목록에서 자동으로 필터링됨)
-    const acceptInvitationTest = (invitationId) => {
-        const invitation = receivedInvitations.find(inv => inv.inviteId === invitationId);
-        if (!invitation) return;
-
-        setReceivedInvitations(prev =>
-            prev.map(inv => 
-                inv.inviteId === invitationId
-                    ? { ...inv, status: "ACCEPTED" }
-                    : inv
-            )
-        );
-
-        const newProject = {
-            id: Math.floor(Math.random() * 1000) + 1, // 임의의 프로젝트 ID 생성
-            projectName: invitation.projectName,
-            description: "초대받아 참가하게 된 프로젝트입니다.",
-            progress: 0,
-            // 생성한 유저를 리더로 추가 (임의로 userId 1 사용)
-            members: [
-                { userId: 1, username: "qwer", role: "LEADER", name: "미룸 데모 유저", profileImg: null, email: "demo@mirum.com" }
-            ], 
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-        };
-
-        const savedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const updatedProjects = [...savedProjects, newProject];
-        localStorage.setItem("projects", JSON.stringify(updatedProjects));
-        setProjects(updatedProjects);
-        alert(`(테스트 모드) "${invitation.projectName}" 프로젝트 초대를 수락했습니다.`);
-        alert('(테스트 모드) 프로젝트 목록이 갱신되었습니다.');
-    };
-
-    // [DELETE] 초대 거절 (테스트용)
-    // status를 INVITED → DECLINED로 변경 (목록에서 자동으로 필터링됨)
-    const rejectInvitationTest = (invitationId) => {
-        const invitation = receivedInvitations.find(inv => inv.inviteId === invitationId);
-
-        setReceivedInvitations(prev =>
-            prev.map(inv => 
-                inv.inviteId === invitationId
-                    ? { ...inv, status: "DECLINED" }
-                    : inv
-            )
-        );
-        if(invitation) {
-            alert(`(테스트 모드) "${invitation.projectName}" 프로젝트 초대를 거절했습니다.`);
-        }
-    };
-
-    // ==================== [핸들러 선택] ====================
-    // 환경변수에 따라 API 또는 테스트 함수 사용
-    const handleGetReceivedInvitations = USE_MOCK ? getInvitationsTest : handleGetInvitationsApi;
-    // const handleGetSentInvitations = USE_MOCK ? handleGetProjectInvitationsApi2 : handleGetProjectInvitationsApi2;
-    const handleAcceptInvitation = USE_MOCK ? acceptInvitationTest : handleAcceptInvitationApi;
-    const handleRejectInvitation = USE_MOCK ? rejectInvitationTest : handleRejectInvitationApi;
-
-
-    useEffect(() => {
-        if (USE_MOCK) {
-            // 테스트 모드: 모의 초대 데이터 로드
-            localStorage.clear();
-            getInvitationsTest();
-        } else {
-            // 실제 API 모드
-            handleGetProjectList();
-            handleGetReceivedInvitations();
-            // handleGetSentInvitations();
-        }
-    }, []);
-
-    // 로그인 상태면 대시보드로 리다이렉트
-    useEffect(() => {
-        if (!isAuthenticated) {
-            navigate("/");
-        }
-    }, [isAuthenticated, navigate]);
-
-    useEffect(() => {
-        // user가 null이면 로딩 중으로 간주
-        if (user === null) {
-            setLoading(true);
-        } else {
-            setLoading(false);
-        }
-    }, [user]);
-
-    if (loading) {
-        return <div>로딩 중...</div>;
+  const handleRestore = (projectId) => {
+    if (window.confirm('이 프로젝트를 복구하시겠습니까?')) {
+      restoreProject(projectId);
     }
+  };
 
-    return (
-        <>
-            <div className="dashboard-container">
-                {/* 1. 헤더 영역 */}
-                <header className="header" style={ { position: "relative" } }>
-                    <div className="header-left">
-                        <div className="logo-box">M</div>
-                        <span className="logo-text">Mirum</span>
-                    </div>
-                    <div className="header-right">
-                        <button className="profile-btn" style={ { backgroundColor: "transparent" }}
-                            onClick={() => {
-                                setIsProfileModalOpen(false);
-                                setIsInvitationModalOpen(!isInvitationModalOpen);
-                            }}
+  const handlePermanentDelete = (projectId) => {
+    if (
+      window.confirm('이 프로젝트를 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')
+    ) {
+      permanentDeleteProject(projectId);
+    }
+  };
+
+  // 수동 리프레시 로직: 오버레이를 위해 로컬 상태 제어
+  const handleRefreshAll = async () => {
+    setIsManualLoading(true);
+    await Promise.all([refetchProjects(), refetchDeleted()]);
+    setIsManualLoading(false);
+  };
+
+  const isInitialLoading = isProjectsLoading || isDeletedLoading;
+  const isAnyFetching = isProjectsFetching || isDeletedFetching;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* 1. 최초 진입 로딩 또는 2. 수동 갱신 시에만 오버레이 표시 */}
+      {(isInitialLoading || isManualLoading) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+          <LoadingSpinner
+            size="lg"
+            label={
+              isInitialLoading
+                ? '대시보드를 준비 중입니다...'
+                : '최신 데이터를 가져오는 중입니다...'
+            }
+          />
+        </div>
+      )}
+
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => {
+          setIsModalOpen(false);
+          refetchProjects();
+        }}
+      />
+
+      <div className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <Header />
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        {/* Dashboard Title Section */}
+        <header className="mb-8 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              내 대시보드
+            </h1>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">
+              안녕하세요, {myNickname}님! 오늘의 프로젝트 현황입니다.
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95 sm:w-auto sm:px-6"
+            >
+              + 새 프로젝트
+            </button>
+          </div>
+        </header>
+
+        <main className="space-y-10 sm:space-y-12">
+          {/* Project List Section */}
+          <div className="space-y-8">
+            <div className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-xl font-black text-foreground sm:text-2xl">진행 중인 프로젝트</h2>
+              <button
+                onClick={handleRefreshAll}
+                disabled={isAnyFetching}
+                type="button"
+                className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-background px-4 py-2 text-sm font-bold text-muted-foreground shadow-sm ring-1 ring-black/5 transition-all hover:bg-blue-50 hover:text-blue-600 hover:ring-blue-100 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground`}
+              >
+                <IconRefresh size={16} className={isAnyFetching ? 'animate-spin' : ''} />
+                목록 새로고침
+              </button>
+            </div>
+
+            {isProjectsLoading ? (
+              <div className="flex h-64 items-center justify-center">
+                <LoadingSpinner size="lg" label="프로젝트를 불러오는 중..." />
+              </div>
+            ) : isProjectsError ? (
+              <ErrorState
+                title="프로젝트 목록을 불러오지 못했습니다."
+                message={getErrorMessage(projectsError, '잠시 후 다시 시도해 주세요.')}
+                onRetry={handleRefreshAll}
+                className="h-64"
+              />
+            ) : (
+              <>
+                {!Array.isArray(projects) || projects.length === 0 ? (
+                  <EmptyState
+                    title="프로젝트가 없습니다"
+                    description="새로운 프로젝트를 생성하여 협업을 시작해보세요!"
+                    actionLabel="새 프로젝트 생성"
+                    onAction={() => setIsModalOpen(true)}
+                    className="rounded-[40px] border-2 border-dashed border-border"
+                  />
+                ) : (
+                  <section className="space-y-6">
+                    <div className="project-grid grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {projects.map((p) => (
+                        <div
+                          key={p.projectId}
+                          className="group relative cursor-pointer overflow-hidden rounded-[28px] border border-border bg-card p-6 shadow-sm transition-all hover:border-primary/25 hover:shadow-xl sm:rounded-[40px] sm:p-8"
+                          onClick={() => navigate(`/project/${p.projectId}`)}
                         >
-                            <HiOutlineBell size={20} />
-                        </button>
-                        <button 
-                            className="profile-btn" 
-                            onClick={() => {
-                                setIsInvitationModalOpen(false);
-                                setIsProfileModalOpen(!isProfileModalOpen);}}
-                        >
-                            {user?.nickname.charAt(0) || "?"}
-                        </button>
-                    </div>
+                          <div className="absolute right-0 top-0 p-8 text-blue-50/50 transition-colors group-hover:text-blue-100/50">
+                            <IconFolder5 size={96} className="-mr-4 -mt-4" />
+                          </div>
 
-                    {isInvitationModalOpen && (
-                        <ProjectInvitationModal 
-                            receivedInvitations={receivedInvitations}
-                            sentInvitations={sentInvitations}
-                            onClose={() => setIsInvitationModalOpen(false)}
-                            onAccept={handleAcceptInvitation}
-                            onReject={handleRejectInvitation}
-                        />
-                    )}
+                          <div className="relative z-10 space-y-6">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                              <IconFolder size={24} />
+                            </div>
 
+                            <div>
+                              <h3 className="text-xl font-black text-foreground transition-colors group-hover:text-primary">
+                                {p?.projectName}
+                              </h3>
+                              <p className="mt-2 line-clamp-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                                {p?.description || '프로젝트 설명이 없습니다.'}
+                              </p>
+                            </div>
 
-                    {isProfileModalOpen && (
-                        <ProfileModal 
-                            onClose={() => setIsProfileModalOpen(false)} 
-                        />
-                    )}
-                </header>
+                            <div className="space-y-3 pt-2">
+                              <div className="flex items-end justify-between">
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                  진행도
+                                </span>
+                                <span className="text-xs font-bold text-primary">
+                                  {p?.taskProgress || 0}%
+                                </span>
+                              </div>
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-primary transition-all duration-1000"
+                                  style={{ width: `${p?.taskProgress || 0}%` }}
+                                ></div>
+                              </div>
+                            </div>
 
-                {/* 2. 메인 콘텐츠 영역 (회색 배경) */}
-                <main className="main-content">
-                    <div className="content-inner">
-
-                        {/* 인사말 섹션 */}
-                        <section className="greeting-section">
-                            <h1>안녕하세요, {user?.nickname || "김미룸"}님! 👋</h1>
-                            <p>오늘도 팀 프로젝트를 효율적으로 관리해보세요.</p>
-                        </section>
-
-                        <CreateProjectModal
-                            isOpen={isCreateProjectModalOpen}
-                            onClose={() => setIsCreateProjectModalOpen(false)}
-                            onCreateProjectSuccess={(data) => {
-                                setIsCreateProjectModalOpen(false);
-                                alert("프로젝트 생성 완료!");
-                                handleGetProjectList();
-                                // setter 함수의 이전 값을 prev로 꺼내서 갱신하는 로직인데 왜 prev가 undefined였을까..?
-                                setProjects((projects) => {
-                                    const newProjects = [...projects, data];
-                                    localStorage.setItem("projects", JSON.stringify(newProjects));
-                                    return newProjects;
-                                });
-                            }}
-                        />
-
-                        {
-                           !Array.isArray(projects) || projects.length === 0 ? (
-                                <div style={{ textAlign: "center", marginTop: "50px", color: "#666", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
-                                    <p>진행 중인 프로젝트가 없습니다.</p>
-                                    <button className="primary-btn" onClick={() => setIsCreateProjectModalOpen(true)}>+ 새 프로젝트 생성</button>
-                                </div>
-                           ) : (
-                                <>
-                                {/* 요약 카드 섹션 (가로 배치) */}
-                                <section className="summary-cards">
-                                    <div className="card summary-card">
-                                        <div className="card-info">
-                                            <span>🔥 진행 중인 프로젝트</span>
-                                            <strong>{projects.length}개</strong>
-                                        </div>
-                                        <div className="icon-box blue">🚀</div>
-                                    </div>
-
-                                    <div className="card summary-card">
-                                        <div className="card-info">
-                                            <span>⏰ 금일 마감까지 남은 시간</span>
-                                            <strong>3시간 20분</strong> {/* 예시값, 실제 계산 필요 */}
-                                        </div>
-                                        <div className="icon-box green">⏳</div>
-                                    </div>
-
-                                    <div className="card summary-card">
-                                        <div className="card-info">
-                                            <span>🎯 오늘의 목표 달성률</span>
-                                            <strong>60%</strong> {/* 예시값, 실제 계산 필요 */}
-                                        </div>
-                                        <div className="icon-box purple">📈</div>
-                                    </div>
-                                </section>
-
-                                {/* 내 프로젝트 섹션 */}
-                                <section className="project-section">
-                                    <div className="section-header">
-                                        <h2>내 프로젝트</h2>
-                                        <button className="primary-btn" onClick={() => setIsCreateProjectModalOpen(true)}>+ 새 프로젝트</button>
-                                    </div>
-
-                                    <div className="project-grid">
-                                    {
-                                        projects.map((p) => {
-                                            return(
-                                                // 1. 최상위 요소에 고유한 'key'를 추가합니다. (project.id가 가장 이상적입니다.)
-                                                <div
-                                                    key={p.projectId}
-                                                    data-testid="project-card"
-                                                    className="card project-card"
-                                                    onClick={() => {
-                                                        const projectId = p.projectId;
-                                                        if (USE_MOCK) {
-                                                            navigate(`/project/${projectId}`, { state: { p } });
-                                                        } else {
-                                                            navigate(`/project/${projectId}`);
-                                                        }
-                                                    }}
-                                                >
-                                                    <div className="project-header">
-                                                    <div className="project-text">
-                                                        {/* 2. 하드코딩된 텍스트를 props로 받은 데이터로 교체합니다. */}
-                                                        <h2>{p?.projectName}</h2>
-                                                        <p className="project-desc">
-                                                            <br />
-                                                            {
-                                                            p?.description?.length > 30 ? p.description.slice(0, 20) : p.description
-                                                        }</p>
-                                                    </div>
-                                                    <div className="project-icon">📂</div>
-                                                    </div>
-
-                                                    <div className="progress-bar">
-                                                    <div className="full" style={{ width: `${p?.taskProgress}%`, height: 100, backgroundColor: p.progress > 80 ? '#c900fbed' : (p.progress > 30 ? '#2563eb' : '#03f7c2ed') }}></div>
-                                                    </div>
-
-                                                    <div className="card-footer">                                                
-                                                    <span>👤 {USE_MOCK ? p.members.length : p.memberCount || 0}명</span>
-                                                    <span>📅 {USE_MOCK ? p.created_at.slice(0, 10) : p.creationDate?.slice(0, 10) || "-"}</span>
-                                                    </div>
-                                                </div>
-                                            )
-                                        })
-                                    }
-
-                                        {/* 프로젝트 카드 1 */}
-                                        {/* <div className="card project-card">
-                                            <div className="project-header">
-                                                <div className="project-text">
-                                                    <h3>마케팅 전략</h3>
-                                                    <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                                </div>
-
-                                                <div className="project-icon">📂</div>
-                                            </div>
-
-                                            <div className="progress-bar">
-                                                <div className="fill" style={{ width: '65%' }}></div>
-                                            </div>
-
-                                            <div className="card-footer">
-                                                <span>👤 3명</span>
-                                                <span>📅 2시간 전</span>
-                                            </div>
-                                        </div> */}
-
-                                        {/* 프로젝트 카드 2 */}
-                                        {/* <div className="card project-card">
-                                            <div style = { { "display" : "flex", "gap": "24px"} }>
-                                                <h3>마케팅 과제</h3>
-                                                <div className="project-icon">📂</div>
-                                            </div>
-                                            <p className="project-desc">브랜드 전략 수립 및 분석</p>
-                                            <div className="progress-bar">
-                                                <div className="fill" style={{width: '30%'}}></div>
-                                            </div>
-                                            <div className="card-footer">
-                                                <span>👤 2명</span>
-                                                <span>📅 1일 전</span>
-                                            </div>
-                                        </div>        */}
-
-                                        </div>
-                                    </section>
-                                </>
-                            )
-                        }
+                            <div className="flex items-center justify-between border-t border-border pt-4 text-[11px] font-semibold text-muted-foreground">
+                              <div className="flex items-center gap-2">
+                                <IconGroup size={14} />
+                                <span>{p.memberCount || 0}명 참여 중</span>
+                              </div>
+                              <span>{p.createdDate?.slice(0, 10)}</span>
+                            </div>
+                          </div>
                         </div>
-                    </main>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+
+            {!isDeletedLoading && !isDeletedError && deletedProjects?.length > 0 && (
+              <section className="space-y-6 pt-10">
+                <div className="flex items-center gap-3">
+                  <IconTrash size={20} className="text-muted-foreground" />
+                  <h2 className="text-xl font-black text-foreground">삭제된 프로젝트</h2>
                 </div>
-            </>
-        // <>
-        // {/* Header */}
-        //   <header className="header">{/*"bg-white border-b border-gray-200">*/}
-        //     <div className="container">
-        //       <div>
-        //         <div>
-        //           <div className="logo">
-        //               로고
-        //           </div>
-        //           <button>
-        //               미룸
-        //           </button>
-        //         </div>
-        //       </div>
-        //         <div className="img">
-        //           <button>알림</button>
-        //           <button>내 정보</button>
-        //         </div>
-        //       </div>
-        //   </header>
-        //   <section>
-        //       <p>
-        //         <div style = { { "margin-bottom" : "10%" } }>
-        //           <h2>안녕하세요, 김 학생님! 👋</h2>
-        //           <text>오늘도 팀 프로젝트를 효율적으로 관리해보세요</text>
-        //         </div>
-        //         <div style = { { "display": "inline-flex", "justify-content": "space-between", "margin-bottom": "20%" } }>
-        //             진행중인 프로젝트 /
-        //             완료된 작업 /
-        //             팀원 수(?)
-        //         </div>
-        //         <div>
-        //             <h3>
-        //                 프로젝트 목록
-        //                 <button>프로젝트 생성</button>
-        //             </h3>
-        //         </div>
-        //         <div>
-        //             프로젝트 1 / 프로젝트 2 / 프로젝트 3
-        //             프로젝트 4 / 프로젝트 5 / 프로젝트 6
-        //         </div>
-        //       </p>
-        //   </section>
-        //   <footer>
-        //
-        //   </footer>
-        // </>
-    )
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {deletedProjects.map((p) => (
+                    <div
+                      key={p.projectId}
+                      className="group flex items-center justify-between rounded-[32px] border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                          <IconFolder size={20} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-foreground">{p.projectName}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleRestore(p.projectId)}
+                          className="rounded-xl p-2 text-blue-600 transition-all hover:bg-blue-50"
+                          title="복구하기"
+                        >
+                          <IconRefresh size={18} />
+                        </button>
+                        <button
+                          onClick={() => handlePermanentDelete(p.projectId)}
+                          className="rounded-xl p-2 text-red-600 transition-all hover:bg-red-50"
+                          title="영구 삭제"
+                        >
+                          <IconTrash size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {!isDeletedLoading && isDeletedError && (
+              <section className="rounded-[28px] border border-border bg-card p-5">
+                <p className="text-sm font-medium text-muted-foreground">
+                  삭제된 프로젝트 목록을 불러오지 못했습니다:{' '}
+                  {getErrorMessage(deletedError, '알 수 없는 오류')}
+                </p>
+              </section>
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 }
-
-// function Home() {
-//     return(
-//     <div className="min-h-screen bg-gray-50">
-//       {/* Header */}
-//       <header className="bg-white border-b border-gray-200">
-//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//           <div className="flex justify-between items-center h-16">
-//             <div className="flex items-center space-x-3">
-//               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-//                 <i className="ri-team-line text-white text-lg"></i>
-//               </div>
-//               <h1 className="text-xl font-bold text-gray-900">mirum</h1>
-//             </div>
-//             <button
-//               onClick={() => setIsCreateModalOpen(true)}
-//               className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 cursor-pointer whitespace-nowrap"
-//             >
-//               <i className="ri-add-line text-lg"></i>
-//               <span>새 프로젝트</span>
-//             </button>
-//           </div>
-//         </div>
-//       </header>
-//       </div>
-//       )
-// }
-
-export default Home;

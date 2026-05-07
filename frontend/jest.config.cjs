@@ -9,6 +9,8 @@ module.exports = {
   // CSS, SASS 등의 파일을 만났을 때 에러가 나지 않도록 모의(mock) 처리
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@global/(.*)$': '<rootDir>/../global/$1',
   },
 
   // .js, .jsx 파일을 babel-jest를 사용해 변환하도록 설정

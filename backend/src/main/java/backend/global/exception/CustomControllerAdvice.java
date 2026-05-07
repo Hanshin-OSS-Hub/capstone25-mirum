@@ -17,49 +17,47 @@ public class CustomControllerAdvice {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleAccessDeniedException(AccessDeniedException ex) {
-        Map<String, String> response = Map.of("detail", "접근 권한이 없습니다.");
         return ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.exception(response)); //403 에러
+                    .body(ApiResponse.exception("접근 권한이 없습니다.")); //403 에러
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleRuntimeException(RuntimeException ex) {
-        Map<String, String> response = Map.of("detail", "잘못된 요청입니다.");
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.exception(response));  //400에러
+                .body(ApiResponse.exception("잘못된 요청입니다."));  //400에러
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleEntityNotFoundException(EntityNotFoundException ex) {
-        Map<String, String> response = Map.of("detail", "404 NOT FOUND");
+        String message;
+        if (ex.getMessage()==null) message = "해당 파일이 존재하지 않습니다.";
+        else message = ex.getMessage();
+
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.exception(response));
+                .body(ApiResponse.exception(message));
     }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleBadRequestException(BadRequestException ex) {
-        Map<String, String> response = Map.of("detail", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.exception(response));
+                .body(ApiResponse.exception(ex.getMessage()));
     }
 
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
-        Map<String, String> response = Map.of("detail", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.exception(response));
+                .body(ApiResponse.exception(ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        Map<String, String> response = Map.of("detail", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.exception(response));
+                .body(ApiResponse.exception(ex.getMessage()));
     }
 }

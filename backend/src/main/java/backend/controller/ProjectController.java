@@ -1,5 +1,6 @@
 package backend.controller;
 
+import backend.dto.project.DeletedProjectsResponseDTO;
 import backend.dto.project.ProjectResponseDTO;
 import backend.dto.project.ProjectUpdateDTO;
 import backend.dto.project.ProjectsDTO;
@@ -50,6 +51,12 @@ public class ProjectController {
     public ResponseEntity<ApiResponse<Void>>  deleteProject(@AuthenticationPrincipal String username, @PathVariable Long projectId) {
         projectService.deleteProject(projectId, username);
         return ResponseEntity.ok(ApiResponse.response(null));
+    }
+
+    // 소프트 삭제한 프로젝트 검색
+    @GetMapping("/project/deleted")
+    public ResponseEntity<ApiResponse<List<DeletedProjectsResponseDTO>>> getDeletedProject(@AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(ApiResponse.response(projectService.getDeletedProject(username)));
     }
 
     // 프로젝트 복구

@@ -28,6 +28,9 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 
     long countByProjectId(Long projectId);
 
+    @Query("SELECT pm.user.username FROM ProjectMember pm WHERE pm.role = :role AND pm.project.id = :projectId")
+    List<String> findLeader(@Param("projectId") Long projectId, @Param("role") ProjectMemberRoleType role);
+
     //LEADER 찾는 매서드
     @Query("SELECT pm FROM ProjectMember pm JOIN FETCH pm.user WHERE pm.project.id = :projectId AND pm.role = :role")
     Optional<ProjectMember> findLeader(@Param("projectId") Long projectId,

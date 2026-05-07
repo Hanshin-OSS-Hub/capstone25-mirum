@@ -1,110 +1,115 @@
-// src/components/HeroSection.jsx
-import React from "react";
-import { Button } from "./Button";
+import { IconCheck, IconPlay, IconRocket } from '@/shared/assets/icons.js';
 
-export const HeroSection = () => {
-  const scrollToContact = () => {
-    const contactSection = document.getElementById("contact");
-    if (contactSection) {
-      contactSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const scrollToDemo = () => {
-    const featuresSection = document.getElementById("features");
-    if (featuresSection) {
-      featuresSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
+/**
+ * 랜딩 페이지 히어로 섹션 컴포넌트
+ * @param {object} props
+ * @param {Function} props.onLoginOpen - 소셜 로그인 모달 열기 핸들러
+ */
+export default function HeroSection({ onLoginOpen }) {
   return (
-    <section
-      className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50"
-      style={{
-        backgroundImage:
-          "url('https://readdy.ai/api/search-image?query=Modern%20university%20students%20collaborating%20on%20laptops%20in%20a%20bright%2C%20clean%20study%20space%20with%20soft%20lighting%2C%20minimalist%20design%2C%20productivity%20atmosphere%2C%20teamwork%20environment%2C%20contemporary%20workspace%20with%20natural%20light%20streaming%20through%20large%20windows%2C%20clean%20white%20and%20blue%20color%20scheme%2C%20professional%20yet%20friendly%20atmosphere&width=1920&height=1080&seq=hero1&orientation=landscape')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundBlendMode: "overlay",
-      }}
-    >
-      <div className="absolute inset-0 bg-white/80"></div>
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+    <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden bg-background">
+      {/* Background Decor */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute left-[-10%] top-[-10%] h-[600px] w-[600px] rounded-full bg-blue-100/30 blur-[120px]" />
+        <div className="absolute bottom-[-5%] right-[-5%] h-[700px] w-[700px] rounded-full bg-indigo-100/20 blur-[120px]" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[1400px] px-8 py-24 sm:px-12 lg:px-16">
+        <div className="grid grid-cols-1 items-center gap-20 min-[1480px]:grid-cols-2">
           {/* Left Content */}
-          <div className="text-center lg:text-left">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              마감일까지 대책 없이
-              <span className="text-indigo-600"> 미루던 일</span>,<br />
-              이제는 <span className="text-indigo-600">미룸</span>에서
-              <span className="text-indigo-600"> 함께 끝내자!</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              대학생을 위한 직관적이고 통합된 프로젝트 관리 도구
-              <br />
-              복잡한 협업 도구는 이제 그만, MIRUM으로 간편하게 시작하세요
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button
-                variant="primary"
-                size="lg"
-                className="text-lg px-8 py-4"
-                onClick={scrollToContact}
-              >
-                <i className="ri-rocket-line mr-2"></i>
-                무료로 시작하기
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="text-lg px-8 py-4"
-                onClick={scrollToDemo}
-              >
-                <i className="ri-play-circle-line mr-2"></i>
-                데모 보기
-              </Button>
+          <div className="text-left">
+            <div className="mb-10 inline-flex items-center gap-2.5 rounded-full border border-border bg-blue-50 px-5 py-2 shadow-[0_2px_10px_rgba(37,99,235,0.05)]">
+              <IconRocket size={16} className="text-blue-600" />
+              <span className="text-[12px] font-bold uppercase tracking-[0.15em] text-blue-700">
+                Team Collaboration Platform
+              </span>
             </div>
-            <div className="mt-8 flex items-center justify-center lg:justify-start space-x-6 text-sm text-gray-500">
-              <div className="flex items-center">
-                <i className="ri-check-line text-green-500 mr-1"></i>
-                무료 체험
+
+            <h2 className="mb-10 text-[clamp(2.6rem,7vw,5rem)] font-black leading-[1.05] tracking-[-0.04em] text-foreground">
+              <span className="block whitespace-nowrap">마감일까지</span>
+              <span className="block whitespace-nowrap">
+                <span className="text-blue-600">미루던</span> 일,
+              </span>
+              <span className="block whitespace-nowrap">
+                이제{' '}
+                <span className="relative font-black tracking-[-0.04em] text-blue-600">
+                  미룸
+                </span>
+                에서
+              </span>
+              <span className="block whitespace-nowrap">함께 끝내보세요.</span>
+            </h2>
+
+            <p className="mb-12 max-w-lg text-[22px] font-medium leading-relaxed text-muted-foreground">
+              대학생을 위한 가장 직관적인 프로젝트 관리 도구.
+              <br />
+              복잡한 절차 없이,{' '}
+              <span className="font-semibold text-foreground">MIRUM</span>으로
+              시작하세요.
+            </p>
+
+            <div className="flex flex-col gap-5 sm:flex-row">
+              <button
+                onClick={onLoginOpen}
+                className="flex items-center justify-center gap-3 rounded-[28px] bg-blue-600 px-10 py-6 text-xl font-bold text-white shadow-[0_20px_40px_rgba(37,99,235,0.25)] transition-all hover:translate-y-[-2px] hover:bg-blue-700 active:scale-95"
+              >
+                <IconRocket size={24} />
+                무료로 시작하기
+              </button>
+              <button className="flex items-center justify-center gap-3 rounded-[28px] border-[3px] border-border bg-card px-10 py-6 text-xl font-bold text-foreground shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-all hover:translate-y-[-2px] hover:opacity-80 active:scale-95">
+                <IconPlay size={24} />
+                데모 영상 보기
+              </button>
+            </div>
+
+            <div className="mt-16 flex flex-row items-center gap-x-10 gap-y-4 text-[12px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              <div className="flex items-center gap-2.5 whitespace-nowrap transition-colors hover:text-foreground">
+                <IconCheck size={18} className="text-emerald-500" strokeWidth={3} />
+                No Credit Card
               </div>
-              <div className="flex items-center">
-                <i className="ri-check-line text-green-500 mr-1"></i>
-                신용카드 불필요
+              <div className="flex items-center gap-2.5 whitespace-nowrap transition-colors hover:text-foreground">
+                <IconCheck size={18} className="text-emerald-500" strokeWidth={3} />
+                Unlimited Tasks
               </div>
-              <div className="flex items-center">
-                <i className="ri-check-line text-green-500 mr-1"></i>
-                즉시 사용 가능
+              <div className="flex items-center gap-2.5 whitespace-nowrap transition-colors hover:text-foreground">
+                <IconCheck size={18} className="text-emerald-500" strokeWidth={3} />
+                Free for Students
               </div>
             </div>
           </div>
 
-          {/* Right Content - Stats */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100">
-              <div className="text-3xl font-bold text-indigo-600 mb-2">98%</div>
-              <div className="text-gray-600">프로젝트 완료율 향상</div>
-            </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100">
-              <div className="text-3xl font-bold text-indigo-600 mb-2">50%</div>
-              <div className="text-gray-600">협업 시간 단축</div>
-            </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100">
-              <div className="text-3xl font-bold text-indigo-600 mb-2">
-                10,000+
-              </div>
-              <div className="text-gray-600">대학생 사용자</div>
-            </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100">
-              <div className="text-3xl font-bold text-indigo-600 mb-2">
-                4.9★
-              </div>
-              <div className="text-gray-600">사용자 만족도</div>
-            </div>
+          {/* Right Content - Modern Stats Display */}
+          <div className="animate-in fade-in zoom-in-95 hidden grid-cols-2 gap-8 duration-1000 min-[1480px]:grid">
+            <StatCard label="Task Completion" value="98%" trend="+12%" color="blue" />
+            <StatCard label="Time Saved" value="50%" trend="-2.4h" color="emerald" />
+            <StatCard label="Student Users" value="10k+" trend="New" color="violet" />
+            <StatCard label="User Rating" value="4.9" trend="★ ★ ★ ★ ★" color="amber" />
           </div>
         </div>
       </div>
     </section>
   );
-};
+}
+
+function StatCard({ label, value, trend, color }) {
+  const colors = {
+    blue:    'text-blue-600 bg-blue-50/80 border-blue-100/50',
+    emerald: 'text-emerald-600 bg-emerald-50/80 border-emerald-100/50',
+    violet:  'text-violet-600 bg-violet-50/80 border-violet-100/50',
+    amber:   'text-amber-600 bg-amber-50/80 border-amber-100/50',
+  };
+
+  return (
+    <div className="group rounded-[48px] border border-border bg-card p-10 shadow-[0_32px_64px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.02] backdrop-blur-xl transition-all hover:scale-[1.03] hover:shadow-[0_48px_80px_rgba(0,0,0,0.06)]">
+      <div className={`mb-8 inline-flex rounded-xl px-3 py-1 text-[11px] font-bold uppercase tracking-widest ${colors[color]}`}>
+        {trend}
+      </div>
+      <div className="mb-4 text-[56px] font-black leading-none tracking-[-0.04em] text-foreground transition-colors group-hover:text-blue-600">
+        {value}
+      </div>
+      <div className="text-[13px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+        {label}
+      </div>
+    </div>
+  );
+}

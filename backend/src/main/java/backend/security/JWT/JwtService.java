@@ -78,7 +78,7 @@ public class JwtService {
         refreshCookie.setHttpOnly(true);
         refreshCookie.setSecure(false);
         refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(10);
+        refreshCookie.setMaxAge(0);
         response.addCookie(refreshCookie);
 
         return new JWTResponseDTO(newAccessToken, newRefreshToken);
