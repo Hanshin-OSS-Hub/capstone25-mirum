@@ -33,6 +33,7 @@ public class Project {
     private LocalDate deletedDate;
     private String deleteUsername;
 
+
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
     private List<ProjectMember> projectMembers =  new ArrayList<>();
 

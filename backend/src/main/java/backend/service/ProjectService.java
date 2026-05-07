@@ -152,7 +152,7 @@ public class ProjectService {
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
-                        .deletedDate(p.getDeletedDate())
+                        .deletedDate(p.getDeletedDate().atStartOfDay())
                         // 이거 바꿔야 함
                         .taskProgress(50)
                         .build()
