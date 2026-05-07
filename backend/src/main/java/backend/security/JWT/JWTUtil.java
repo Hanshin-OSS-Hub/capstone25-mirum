@@ -17,7 +17,7 @@ public class JWTUtil {
 
     private static SecretKey secretKey;
     private static final Long accessTokenExpiresIn = 3600L * 1000;
-    private static final Long refreshTokenExpiresIn = 604800L * 1000;
+    private static final Long refreshTokenExpiresIn = 604800L * 1000; //7일
 
     @Value("${spring.jwt.secret}")
     public void setSecretKey(String secret) {

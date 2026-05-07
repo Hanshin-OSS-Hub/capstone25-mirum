@@ -75,9 +75,13 @@ public class User {
     private List<ProjectInvite> projectInvites =  new ArrayList<>();
 
     public void updateUser(UserRequestDTO dto) {
-        //Setter는 최대한 지양
-        this.email = dto.getEmail();
-        this.nickname = dto.getNickname();
+        if (dto.getEmail() != null) {
+            this.email = dto.getEmail();
+        }
+
+        if (dto.getNickname() != null) {
+            this.nickname = dto.getNickname();
+        }
     }
 
 }

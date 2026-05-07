@@ -24,7 +24,15 @@ public class JwtController {
     }
 
     // 소셜 로그인 쿠키 방식의 Refresh 토큰 헤더 방식으로 교환
-    @PostMapping(value = "/jwt/exchange", consumes = MediaType.APPLICATION_JSON_VALUE)
+//    @PostMapping(value = "/jwt/exchange", consumes = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<ApiResponse<JWTResponseDTO>> jwtExchangeApi(
+//            HttpServletRequest request,
+//            HttpServletResponse response
+//    ) {
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .body(ApiResponse.response(jwtService.cookie2Header(request, response)));
+//    }
+    @PostMapping(value = "/jwt/exchange")
     public ResponseEntity<ApiResponse<JWTResponseDTO>> jwtExchangeApi(
             HttpServletRequest request,
             HttpServletResponse response
