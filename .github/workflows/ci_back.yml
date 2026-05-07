@@ -64,23 +64,23 @@ jobs:
       #     path: build/test-results/test/*.xml
       #     retention-days: 30
 
-      - name: Commit Info
-        id: commit_info
-        if: always()
-        run: |
-          # PR의 헤드 커밋 정보를 가져옴
-          echo "msg=$(git log -1 --pretty='%s')" >> $GITHUB_OUTPUT
-          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
-          echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
-          echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
-          echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
+      # - name: Commit Info
+      #   id: commit_info
+      #   if: always()
+      #   run: |
+      #     # PR의 헤드 커밋 정보를 가져옴
+      #     echo "msg=$(git log -1 --pretty='%s')" >> $GITHUB_OUTPUT
+      #     echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
+      #     echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+      #     echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
+      #     echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
           
-          # PR description을 멀티라인으로 안전하게 저장
-          {
-            echo "pr_description<<EOF"
-            echo "${{ github.event.pull_request.body }}"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
+      #     # PR description을 멀티라인으로 안전하게 저장
+      #     {
+      #       echo "pr_description<<EOF"
+      #       echo "${{ github.event.pull_request.body }}"
+      #       echo "EOF"
+      #     } >> $GITHUB_OUTPUT
 
 
 
