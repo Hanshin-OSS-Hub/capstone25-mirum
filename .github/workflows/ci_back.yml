@@ -44,6 +44,7 @@ jobs:
           echo "spring.jwt.secret=${{ secrets.JWT }}" >> src/main/resources/application.properties
           echo "gemini.api.url=${{ secrets.GEMINI_API_URL }}" >> src/main/resources/application.properties
           echo "gemini.api.key=${{ secrets.GEMINI_API_KEY }}" >> src/main/resources/application.properties
+        working-directory: ./backend
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./backend/gradlew
