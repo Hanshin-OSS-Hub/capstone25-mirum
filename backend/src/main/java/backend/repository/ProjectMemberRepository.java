@@ -30,4 +30,8 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 
     @Query("SELECT pm.user.username FROM ProjectMember pm WHERE pm.role = :role AND pm.project.id = :projectId")
     List<String> findLeader(@Param("projectId") Long projectId, @Param("role") ProjectMemberRoleType role);
+
+
+
+     Optional<ProjectMember> findByProjectIdAndRole(Long projectId, ProjectMemberRoleType role);
 }

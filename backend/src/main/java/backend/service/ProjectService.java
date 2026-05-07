@@ -5,16 +5,18 @@ import backend.entity.Project.Project;
 import backend.entity.Project.ProjectMember;
 import backend.entity.Project.ProjectMemberRoleType;
 import backend.entity.User;
+import backend.entity.taskcard.TaskStatus;
 import backend.repository.ProjectMemberRepository;
 import backend.repository.ProjectRepository;
 import backend.repository.UserRepository;
+import backend.repository.taskcard.TaskRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final UserRepository userRepository;
+    private final TaskRepository taskRepository;
 
     //C
     @Transactional
@@ -62,7 +65,7 @@ public class ProjectService {
         //맴버 목록 가져와서 이름, 권한만 뽑은 뒤 DTO로 맵핑
         List<ProjectMemberDTO> projectMemberDTOS = projectMembers.stream()
                 .map(a -> ProjectMemberDTO.builder()
-                        .username(a.getUser().getUsername())
+                        .username(a.getUser().getNickname())
                         .nickname(a.getUser().getNickname())
                         .role(a.getRole())
                         .build()
@@ -135,6 +138,7 @@ public class ProjectService {
         if (isNotLeader(username, projectId)) throw new AccessDeniedException("권한 없음");
         Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
         project.deleteProject(username);
+        taskRepository.softDeleteAllByProjectId(projectId, TaskStatus.DELETED, LocalDate.now());
         //projectRepository.deleteById(projectId);
     }
 
@@ -148,7 +152,7 @@ public class ProjectService {
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
-                        .deletedDate(p.getDeletedDate())
+                        .deletedDate(p.getDeletedDate().atStartOfDay())
                         // 이거 바꿔야 함
                         .taskProgress(50)
                         .build()

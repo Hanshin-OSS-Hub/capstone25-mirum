@@ -8,6 +8,7 @@ import org.hibernate.annotations.Formula;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +30,9 @@ public class Project {
 
     // 삭제 관련
     private boolean isDeleted;
-    private LocalDateTime deletedDate;
+    private LocalDate deletedDate;
     private String deleteUsername;
+
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
     private List<ProjectMember> projectMembers =  new ArrayList<>();
@@ -51,7 +53,7 @@ public class Project {
 
     public void deleteProject(String username){
         this.isDeleted = true;
-        this.deletedDate = LocalDateTime.now();
+        this.deletedDate = LocalDate.now();
         this.deleteUsername = username;
     }
 

@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
+
     Boolean existsByUsername(String name);
+
     Optional<User> findByUsernameAndIsLockAndIsSocial(String username, Boolean isLock, Boolean isSocial);
 
     @Transactional

@@ -69,9 +69,11 @@ public class User {
     private LocalDateTime updatedDate;
 
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     private List<ProjectMember> projectsMembers =  new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     private List<ProjectInvite> projectInvites =  new ArrayList<>();
 
     public void updateUser(UserRequestDTO dto) {

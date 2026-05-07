@@ -51,7 +51,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         }
 
         User entity = User.builder()
-                .username(dto.getUsername())
+                .nickname(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .isLock(false)
                 .isSocial(false)
@@ -73,7 +73,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
                 .orElseThrow(() -> new UsernameNotFoundException(username));
 
         return org.springframework.security.core.userdetails.User.builder()
-                .username(entity.getUsername())
+                .username(entity.getNickname())
                 .password(entity.getPassword())
                 .roles(entity.getRoleType().name())
                 .accountLocked(entity.getIsLock())
