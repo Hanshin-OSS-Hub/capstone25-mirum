@@ -105,6 +105,8 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
 
 # API 키, DB 비밀번호 등 민감 정보만 gradle.properties와 따로 저장
 local.properties

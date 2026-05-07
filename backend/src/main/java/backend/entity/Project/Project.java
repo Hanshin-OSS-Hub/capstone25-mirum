@@ -1,6 +1,7 @@
 package backend.entity.Project;
 
 import backend.dto.project.ProjectUpdateDTO;
+import backend.entity.S3File;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Formula;
@@ -39,6 +40,9 @@ public class Project {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
     private List<ProjectInvite> projectInvites =  new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL,  orphanRemoval = true)
+    private List<S3File> s3Files =  new ArrayList<>();
 
     public void updateProjectInfo(ProjectUpdateDTO projectUpdateDTO){
         this.projectName = projectUpdateDTO.getProjectName();

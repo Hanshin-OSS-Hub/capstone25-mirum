@@ -1,228 +1,194 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { api, client } from '../../../api/client';
-import { useAuth } from '../hooks/useAuth';
-import { HiPencil } from 'react-icons/hi2';
+import { api, client } from '@/api/client.js';
+import { getErrorMessage } from '@/utils/getErrorMessage.js';
+import { notify } from '@/utils/notify.js';
+import { useAuth } from '@/features/auth/hooks/useAuth.js';
+import { IconClose, IconPencil, IconTrash, IconUser } from '@/shared/assets/icons.js';
+import { LoadingSpinner, UserProfileImg } from '@/shared/components/index.js';
+import {
+  Button,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogHeader,
+  DialogOverlay,
+  DialogTitle,
+  IconButton,
+  Input,
+} from '@/shared/components/ui/index.js';
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock.js';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
-function UserEditModal(props) {
-  const [draftName, setDraftName] = useState(props.user?.nickname || "");
-  const [draftEmail, setDraftEmail] = useState(props.user?.email || "");
+/**
+ * 프로필 정보 수정 모달 (현대적인 디자인 리뉴얼)
+ * @param root0
+ * @param root0.user
+ * @param root0.onSave
+ * @param root0.onDelete
+ * @param root0.onClose
+ */
+function UserEditModal({ user, onSave, onDelete, onClose }) {
+  const [draftName, setDraftName] = useState(user?.nickname || '');
+  const [draftEmail, setDraftEmail] = useState(user?.email || '');
+
+  useBodyScrollLock(true);
 
   useEffect(() => {
-    setDraftName(props.user?.nickname || "");
-    setDraftEmail(props.user?.email || "");
-  }, [props.user]);
+    setDraftName(user?.nickname || '');
+    setDraftEmail(user?.email || '');
+  }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (props.onSave) {
-      props.onSave({ username: props.user.username, nickname: draftName, email: draftEmail });
+    if (onSave) {
+      onSave({ username: user.username, nickname: draftName, email: draftEmail });
     }
-    props.onClose();
   };
 
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={props.onClose}
-    >
-      <div
-        style={{
-          background: 'white',
-          borderRadius: '8px',
-          padding: '20px',
-          width: '400px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          position: 'relative'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "8px"
-        }}>
-          <h1>프로필 수정</h1>
-          {/* 닫기 버튼 */}
-          <button
-              type="button"
-              className="login-close-btn"
-              onClick={props.onClose}
+  const modalContent = (
+    <Dialog open={true}>
+      <DialogOverlay onClick={onClose} className="bg-black/40" />
+      <DialogContent className="max-w-[min(28rem,calc(100vw-2rem))] rounded-[32px] duration-200">
+        {/* Header */}
+        <DialogHeader className="flex items-center justify-between px-5 py-5 sm:px-8 sm:py-6">
+          <DialogTitle className="text-xl">프로필 정보 수정</DialogTitle>
+          <IconButton
+            onClick={onClose}
+            className="text-muted-foreground transition-colors hover:bg-muted"
           >
-            닫기버튼
-          </button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <h4>아이디</h4>
-          <input
-            type="text"
-            disabled
-            value={ props.user?.username ?? '' }
-            style={{ width: '100%', padding: '8px', marginBottom: '12px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-          />
-          <h4>이름</h4>
-          <input
-            type="text"
-            value={draftName}
-            onChange={(e) => setDraftName(e.target.value)}
-            style={{ width: '100%', padding: '8px', marginBottom: '12px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-          />
-          <h4>이메일</h4>
-          <input
-            type="email"
-            value={draftEmail}
-            onChange={(e) => setDraftEmail(e.target.value)}
-            style={{ width: '100%', padding: '8px', marginBottom: '12px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
-            <button 
-              type="submit"
-              className="login-button"
-            >
-              저장
-            </button>
+            <IconClose size={20} />
+          </IconButton>
+        </DialogHeader>
 
-            <div
-                style={{
-                  width: 'auto',
-                  padding: '10px',
-                  border: 'none',
-                  background: 'none',
-                  display: "flex",
-                  justifyContent: "center",
-                  // alignItems: "center",
-                  // textAlign: "center"
-                }}
-            >
-              <span style={{
-                color: '#9ca3af',
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                fontWeight: 500,
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.color = '#6b7280';
-                  e.target.style.background = '#f3f4f6';
-                  e.target.style.borderRadius = '6px';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.color = '#9ca3af';
-                  e.target.style.background = 'none';
-                }}
-                onClick={() => props.onDelete()}
-              >
-                회원탈퇴
-              </span>
+        <DialogBody className="p-8">
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-6">
+              {/* Username (Read-only) */}
+              <div className="space-y-2">
+                <label className="px-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                  계정 아이디
+                </label>
+                <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/60 px-4 py-3.5 text-muted-foreground shadow-inner">
+                  <IconUser size={18} />
+                  <span className="text-sm font-bold">{user?.username || '-'}</span>
+                </div>
+              </div>
+
+              {/* Nickname */}
+              <div className="space-y-2">
+                <label className="px-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                  닉네임
+                </label>
+                <div className="group relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
+                    <IconPencil size={18} />
+                  </div>
+                  <Input
+                    type="text"
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    className="h-auto bg-white py-3.5 pl-12 pr-4 text-sm font-bold text-gray-800"
+                    placeholder="닉네임을 입력하세요"
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <label className="px-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                  이메일 주소
+                </label>
+                <div className="group relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
+                    <IconUser size={18} />
+                  </div>
+                  <Input
+                    type="email"
+                    value={draftEmail}
+                    onChange={(e) => setDraftEmail(e.target.value)}
+                    className="h-auto bg-card py-3.5 pl-12 pr-4 text-sm font-bold text-foreground"
+                    placeholder="example@mirum.com"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-
-
-            {/*<button*/}
-            {/*  style={{*/}
-            {/*    width: 'auto',*/}
-            {/*    padding: '10px',*/}
-            {/*    border: 'none',*/}
-            {/*    background: 'none',*/}
-            {/*    color: '#9ca3af',*/}
-            {/*    fontSize: '14px',*/}
-            {/*    cursor: 'pointer',*/}
-            {/*    transition: 'all 0.2s',*/}
-            {/*    fontWeight: 500,*/}
-            {/*  }}*/}
-            {/*  onMouseEnter={(e) => {*/}
-            {/*    e.target.style.color = '#6b7280';*/}
-            {/*    e.target.style.background = '#f3f4f6';*/}
-            {/*    e.target.style.borderRadius = '6px';*/}
-            {/*  }}*/}
-            {/*  onMouseLeave={(e) => {*/}
-            {/*    e.target.style.color = '#9ca3af';*/}
-            {/*    e.target.style.background = 'none';*/}
-            {/*  }}*/}
-            {/*  onClick={() => props.onDelete()}*/}
-            {/*>*/}
-            {/*  회원탈퇴*/}
-            {/*</button>*/}
-        </form>
-      </div>
-    </div>
+            <div className="mt-10 flex flex-col gap-3">
+              <Button
+                type="submit"
+                className="h-auto w-full py-4 text-sm font-black shadow-xl shadow-blue-100"
+              >
+                변경 사항 저장
+              </Button>
+              <Button
+                type="button"
+                onClick={onDelete}
+                variant="ghost"
+                className="h-auto justify-center gap-2 rounded-xl py-3 text-xs font-bold text-muted-foreground transition-all hover:bg-red-500/15 hover:text-red-600 dark:hover:text-red-400"
+              >
+                <IconTrash size={14} />
+                회원탈퇴
+              </Button>
+            </div>
+          </form>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
-
-function ProfileModal(props) {
+/**
+ * 헤더 프로필 퀵 메뉴 모달
+ * @param root0
+ * @param root0.onClose
+ */
+function ProfileModal({ onClose }) {
   const navigate = useNavigate();
   const { user, logout, deleteUser, updateUser } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // 로그아웃 처리
   const handleLogout = () => {
     logout();
     navigate('/');
-    props.onClose();
+    onClose();
   };
 
-  /**
-   * 회원정보 업데이트 API
-   * 
-   * 현재 상태:
-   * @param {Object} updatedData - { name: string, email: string }
-   * @returns {void} 서버가 userId만 반환하므로 클라이언트의 updatedData를 사용하여 updateUser() 호출
-   * 
-   * 다른 방식 (서버에서 전체 유저 정보 반환):
-   * @param {Object} updatedData - { name: string, email: string }
-   * @returns {void} 서버가 { id, username, name, email, ... } 를 반환하므로 response.data를 updateUser()에 전달
-   * 서버 응답 예시: { "id": 1(?), "username": "user123", "name": "홍길동", "email": "hong@example.com" }
-   */
-
   const handleProfileSaveApi = (updatedData) => {
-    api.put('/user', updatedData)
+    api
+      .put('/user', updatedData)
       .then(() => {
         updateUser(updatedData);
-        alert('회원정보가 성공적으로 업데이트되었습니다.');
+        notify.success('회원정보가 성공적으로 업데이트되었습니다.');
+        setIsEditModalOpen(false);
       })
-      .catch(error => {
-        alert(error.message || '회원정보 업데이트에 실패했습니다. 다시 시도해주세요.');
+      .catch((error) => {
+        notify.error(getErrorMessage(error, '회원정보 업데이트에 실패했습니다.'));
       });
-  }
+  };
 
   const handleProfileSaveTest = (updatedData) => {
     updateUser(updatedData);
-    alert('프로필이 성공적으로 업데이트되었습니다. (데모 모드)');
+    notify.success('프로필이 성공적으로 업데이트되었습니다. (데모 모드)');
+    setIsEditModalOpen(false);
   };
 
-  /**
-   * 회원탈퇴 API
-   * 
-   * @returns {Promise<void>} 사용자 확인 후 DELETE /user API 호출, 성공 시 로그아웃 및 메인 페이지 이동
-   * @description 회원탈퇴 확인 후 서버에 탈퇴 요청을 보내고, AuthContext의 deleteUser()로 상태 초기화
-   */
   const handleDeleteUserApi = async () => {
-    if (window.confirm('정말 탈퇴하시겠습니까?')) {
+    if (window.confirm('정말 탈퇴하시겠습니까? 모든 프로젝트 데이터가 소실됩니다.')) {
       try {
-        // await api.delete('/user');
-        await client('/user', { method: 'DELETE', body: JSON.stringify({ username: user.username }) });
+        await client('/user', {
+          method: 'DELETE',
+          body: JSON.stringify({ username: user.username }),
+        });
         deleteUser();
         navigate('/');
-        props.onClose();
+        onClose();
       } catch (error) {
-        alert(error.message || '회원탈퇴에 실패했습니다.');
+        notify.error(getErrorMessage(error, '회원탈퇴에 실패했습니다.'));
       }
     }
   };
@@ -231,153 +197,73 @@ function ProfileModal(props) {
     if (window.confirm('정말 탈퇴하시겠습니까?')) {
       deleteUser();
       navigate('/');
-      props.onClose();
+      onClose();
     }
-  }
+  };
 
   const handleProfileSave = USE_MOCK ? handleProfileSaveTest : handleProfileSaveApi;
   const handleDeleteUser = USE_MOCK ? handleDeleteUserTest : handleDeleteUserApi;
 
   return (
     <>
-      {/* 모달 */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '60px',
-          right: '0',
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          width: '300px',
-          padding: '20px',
-          // zIndex: 100,
-          // animation: 'slideIn 0.2s ease-out',
-        }}
-      >
-        {/* <style>{`
-          @keyframes slideIn {
-            from {
-              opacity: 0;
-              transform: translateY(-10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-        `}</style> */}
-
+      <div className="animate-in slide-in-from-top-4 absolute right-0 top-[68px] z-[60] w-[min(320px,calc(100vw-1rem))] max-w-[calc(100vw-1rem)] overflow-hidden rounded-[32px] border border-border bg-popover p-2 text-popover-foreground shadow-2xl ring-1 ring-black/5 duration-300 dark:ring-white/10">
         {user ? (
-          <>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                marginBottom: '20px',
-                paddingBottom: '16px',
-                borderBottom: '1px solid #e5e7eb',
-              }}
-            >
-              <div
-                style={{
-                  position: 'relative',
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '20px',
-                  flexShrink: 0,
-                }}
-              >
-                {user.nickname?.charAt(0) || '?'}
-                <HiPencil 
-                  style={{ 
-                    position: 'absolute', 
-                    bottom: 0, 
-                    right: 0, 
-                    backgroundColor: 'white', 
-                    borderRadius: '50%', 
-                    padding: '2px',
-                    color: '#000',
-                    // zIndex: 1,
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setIsEditModalOpen(true)}
-                  size={24} 
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1f2937' }}>
+          <div className="flex flex-col">
+            {/* User Info Header */}
+            <div className="flex items-center gap-4 rounded-[28px] border border-border bg-muted/40 p-5">
+              <UserProfileImg
+                name={user.nickname || user.username}
+                profileImg={user.profileImg}
+                size="lg"
+                className="h-14 w-14 ring-2 ring-background"
+              />
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-base font-black text-foreground">
                   {user.nickname || '사용자'}
                 </h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-                  {user.username || '-'}
-                </p>
-                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-                  {user.email || '-'}
+                <p className="mt-0.5 truncate text-xs font-semibold text-muted-foreground">
+                  {user.email || user.username}
                 </p>
               </div>
             </div>
 
-            {/* <div style={{ marginBottom: '20px' }}>
-              {user.username && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '10px 0',
-                    fontSize: '14px',
-                  }}
-                >
+            {/* Quick Menu */}
+            <div className="space-y-1 p-2">
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-foreground transition-all hover:bg-muted hover:text-primary"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <IconPencil size={16} />
                 </div>
-              )}
-            </div> */}
+                프로필 수정
+              </button>
 
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
               <button
                 onClick={handleLogout}
-                style={{
-                  padding: '10px',
-                  border: 'none',
-                  background: 'none',
-                  color: '#9ca3af',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  fontWeight: 500,
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.color = '#6b7280';
-                  e.target.style.background = '#f3f4f6';
-                  e.target.style.borderRadius = '6px';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.color = '#9ca3af';
-                  e.target.style.background = 'none';
-                }}
+                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-muted-foreground transition-all hover:bg-red-500/15 hover:text-red-600 dark:hover:text-red-400"
               >
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted transition-colors hover:bg-red-500/20">
+                  <IconClose size={16} />
+                </div>
                 로그아웃
               </button>
             </div>
-          </>
+          </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '20px 0', color: '#6b7280', fontSize: '14px' }}>
-            로딩 중...
+          <div className="p-10 text-center">
+            <LoadingSpinner size="sm" label="사용자 확인 중..." />
           </div>
         )}
       </div>
 
-      {/* 프로필 수정 모달 */}
       {isEditModalOpen && (
-        <UserEditModal onClose={() => setIsEditModalOpen(false)} user={user} onSave={handleProfileSave} onDelete={handleDeleteUser} />
+        <UserEditModal
+          onClose={() => setIsEditModalOpen(false)}
+          user={user}
+          onSave={handleProfileSave}
+          onDelete={handleDeleteUser}
+        />
       )}
     </>
   );

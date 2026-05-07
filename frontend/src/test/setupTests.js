@@ -1,11 +1,12 @@
 import '@testing-library/jest-dom';
-import { TextEncoder, TextDecoder } from 'util';
+import { TextDecoder, TextEncoder } from 'util';
 
-if (typeof global.TextEncoder === 'undefined') {
-  global.TextEncoder = TextEncoder;
+const testGlobal = globalThis;
+if (typeof testGlobal.TextEncoder === 'undefined') {
+  testGlobal.TextEncoder = TextEncoder;
 }
-if (typeof global.TextDecoder === 'undefined') {
-  global.TextDecoder = TextDecoder;
+if (typeof testGlobal.TextDecoder === 'undefined') {
+  testGlobal.TextDecoder = TextDecoder;
 }
 
 // 모든 테스트에서 사용할 localStorage 모의 객체 생성

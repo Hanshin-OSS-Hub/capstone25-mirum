@@ -14,7 +14,7 @@ public class ApiResponse<T> {
         return new ApiResponse<>(true, "성공", data);
     }
 
-    public static <T> ApiResponse<T> exception(T data) {
-        return new ApiResponse<>(false, "에러 발생", data);
+    public static <T> ApiResponse<T> exception(String message) {
+        return new ApiResponse<>(false, message, null);
     }
 }
