@@ -18,3 +18,15 @@ resource "aws_s3_bucket" "user_data" {
         Name = "my-user-data-bucket"
     }
 }
+
+resource "aws_s3_bucket_cors_configuration" "user_data_cors" {
+    bucket = aws_s3_bucket.user_data.id
+
+    cors_rule {
+        allowed_headers = ["*"]
+        allowed_methods = ["PUT", "GET", "POST"]
+        allowed_origins = ["http://${aws_eip.for_nginx.public_ip}", "http://localhost:5173"]
+        expose_headers = ["ETag"]
+        max_age_seconds = 3000
+    }
+}

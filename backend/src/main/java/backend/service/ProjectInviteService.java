@@ -29,13 +29,13 @@ public class ProjectInviteService {
     @Transactional
     public Long inviteMember(InviteRequestDTO inviteRequestDTO) {
         Long projectId = inviteRequestDTO.getProjectId();
-        String invitee = inviteRequestDTO.getInvitedName();
+        String invited = inviteRequestDTO.getInvitedName();
 
-        if (projectMemberRepository.existsByProjectIdAndUserUsername(projectId, invitee)) {
+        if (projectMemberRepository.existsByProjectIdAndUserUsername(projectId, invited)) {
             throw new IllegalArgumentException("이미 참여 중인 멤버입니다.");
         }
 
-        ProjectInvite existingInvite = projectInviteRepository.findByProjectIdAndUserUsername(projectId, invitee).orElse(null);
+        ProjectInvite existingInvite = projectInviteRepository.findByProjectIdAndUserUsername(projectId, invited).orElse(null);
         ProjectInvite savedInvite;
 
         if (existingInvite != null) {
@@ -50,7 +50,7 @@ public class ProjectInviteService {
             existingInvite.setResponseDate(null);
             savedInvite = existingInvite;
         } else {
-            User user = userRepository.findByUsername(invitee).orElseThrow(EntityNotFoundException::new);
+            User user = userRepository.findByUsername(invited).orElseThrow(EntityNotFoundException::new);
             Project project = projectRepository.getReferenceById(projectId);
 
             ProjectInvite newInvite = ProjectInvite.builder()
@@ -103,7 +103,7 @@ public class ProjectInviteService {
         return invite.stream().map(i -> InviteResponseDTO.builder()
                     .inviteId(i.getId())
                     .projectName(i.getProject().getProjectName())
-                    .inviteeName(i.getUser().getUsername())
+                    .invitedName(i.getUser().getUsername())
                     .status(i.getStatus())
                     .inviterName(i.getInviterName())
                     .build()
@@ -117,7 +117,7 @@ public class ProjectInviteService {
         return invite.stream().map(i -> InviteResponseDTO.builder()
                 .inviteId(i.getId())
                 .projectName(i.getProject().getProjectName())
-                .inviteeName(i.getUser().getUsername())
+                .invitedName(i.getUser().getUsername())
                 .status(i.getStatus())
                 .inviterName(i.getInviterName())
                 .build()

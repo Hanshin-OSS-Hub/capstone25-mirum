@@ -19,7 +19,12 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query ("SELECT p FROM Project p JOIN p.projectMembers m WHERE m.user.username = :username AND p.isDeleted = FALSE")
     List<Project> findAllProjectsByUsername(@Param("username") String username);
 
+    @Query ("SELECT p FROM Project p JOIN p.projectMembers m WHERE m.user.username = :username AND p.isDeleted = TRUE")
+    List<Project> findAllDeletedProjectByUsername(@Param("username") String username);
+
     @Modifying
     @Query("DELETE FROM Project p WHERE p.deletedDate < :beforeDate")
     void deleteExpiredSoftDeletedDate(@Param("beforeDate") LocalDateTime beforeDate);
+
+    Optional<Project> findByIdAndIsDeletedFalse(Long id);
 }
