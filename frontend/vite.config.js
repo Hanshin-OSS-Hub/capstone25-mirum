@@ -26,6 +26,14 @@ export default defineConfig({
         secure: false,
         ws: true,
       },
+      '/oauth2': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/jwt': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     },
   },
 });

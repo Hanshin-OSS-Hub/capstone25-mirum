@@ -26,6 +26,7 @@ import {
 import { UserProfileImg } from '@/shared/components/index.js';
 import { IconButton } from '@/shared/components/ui/index.js';
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock.js';
+import { useDragScroll } from '@/shared/hooks/useDragScroll.js';
 
 /**
  * Task 상세 모달 컴포넌트
@@ -45,6 +46,8 @@ export default function TaskModal(props) {
   const { projectId, task, members, files, onClose, myUserName, leaderName } = props;
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedTask, setEditedTask] = useState({ ...task, notes: task.notes || '' });
+  const isEdited = JSON.stringify(editedTask) !== JSON.stringify(task);
+  const { ref: scrollRef, onMouseDown, onMouseLeave, onMouseUp, onMouseMove, isDragging } = useDragScroll();
 
   // region AI 및 채팅 관련 상태
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -159,7 +162,7 @@ export default function TaskModal(props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
       <div
-        className={`relative flex h-[92vh] w-full overflow-hidden rounded-[40px] bg-white shadow-2xl ring-1 ring-black/5 ${isChatOpen ? 'max-w-[1760px]' : 'max-w-5xl'}`}
+        className={`relative flex h-[92vh] w-full overflow-hidden rounded-[40px] bg-card shadow-2xl ring-1 ring-black/5 dark:ring-white/5 ${isChatOpen ? 'max-w-[1760px]' : 'max-w-5xl'}`}
       >
         <div className="flex min-w-0 flex-1 flex-col">
           {isEditMode ? (
@@ -173,9 +176,9 @@ export default function TaskModal(props) {
               onDeleteSuccess={onClose}
             />
           ) : (
-            <div className="flex flex-1 flex-col overflow-hidden bg-white">
+            <div className="flex flex-1 flex-col overflow-hidden bg-card">
               {/* Sticky Header Row */}
-              <div className="sticky top-0 z-20 flex items-center justify-between border-b border-gray-100 bg-white/95 px-8 py-4 backdrop-blur-md">
+              <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-card/95 px-8 py-4 backdrop-blur-md">
                 <div className="flex items-center gap-3">
                   <div
                     className={`h-3 w-3 rounded-full ${getStatusDotColor(editedTask.status)} shadow-sm`}
@@ -196,7 +199,7 @@ export default function TaskModal(props) {
                     className={`${
                       isChatOpen
                         ? 'border-blue-600 bg-blue-600 text-white shadow-blue-100'
-                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                        : 'border-border bg-card text-foreground hover:bg-muted'
                     }`}
                   >
                     <IconChat size={18} />
@@ -205,48 +208,55 @@ export default function TaskModal(props) {
                   <IconButton
                     type="button"
                     onClick={() => setIsEditMode(true)}
-                    className="text-gray-700"
+                    className="text-foreground"
                     title="편집하기"
                   >
                     <IconEdit size={20} />
                   </IconButton>
 
-                  <IconButton type="button" onClick={handleClose} className="text-gray-700">
+                  <IconButton type="button" onClick={handleClose} className="text-foreground">
                     <IconClose size={20} />
                   </IconButton>
                 </div>
               </div>
 
-              <div className="custom-scrollbar flex-1 overflow-y-auto px-8 py-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div 
+                ref={scrollRef}
+                onMouseDown={onMouseDown}
+                onMouseLeave={onMouseLeave}
+                onMouseUp={onMouseUp}
+                onMouseMove={onMouseMove}
+                className={`hide-scrollbar flex-1 overflow-y-auto px-8 py-8 ${isDragging ? 'cursor-grabbing' : 'cursor-auto'}`}
+              >
                 <section className="mb-10">
-                  <h1 className="text-3xl font-black leading-tight tracking-tight text-gray-900">
+                  <h1 className="text-3xl font-black leading-tight tracking-tight text-foreground">
                     {editedTask.title}
                   </h1>
-                  <p className="mt-4 max-w-3xl text-lg font-medium leading-relaxed text-gray-600">
+                  <p className="mt-4 max-w-3xl text-lg font-medium leading-relaxed text-muted-foreground">
                     {editedTask.description || '작업 설명이 없습니다.'}
                   </p>
                 </section>
 
-                <div className="rounded-3xl border border-gray-100 bg-gray-50/50 p-7 shadow-sm">
+                <div className="rounded-3xl border border-border bg-muted/50 p-7 shadow-sm">
                   <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
                     <div>
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                         담당자
                       </p>
                       <div className="flex items-center gap-3">
                         <UserProfileImg name={editedTask.assigneeName} size="md" />
-                        <p className="text-base font-semibold text-gray-900">
+                        <p className="text-base font-semibold text-foreground">
                           {editedTask.assigneeName || '미지정'}
                         </p>
                       </div>
                     </div>
 
                     <div>
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                         마감일
                       </p>
-                      <div className="flex items-center gap-2.5 font-semibold text-gray-900">
-                        <div className="rounded-xl bg-blue-50 p-2 text-blue-600">
+                      <div className="flex items-center gap-2.5 font-semibold text-foreground">
+                        <div className="rounded-xl bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                           <IconCalendar size={18} />
                         </div>
                         {editedTask.dueDate ? formatDateDot(editedTask.dueDate) : '기한 없음'}
@@ -254,10 +264,10 @@ export default function TaskModal(props) {
                     </div>
 
                     <div>
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                         상태
                       </p>
-                      <div className="flex items-center gap-2.5 font-semibold text-gray-900">
+                      <div className="flex items-center gap-2.5 font-semibold text-foreground">
                         <div
                           className={`h-2.5 w-2.5 rounded-full ${getStatusDotColor(editedTask.status)} shadow-sm`}
                         />
@@ -267,35 +277,35 @@ export default function TaskModal(props) {
                   </div>
                 </div>
 
-                <div className="mt-10 rounded-[32px] border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-black/5">
+                <div className="mt-10 rounded-[32px] border border-border bg-card p-6 shadow-sm ring-1 ring-black/5 dark:ring-white/5">
                   <div className="mb-4 flex items-center gap-2">
-                    <IconTag size={18} className="text-gray-400" />
-                    <p className="text-sm font-medium text-gray-800">태그</p>
+                    <IconTag size={18} className="text-muted-foreground" />
+                    <p className="text-sm font-medium text-foreground">태그</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {editedTask.tags?.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-2 text-sm font-medium text-blue-700"
+                        className="inline-flex items-center rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-2 text-sm font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                       >
                         #{tag}
                       </span>
                     ))}
                     {(!editedTask.tags || editedTask.tags.length === 0) && (
-                      <p className="py-1 text-sm text-gray-400">등록된 태그가 없습니다.</p>
+                      <p className="py-1 text-sm text-muted-foreground">등록된 태그가 없습니다.</p>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-10 rounded-[32px] border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-black/5">
+                <div className="mt-10 rounded-[32px] border border-border bg-card p-6 shadow-sm ring-1 ring-black/5 dark:ring-white/5">
                   <div className="mb-6 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600">
+                      <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
                         <IconAttachment size={18} />
                       </div>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-lg font-semibold text-foreground">
                         첨부파일{' '}
-                        <span className="ml-1 font-medium text-gray-400">{files.length}</span>
+                        <span className="ml-1 font-medium text-muted-foreground">{files.length}</span>
                       </p>
                     </div>
 
@@ -303,8 +313,8 @@ export default function TaskModal(props) {
                       htmlFor="task-attachment-upload"
                       className={`inline-flex items-center rounded-xl border px-4 py-2 text-sm font-semibold shadow-sm transition-all ${
                         isUploading
-                          ? 'cursor-not-allowed border-gray-100 bg-gray-100 text-gray-400'
-                          : 'cursor-pointer border-gray-200 bg-white text-gray-700 hover:border-blue-200 hover:text-blue-600'
+                          ? 'cursor-not-allowed border-border bg-muted text-muted-foreground'
+                          : 'cursor-pointer border-border bg-card text-foreground hover:border-primary hover:text-primary'
                       }`}
                     >
                       <IconAdd size={18} className="mr-1.5" />
@@ -321,25 +331,25 @@ export default function TaskModal(props) {
                   </div>
 
                   {files.length === 0 ? (
-                    <div className="rounded-3xl bg-gray-50/30 py-10 text-center">
-                      <p className="text-sm text-gray-400">첨부된 파일이 없습니다.</p>
+                    <div className="rounded-3xl bg-muted/30 py-10 text-center">
+                      <p className="text-sm text-muted-foreground">첨부된 파일이 없습니다.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       {files.map((file) => (
                         <div
                           key={file.uuid}
-                          className="group flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-blue-200"
+                          className="group flex items-center justify-between rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary"
                         >
                           <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-blue-500">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-blue-500 dark:text-blue-400">
                               <IconFileGeneric size={20} />
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-gray-800">
+                              <p className="truncate text-sm font-semibold text-foreground">
                                 {file.originalFilename || file.name}
                               </p>
-                              <p className="mt-0.5 text-[10px] font-semibold uppercase text-gray-400">
+                              <p className="mt-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
                                 {formatFileSize(file.size)}
                               </p>
                             </div>
@@ -366,10 +376,10 @@ export default function TaskModal(props) {
                     isAiLoading={isAiLoading}
                     headerContent={
                       <div className="flex items-center gap-2">
-                        <div className="rounded-xl bg-emerald-50 p-2 text-emerald-600">
+                        <div className="rounded-xl bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
                           <IconNote size={18} />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-900">작업 메모</h3>
+                        <h3 className="text-xl font-semibold text-foreground">작업 메모</h3>
                       </div>
                     }
                   />

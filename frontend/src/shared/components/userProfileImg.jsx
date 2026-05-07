@@ -39,7 +39,7 @@ export default function UserProfileImg({
       <div
         className={`flex items-center justify-center overflow-hidden border-white ${variantMap[variant]} ${sizeMap[size]} ${radiusMap[radius]} ${className}`}
       >
-        <img src={profileImg} alt={name || 'user'} className="h-full w-full object-cover" />
+        <img src={profileImg} alt={name || 'user'} draggable={false} className="h-full w-full object-cover select-none" />
       </div>
     );
   }

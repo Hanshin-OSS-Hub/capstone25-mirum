@@ -15,6 +15,7 @@ import {
   Input,
 } from '@/shared/components/ui/index.js';
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock.js';
+import { useDragScroll } from '@/shared/hooks/useDragScroll.js';
 
 /**
  * 새 작업 생성 모달 컴포넌트
@@ -44,6 +45,7 @@ export default function CreateTaskModal(props) {
   const [newTag, setNewTag] = useState('');
 
   useBodyScrollLock(isOpen);
+  const { ref: scrollRef, onMouseDown, onMouseLeave, onMouseUp, onMouseMove, isDragging } = useDragScroll();
 
   useEffect(() => {
     if (isOpen) {
@@ -117,7 +119,14 @@ export default function CreateTaskModal(props) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex max-h-[70vh] flex-col">
-          <DialogBody className="custom-scrollbar flex-1 space-y-6 overflow-y-auto p-5 sm:space-y-8 sm:p-10">
+          <DialogBody 
+            ref={scrollRef}
+            onMouseDown={onMouseDown}
+            onMouseLeave={onMouseLeave}
+            onMouseUp={onMouseUp}
+            onMouseMove={onMouseMove}
+            className={`hide-scrollbar flex-1 space-y-6 overflow-y-auto p-5 sm:space-y-8 sm:p-10 ${isDragging ? 'cursor-grabbing' : 'cursor-auto'}`}
+          >
             <section className="space-y-6">
               <div>
                 <label className="mb-2 block text-xs font-black uppercase tracking-widest text-muted-foreground">

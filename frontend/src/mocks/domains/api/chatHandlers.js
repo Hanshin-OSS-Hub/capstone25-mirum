@@ -64,7 +64,7 @@ export const chatHandlers = [
       id: Date.now(),
       author,
       message,
-      timestamp: new Date().toLocaleString(),
+      timestamp: new Date().toISOString(),
       isAi: !!isAi,
     };
 

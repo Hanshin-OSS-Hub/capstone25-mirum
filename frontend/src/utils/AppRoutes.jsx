@@ -1,14 +1,14 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import PrivateRoute from '@/utils/PrivateRoute.jsx';
-// 2. 레거시 CSS 컴포넌트 (정적 임포트 유지 - 사용자 요청 반영)
-import LoginModal from '@/features/auth/components/Login.jsx';
+import SocialLoginModal from '@/features/auth/components/SocialLoginModal.jsx';
 import { LoadingSpinner, NotFoundState } from '@/shared/components/index.js';
 
 // 1. 페이지 컴포넌트 지연 로딩 (Code Splitting)
 const Landing = lazy(() => import('@/pages/Landing.jsx'));
 const Home = lazy(() => import('@/pages/Home.jsx'));
 const Task = lazy(() => import('@/pages/Task.jsx'));
+const CookieCallback = lazy(() => import('@/pages/OAuthCallback.jsx'));
 
 function NotFoundPage() {
   return <NotFoundState message="요청하신 페이지를 찾을 수 없습니다." />;
@@ -68,6 +68,7 @@ export default function AppRoutes() {
       <Routes>
         {/* 공개 경로 */}
         <Route path="/" element={<Landing />} />
+        <Route path="/cookie" element={<CookieCallback />} />
 
         {/* 보호된 경로 (인증 필요) */}
         <Route
@@ -89,14 +90,18 @@ export default function AppRoutes() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
 
-      {/* 글로벌 모달 */}
+      {/* 세션 만료 시 소셜 로그인 모달 */}
       {isLoginModalOpen && (
-        <LoginModal
-          onClose={() => setIsLoginModalOpen(false)}
-          onCancel={(result) => handleModalClose(result)}
-          onLoginSuccess={() => {
+        <SocialLoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => {
             setIsLoginModalOpen(false);
-            navigate(consumePostLoginRedirect());
+            localStorage.clear();
+            sessionStorage.removeItem('postLoginRedirect');
+            navigate('/');
+          }}
+          onProviderClick={() => {
+            setIsLoginModalOpen(false);
           }}
         />
       )}

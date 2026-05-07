@@ -4,6 +4,7 @@ import { useDeclineInvitation } from '@/features/invitations/api/useDeclineInvit
 import { useGetInviteList } from '@/features/invitations/api/useGetInviteList.js';
 import { InvitationCard } from '@/features/invitations/components/InvitationCard.jsx';
 import { IconClose } from '@/shared/assets/icons.js';
+import { useDragScroll } from '@/shared/hooks/useDragScroll.js';
 
 /**
  * 프로젝트 초대 수신 목록 모달 컴포넌트
@@ -11,6 +12,7 @@ import { IconClose } from '@/shared/assets/icons.js';
  */
 export default function ReceivedInvitationsModal(props) {
   const [loadingId, setLoadingId] = useState(null);
+  const { ref, onMouseDown, onMouseLeave, onMouseUp, onMouseMove, isDragging } = useDragScroll();
 
   const { data: receivedInvitations } = useGetInviteList();
   const { mutate: accept } = useAcceptInvitation();
@@ -38,7 +40,14 @@ export default function ReceivedInvitationsModal(props) {
         </button>
       </div>
 
-      <div className="custom-scrollbar max-h-[400px] overflow-y-auto">
+      <div 
+        ref={ref}
+        onMouseDown={onMouseDown}
+        onMouseLeave={onMouseLeave}
+        onMouseUp={onMouseUp}
+        onMouseMove={onMouseMove}
+        className={`hide-scrollbar max-h-[400px] overflow-y-auto select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      >
         <InvitationCard
           invitations={receivedInvitations}
           loadingId={loadingId}

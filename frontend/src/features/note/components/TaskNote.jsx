@@ -23,26 +23,26 @@ export default function TaskNote({
   aiError = '',
   headerContent,
 }) {
-  const [isPreview, setIsPreview] = useState(true);
+  const [isPreview, setIsPreview] = useState(false);
 
   if (isReadOnly) {
     return (
-      <div className="min-h-[300px] rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="min-h-[300px] rounded-2xl border border-border bg-card p-6 shadow-sm">
         {notes ? (
-          <div className="prose prose-sm max-w-none">
+          <div className="prose prose-sm max-w-none dark:prose-invert">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{notes}</ReactMarkdown>
           </div>
         ) : (
-          <p className="italic text-gray-400">작성된 메모가 없습니다.</p>
+          <p className="italic text-muted-foreground">작성된 메모가 없습니다.</p>
         )}
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
       <div className="mb-6 flex flex-col gap-4 px-1 sm:flex-row sm:items-center sm:justify-between">
-        {headerContent || <h3 className="text-lg font-bold text-gray-900">작업 상세 메모</h3>}
+        {headerContent || <h3 className="text-lg font-bold text-foreground">작업 상세 메모</h3>}
 
         <div className="flex flex-wrap items-center gap-3">
           {onAiSummarize && (
@@ -57,28 +57,30 @@ export default function TaskNote({
             </button>
           )}
 
-          <div className="inline-flex rounded-lg bg-gray-100 p-1">
-            <button
-              type="button"
-              onClick={() => setIsPreview(true)}
-              className={`flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold transition-all ${
-                isPreview ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <IconSearch size={14} />
-              미리보기
-            </button>
+          <div className="inline-flex rounded-lg bg-muted p-1">
             <button
               type="button"
               onClick={() => setIsPreview(false)}
               className={`flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold transition-all ${
                 !isPreview
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900'
+                  ? 'bg-card text-blue-600 shadow-sm dark:text-blue-400'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <IconEdit size={14} />
               편집
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPreview(true)}
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold transition-all ${
+                isPreview 
+                  ? 'bg-card text-blue-600 shadow-sm dark:text-blue-400' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <IconSearch size={14} />
+              미리보기
             </button>
           </div>
         </div>
@@ -94,12 +96,12 @@ export default function TaskNote({
 
       <div className="relative">
         {isPreview ? (
-          <div className="prose prose-sm min-h-[320px] max-w-none rounded-xl border border-gray-50 bg-gray-50/30 p-6">
+          <div className="prose prose-sm min-h-[320px] max-w-none rounded-xl border border-border bg-muted/30 p-6 dark:prose-invert">
             {notes ? (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{notes}</ReactMarkdown>
             ) : (
               <div className="flex items-center justify-center py-20 text-center">
-                <p className="text-sm text-gray-400">메모가 없습니다.</p>
+                <p className="text-sm text-muted-foreground">메모가 없습니다.</p>
               </div>
             )}
           </div>
@@ -108,10 +110,10 @@ export default function TaskNote({
             <textarea
               value={notes}
               onChange={(e) => onChange(e.target.value)}
-              className="h-80 w-full resize-none rounded-xl border border-gray-200 bg-white p-6 font-medium text-gray-800 focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="h-80 w-full resize-none rounded-xl border border-border bg-card p-6 font-medium text-foreground focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:border-blue-700 dark:focus:ring-blue-900/50"
               placeholder="여기에 마크다운 형식으로 메모를 작성하세요..."
             />
-            <div className="absolute bottom-4 right-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-300">
+            <div className="absolute bottom-4 right-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Markdown Supported
             </div>
           </div>

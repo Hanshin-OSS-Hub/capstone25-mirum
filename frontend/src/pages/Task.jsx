@@ -101,6 +101,7 @@ export default function Task() {
   const [topTab, setTopTab] = useState('project');
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [projectReport, setProjectReport] = useState('');
   const [reportHistory, setReportHistory] = useState([]);
   const [activeReportId, setActiveReportId] = useState(null);
@@ -316,6 +317,7 @@ export default function Task() {
       setProjectReport(report);
       setActiveReportId(reportId);
       setReportHistory((prev) => [entry, ...prev].slice(0, 12));
+      setShowPreview(true);
     } catch (err) {
       console.error(err);
     }
@@ -524,7 +526,7 @@ export default function Task() {
                   </div>
                   <div className="p-10">
                     <div
-                      className="flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
+                      className="hide-scrollbar flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
                       onMouseDown={(event) => onLaneMouseDown('FALLBACK', event)}
                       onMouseMove={(event) => onLaneMouseMove('FALLBACK', event)}
                       onMouseUp={endLaneDrag}
@@ -622,7 +624,7 @@ export default function Task() {
                             </div>
                           ) : (
                             <div
-                              className="flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
+                              className="hide-scrollbar flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
                               onMouseDown={(event) => onLaneMouseDown(member.username, event)}
                               onMouseMove={(event) => onLaneMouseMove(member.username, event)}
                               onMouseUp={endLaneDrag}
@@ -672,7 +674,7 @@ export default function Task() {
                         </div>
                       ) : (
                         <div
-                          className="flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
+                          className="hide-scrollbar flex cursor-grab gap-6 overflow-x-auto pb-2 active:cursor-grabbing"
                           onMouseDown={(event) => onLaneMouseDown('UNASSIGNED', event)}
                           onMouseMove={(event) => onLaneMouseMove('UNASSIGNED', event)}
                           onMouseUp={endLaneDrag}
@@ -719,7 +721,7 @@ export default function Task() {
               reportHistory={reportHistory}
               activeReportId={activeReportId}
               onSelectReport={handleSelectReport}
-              previewMode={true}
+              previewMode={showPreview}
             />
           )}
 

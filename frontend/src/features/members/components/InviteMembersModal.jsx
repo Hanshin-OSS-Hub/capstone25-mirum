@@ -12,6 +12,7 @@ import {
   SearchInput,
 } from '@/shared/components/ui/index.js';
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock.js';
+import { useDragScroll } from '@/shared/hooks/useDragScroll.js';
 import { useInviteMember } from '../api/useInviteMember.js';
 
 /**
@@ -23,6 +24,7 @@ function InviteMembersModal(props) {
   const [userInput, setUserInput] = useState('');
 
   useBodyScrollLock(true);
+  const { ref, onMouseDown, onMouseLeave, onMouseUp, onMouseMove, isDragging } = useDragScroll();
 
   const unifiedList = useMemo(() => {
     const memberList = [...members]
@@ -116,7 +118,14 @@ function InviteMembersModal(props) {
           </div>
 
           {/* Member List */}
-          <div className="custom-scrollbar h-80 space-y-3 overflow-y-auto px-1">
+          <div 
+            ref={ref}
+            onMouseDown={onMouseDown}
+            onMouseLeave={onMouseLeave}
+            onMouseUp={onMouseUp}
+            onMouseMove={onMouseMove}
+            className={`hide-scrollbar h-80 space-y-3 overflow-y-auto px-1 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          >
             {filteredMembers.map((user) => (
               <div
                 key={user.username}

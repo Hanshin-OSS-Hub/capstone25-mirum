@@ -233,7 +233,7 @@ export default function TaskChat({ taskId, onChatClose, currentUser, leaderName,
                     </div>
                   </div>
                   <span
-                    className={`px-1 text-[10px] font-bold tracking-tight text-gray-500 ${
+                    className={`whitespace-nowrap px-1 text-[10px] font-bold tracking-tight text-gray-400 ${
                       isSameAuthorAsPrevious ? 'mt-1' : 'mt-1.5'
                     }`}
                   >
