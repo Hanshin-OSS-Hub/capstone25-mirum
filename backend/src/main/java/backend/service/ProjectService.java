@@ -1,9 +1,6 @@
 package backend.service;
 
-import backend.dto.project.ProjectResponseDTO;
-import backend.dto.project.ProjectMemberDTO;
-import backend.dto.project.ProjectUpdateDTO;
-import backend.dto.project.ProjectsDTO;
+import backend.dto.project.*;
 import backend.entity.Project.Project;
 import backend.entity.Project.ProjectMember;
 import backend.entity.Project.ProjectMemberRoleType;
@@ -93,6 +90,8 @@ public class ProjectService {
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
+                        //이거도 바꿔야함
+                        .updatedDate(null)
                         // 이거 바꿔야 함
                         .taskProgress(50)
                         .build()
@@ -137,6 +136,23 @@ public class ProjectService {
         Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
         project.deleteProject(username);
         //projectRepository.deleteById(projectId);
+    }
+
+    // 소프트 삭제된 프로젝트 검색
+    public List<DeletedProjectsResponseDTO> getDeletedProject(String username) {
+        List<Project> projects = projectRepository.findAllDeletedProjectByUsername(username);
+
+        return projects.stream()
+                .map(p -> DeletedProjectsResponseDTO.builder()
+                        .projectId(p.getId())
+                        .projectName(p.getProjectName())
+                        .description(p.getDescription())
+                        .memberCount((long) p.getMemberCount())
+                        .deletedDate(p.getDeletedDate())
+                        // 이거 바꿔야 함
+                        .taskProgress(50)
+                        .build()
+                ).toList();
     }
 
     //권한 검증
