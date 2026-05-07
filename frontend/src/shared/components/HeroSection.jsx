@@ -34,7 +34,6 @@ export default function HeroSection({ onLoginOpen }) {
                 이제{' '}
                 <span className="relative font-black tracking-[-0.04em] text-blue-600">
                   미룸
-                  <span className="absolute -bottom-2 left-0 -z-10 h-2 w-full bg-blue-100/50" />
                 </span>
                 에서
               </span>
@@ -46,7 +45,7 @@ export default function HeroSection({ onLoginOpen }) {
               <br />
               복잡한 절차 없이,{' '}
               <span className="font-semibold text-foreground">MIRUM</span>으로
-              스마트하게 시작하세요.
+              시작하세요.
             </p>
 
             <div className="flex flex-col gap-5 sm:flex-row">
