@@ -38,6 +38,7 @@ jobs:
           echo "spring.security.oauth2.client.registration.kakao.client-id=${{ secrets.KAKAO_CLIENT_ID }}" >> src/main/resources/application.properties
           echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.GOOGLE_CLIENT_ID }}" >>src/main/resources/application.properties
           echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" >>src/main/resources/application.properties
+        working-directory: ./backend
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
