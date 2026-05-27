@@ -1,147 +1,87 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../features/auth/hooks/useAuth";
-import { HeroSection } from '../shared/components/HeroSection';
-// import { FeaturesSection } from './components/FeaturesSection';
-// import { BenefitsSection } from './components/BenefitsSection';
-// import { PricingSection } from './components/PricingSection';
-// import { ContactSection } from './components/ContactSection';
-// import { Footer } from './components/Footer';
-import SignupModal from "../features/auth/components/Signupmodal";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/features/auth/hooks/useAuth.js';
+import SocialLoginModal from '@/features/auth/components/SocialLoginModal.jsx';
+import { HeroSection } from '@/shared/components/index.js';
 
+/**
+ * 랜딩 페이지 컴포넌트
+ */
 export default function Landing() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
 
-  const handleLoginClick = () => {
-    // 📢 "야! 로그인 모달 좀 열어줘!" 라고 방송
-    window.dispatchEvent(new CustomEvent("openLoginModal"));
-  };
+  const [isSocialLoginOpen, setIsSocialLoginOpen] = useState(false);
 
-  // 로그인 상태면 대시보드로 리다이렉트
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
 
-  const scrollToSection = (sectionId) => {
-    const section = document.getElementById(sectionId);
-    if (section) {
-      section.scrollIntoView({ behavior: "smooth" });
-    }
-    setIsMenuOpen(false);
-  };
-
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center">
-              <div
-                className="text-2xl font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
-                style={{ fontFamily: '"Pacifico", serif' }}
-              >
-                MIRUM
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 font-black text-white shadow-lg shadow-blue-100">
+                M
               </div>
+              <span className="text-xl font-black tracking-tight text-foreground">Mirum</span>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-3">
+            {/* Desktop: 로그인 버튼만 */}
+            <nav className="hidden items-center md:flex">
               <button
-                onClick={() => {handleLoginClick()}}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer whitespace-nowrap"
+                onClick={() => setIsSocialLoginOpen(true)}
+                className="ml-2 cursor-pointer whitespace-nowrap rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95"
               >
                 로그인
               </button>
-
-              <button
-                onClick={() => setIsSignupOpen(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer whitespace-nowrap"
-              >
-                회원가입
-              </button>
             </nav>
 
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <i
-                className={`${
-                  isMenuOpen ? "ri-close-line" : "ri-menu-line"
-                } text-xl`}
-              ></i>
-            </button>
-          </div>
-
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="md:hidden py-4 border-t border-gray-200">
-              <div className="flex flex-col space-y-3">
-                <button
-                  onClick={() => scrollToSection("features")}
-                  className="text-left text-gray-700 hover:text-indigo-600 transition-colors py-2 cursor-pointer"
-                >
-                  기능
-                </button>
-                <button
-                  onClick={() => scrollToSection("benefits")}
-                  className="text-left text-gray-700 hover:text-indigo-600 transition-colors py-2 cursor-pointer"
-                >
-                  장점
-                </button>
-                <button
-                  onClick={() => scrollToSection("pricing")}
-                  className="text-left text-gray-700 hover:text-indigo-600 transition-colors py-2 cursor-pointer"
-                >
-                  요금제
-                </button>
-                <button
-                  onClick={() => scrollToSection("contact")}
-                  className="text-left text-gray-700 hover:text-indigo-600 transition-colors py-2 cursor-pointer"
-                >
-                  문의
-                </button>
-                <button
-                  onClick={() => setIsLoginOpen(true)}
-                  className="text-left bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors mt-2 cursor-pointer whitespace-nowrap"
-                >
-                  로그인/회원가입
-                </button>
-              </div>
+            {/* Mobile: 로그인 버튼만 */}
+            <div className="flex items-center md:hidden">
+              <button
+                onClick={() => setIsSocialLoginOpen(true)}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95"
+              >
+                로그인
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main>
-        <HeroSection />
-        {/* <FeaturesSection /> 
-        <BenefitsSection />
-        <PricingSection />
-        <ContactSection /> */}
+        <HeroSection onLoginOpen={() => setIsSocialLoginOpen(true)} />
       </main>
 
-      {isSignupOpen && (
-        <SignupModal
-          isOpen={isSignupOpen}
-          onClose={() => setIsSignupOpen(false)}
-          onSignUpSuccess={() => {
-            setIsSignupOpen(false);
-            alert("회원가입 완료!");
-          }}
-        />
-      )}
+      {/* Footer */}
+      <footer className="border-t border-border bg-background py-12">
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-center justify-center gap-2 opacity-40">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-black text-white">
+              M
+            </div>
+            <span className="text-lg font-bold tracking-tighter text-foreground">Mirum</span>
+          </div>
+          <p className="text-sm font-medium text-muted-foreground">
+            &copy; 2026 Mirum Project. All rights reserved.
+          </p>
+        </div>
+      </footer>
+
+      {/* 소셜 로그인 모달 */}
+      <SocialLoginModal
+        isOpen={isSocialLoginOpen}
+        onClose={() => setIsSocialLoginOpen(false)}
+        onProviderClick={() => setIsSocialLoginOpen(false)}
+      />
     </div>
   );
 }

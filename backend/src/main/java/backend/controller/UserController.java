@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -35,7 +35,8 @@ public class UserController {
     // 회원가입
     @PostMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<Map<String, Long>>> joinApi(
-            @Validated(UserRequestDTO.addGroup.class) @RequestBody UserRequestDTO dto
+            @Validated(UserRequestDTO.addGroup.class)
+            @RequestBody UserRequestDTO dto
     ) {
         Long id = userService.addUser(dto);
         Map<String, Long> responseBody = Collections.singletonMap("userEntityId", id);

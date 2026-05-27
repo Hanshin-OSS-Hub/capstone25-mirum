@@ -103,6 +103,7 @@ public class ProjectInviteService {
         return invite.stream().map(i -> InviteResponseDTO.builder()
                     .inviteId(i.getId())
                     .projectName(i.getProject().getProjectName())
+                    .invitedName(i.getUser().getNickname())
                     .invitedName(i.getUser().getUsername())
                     .status(i.getStatus())
                     .inviterName(i.getInviterName())
@@ -111,12 +112,16 @@ public class ProjectInviteService {
     }
 
     // 발송한 초대 확인
-    public List<InviteResponseDTO> getSentInvites(Long projectId) {
+    public List<InviteResponseDTO> getSentInvites(Long projectId, String username) {
+        if (!projectMemberRepository.existsByProjectIdAndUserUsername(projectId, username)) {
+            throw new org.springframework.security.access.AccessDeniedException("해당 프로젝트에 접근 권한이 없습니다.");
+        }
         List<ProjectInvite> invite = projectInviteRepository.findAllByProjectId(projectId);
 
         return invite.stream().map(i -> InviteResponseDTO.builder()
                 .inviteId(i.getId())
                 .projectName(i.getProject().getProjectName())
+                .invitedName(i.getUser().getNickname())
                 .invitedName(i.getUser().getUsername())
                 .status(i.getStatus())
                 .inviterName(i.getInviterName())

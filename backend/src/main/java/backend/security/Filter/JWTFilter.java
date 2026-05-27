@@ -23,20 +23,30 @@ import java.util.Map;
 public class JWTFilter extends OncePerRequestFilter {
 
     @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String authorization = request.getHeader("Authorization");
-        if (authorization == null) {
+        String accessToken = null;
+
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            accessToken = authorization.split(" ")[1];
+        } else {
+            // SSE 등 헤더를 추가할 수 없는 경우, 쿼리 파라미터에서 토큰 확인
+            String tokenParam = request.getParameter("token");
+            if (tokenParam != null && !tokenParam.isEmpty()) {
+                accessToken = tokenParam;
+            }
+        }
+
+        if (accessToken == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        if (!authorization.startsWith("Bearer ")) {
-            throw new ServletException("Invalid JWT token");
-        }
-
-        // 토큰 파싱
-        String accessToken = authorization.split(" ")[1];
 
         if (JWTUtil.isValid(accessToken, true)) {
 
@@ -51,8 +61,7 @@ public class JWTFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } else {
-            Map<String, String> data = Map.of("error", "Invalid token");
-            ApiResponse<Map<String, String>> apiResponse = ApiResponse.exception(data);
+            ApiResponse<Map<String, String>> apiResponse = ApiResponse.exception("유효하지 않은 토큰입니다.");
             ObjectMapper mapper = new ObjectMapper();
             String result = mapper.writeValueAsString(apiResponse);
 

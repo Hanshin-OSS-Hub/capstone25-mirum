@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -15,10 +16,11 @@ public class ProjectCleanScheduler {
     private final ProjectRepository projectRepository;
 
     @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
     public void cleanProjects(){
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
         projectRepository.deleteExpiredSoftDeletedDate(thirtyDaysAgo);
 
-        log.info("영구 삭제 작업 완료");
+        log.info("[Scheduler] 삭제 후 30일 지난 프로젝트 영구 삭제 작업 완료");
     }
 }

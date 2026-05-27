@@ -5,9 +5,11 @@ import backend.entity.Project.Project;
 import backend.entity.Project.ProjectMember;
 import backend.entity.Project.ProjectMemberRoleType;
 import backend.entity.User;
+import backend.entity.taskcard.TaskStatus;
 import backend.repository.ProjectMemberRepository;
 import backend.repository.ProjectRepository;
 import backend.repository.UserRepository;
+import backend.repository.taskcard.TaskRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +27,7 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final UserRepository userRepository;
+    private final TaskRepository taskRepository;
 
     //C
     @Transactional
@@ -62,7 +65,7 @@ public class ProjectService {
         //맴버 목록 가져와서 이름, 권한만 뽑은 뒤 DTO로 맵핑
         List<ProjectMemberDTO> projectMemberDTOS = projectMembers.stream()
                 .map(a -> ProjectMemberDTO.builder()
-                        .username(a.getUser().getUsername())
+                        .username(a.getUser().getNickname())
                         .nickname(a.getUser().getNickname())
                         .role(a.getRole())
                         .build()
@@ -90,10 +93,7 @@ public class ProjectService {
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
-                        //이거도 바꿔야함
-                        .updatedDate(null)
-                        // 이거 바꿔야 함
-                        .taskProgress(50)
+                        .updatedDate(p.getUpdatedDate())
                         .build()
                 ).toList();
     }
@@ -129,13 +129,41 @@ public class ProjectService {
         }
     }
 
+    // 영구 삭제
+    @Transactional
+    public void permanentDeleteProject(Long projectId, String username) {
+        if (isNotLeader(username, projectId)) throw new AccessDeniedException("권한 없음");
+        Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
+        if (!project.isDeleted()) throw new IllegalArgumentException("삭제된 프로젝트만 영구 삭제 가능합니다.");
+
+        // 관련 태스크 영구 삭제
+        taskRepository.deleteAllByProjectId(projectId);
+
+        // 프로젝트 영구 삭제 (CascadeType.ALL로 인해 멤버, 초대, 파일 등도 삭제됨)
+        projectRepository.delete(project);
+    }
+
     //D
     @Transactional
     public void deleteProject(Long projectId, String username){
         if (isNotLeader(username, projectId)) throw new AccessDeniedException("권한 없음");
         Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
         project.deleteProject(username);
+        taskRepository.softDeleteAllByProjectId(projectId, TaskStatus.DELETED, LocalDateTime.now());
         //projectRepository.deleteById(projectId);
+    }
+
+    // 해당 유저가 리더인 모든 프로젝트 삭제
+    @Transactional
+    public void deleteAllProjectsByLeader(String username) {
+        List<ProjectMember> leadMembers = projectMemberRepository.findAllByUserUsernameAndRole(username, ProjectMemberRoleType.LEADER);
+        for (ProjectMember member : leadMembers) {
+            Project project = member.getProject();
+            if (!project.isDeleted()) {
+                project.deleteProject(username);
+                taskRepository.softDeleteAllByProjectId(project.getId(), TaskStatus.DELETED, LocalDateTime.now());
+            }
+        }
     }
 
     // 소프트 삭제된 프로젝트 검색
@@ -149,8 +177,6 @@ public class ProjectService {
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
                         .deletedDate(p.getDeletedDate())
-                        // 이거 바꿔야 함
-                        .taskProgress(50)
                         .build()
                 ).toList();
     }

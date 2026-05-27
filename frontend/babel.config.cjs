@@ -1,6 +1,6 @@
 module.exports = {
   presets: [
     '@babel/preset-env',
-    ['@babel/preset-react', { runtime: 'automatic' }] // React 17+
-  ]
+    ['@babel/preset-react', { runtime: 'automatic' }], // React 17+
+  ],
 };

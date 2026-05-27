@@ -37,6 +37,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Inject properties
+        run: |
+          mkdir -p src/main/resources
+          echo "aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }}" >> src/main/resources/application.properties
+          echo "spring.jwt.secret=${{ secrets.JWT }}" >> src/main/resources/application.properties
+          echo "gemini.api.url=${{ secrets.GEMINI_API_URL }}" >> src/main/resources/application.properties
+          echo "gemini.api.key=${{ secrets.GEMINI_API_KEY }}" >> src/main/resources/application.properties
+          echo "spring.security.oauth2.client.registration.kakao.client-id=${{ secrets.KAKAO_CLIENT_ID }}" >> src/main/resources/application.properties
+          echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.GOOGLE_CLIENT_ID }}" >>src/main/resources/application.properties
+          echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" >>src/main/resources/application.properties
+        working-directory: ./backend
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./backend/gradlew
 
@@ -56,23 +68,23 @@ jobs:
       #     path: build/test-results/test/*.xml
       #     retention-days: 30
 
-      - name: Commit Info
-        id: commit_info
-        if: always()
-        run: |
-          # PR의 헤드 커밋 정보를 가져옴
-          echo "msg=$(git log -1 --pretty='%s')" >> $GITHUB_OUTPUT
-          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
-          echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
-          echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
-          echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
+      # - name: Commit Info
+      #   id: commit_info
+      #   if: always()
+      #   run: |
+      #     # PR의 헤드 커밋 정보를 가져옴
+      #     echo "msg=$(git log -1 --pretty='%s')" >> $GITHUB_OUTPUT
+      #     echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
+      #     echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+      #     echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
+      #     echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
           
-          # PR description을 멀티라인으로 안전하게 저장
-          {
-            echo "pr_description<<EOF"
-            echo "${{ github.event.pull_request.body }}"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
+      #     # PR description을 멀티라인으로 안전하게 저장
+      #     {
+      #       echo "pr_description<<EOF"
+      #       echo "${{ github.event.pull_request.body }}"
+      #       echo "EOF"
+      #     } >> $GITHUB_OUTPUT
 
 
 

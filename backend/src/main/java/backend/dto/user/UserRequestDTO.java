@@ -16,10 +16,11 @@ public class UserRequestDTO {
     public interface deleteGroup {} //회원 삭제
 
     @NotBlank(groups = {existGroup.class, addGroup.class, updateGroup.class, deleteGroup.class})
-    @Size(min = 4)
+    @Size(min = 4, groups = {existGroup.class, addGroup.class, updateGroup.class, deleteGroup.class})
     private String username;
 
-    @NotBlank(groups = {addGroup.class, passwordGroup.class}) @Size(min = 4)
+    @NotBlank(groups = {addGroup.class, passwordGroup.class}) 
+    @Size(min = 4, groups = {addGroup.class, passwordGroup.class})
     private String password;
 
     @NotBlank(groups = {addGroup.class, updateGroup.class})

@@ -2,6 +2,7 @@ package backend.entity;
 import backend.dto.user.UserRequestDTO;
 import backend.entity.Project.ProjectInvite;
 import backend.entity.Project.ProjectMember;
+import backend.entity.taskcard.Task;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -68,16 +69,22 @@ public class User {
     //최종 수정일
     private LocalDateTime updatedDate;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ProjectMember> projectsMembers =  new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ProjectInvite> projectInvites =  new ArrayList<>();
 
     public void updateUser(UserRequestDTO dto) {
-        //Setter는 최대한 지양
-        this.email = dto.getEmail();
-        this.nickname = dto.getNickname();
+        if (dto.getEmail() != null) {
+            this.email = dto.getEmail();
+        }
+
+        if (dto.getNickname() != null) {
+            this.nickname = dto.getNickname();
+        }
     }
 
 }

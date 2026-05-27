@@ -1,10 +1,13 @@
 package backend.config;
 
 import backend.entity.UserRoleType;
+import backend.security.Handler.SocialSuccessHandler;
 import backend.security.JWT.JwtService;
 import backend.security.Filter.JWTFilter;
 import backend.security.Filter.LoginFilter;
 import backend.security.Handler.RefreshTokenLogoutHandler;
+import backend.service.UserService;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -34,16 +37,19 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final AuthenticationConfiguration authenticationConfiguration;
+    AuthenticationConfiguration authenticationConfiguration;
     private final AuthenticationSuccessHandler loginSuccessHandler;
     private final JwtService jwtService;
+    private final AuthenticationSuccessHandler socialSuccessHandler;
 
     public SecurityConfig(
             AuthenticationConfiguration authenticationConfiguration,
-            @Qualifier("LoginSuccessHandler") AuthenticationSuccessHandler loginSuccessHandler, JwtService jwtService
+            @Qualifier("LoginSuccessHandler") AuthenticationSuccessHandler loginSuccessHandler, JwtService jwtService,
+            @Qualifier("SocialSuccessHandler") AuthenticationSuccessHandler socialSuccessHandler
     ) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
+        this.socialSuccessHandler = socialSuccessHandler;
         this.jwtService = jwtService;
     }
 
@@ -71,9 +77,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        //여기 프론트 주소로 바꿔야 함
+
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
@@ -88,7 +94,7 @@ public class SecurityConfig {
 
     // SecurityFilterChain
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, UserService userService) throws Exception {
 
 
         // CSRF 보안 필터 disable
@@ -117,7 +123,8 @@ public class SecurityConfig {
         // 인가
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/jwt/exchange", "/jwt/refresh").permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+                        .requestMatchers("/jwt/exchange", "/jwt/refresh", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/exist", "/user").permitAll()
                         .requestMatchers(HttpMethod.GET, "/user").hasRole(UserRoleType.USER.name())
                         .requestMatchers(HttpMethod.PUT, "/user").hasRole(UserRoleType.USER.name())
@@ -136,10 +143,14 @@ public class SecurityConfig {
                         })
                 );
 
-//        // OAuth2 인증용
-//        http
-//                .oauth2Login(oauth2 -> oauth2
-//                        .successHandler());
+        // OAuth2 인증용
+        http
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(userService)
+                        )
+                        .successHandler(socialSuccessHandler)
+                );
 
 
 

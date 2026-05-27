@@ -66,6 +66,13 @@ public class ProjectController {
         return ResponseEntity.ok(ApiResponse.response(null));
     }
 
+    // 프로젝트 영구 삭제
+    @DeleteMapping("/project/{projectId}/permanent")
+    public ResponseEntity<ApiResponse<Void>> permanentDeleteProject(@PathVariable Long projectId, @AuthenticationPrincipal String username) {
+        projectService.permanentDeleteProject(projectId, username);
+        return ResponseEntity.ok(ApiResponse.response(null));
+    }
+
     // 내가 속한 프로젝트 목록 가져오기
     @GetMapping("/projects")
     public ResponseEntity<ApiResponse<List<ProjectsDTO>>> getAllProjects(@AuthenticationPrincipal String username){

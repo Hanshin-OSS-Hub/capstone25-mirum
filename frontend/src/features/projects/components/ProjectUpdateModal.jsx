@@ -1,53 +1,109 @@
 import { useState } from 'react';
+import { useUpdateProject } from '@/features/projects/api/useUpdateProject.js';
+import { IconClose } from '@/shared/assets/icons.js';
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock.js';
 
-function ProjectUpdateModal(props) {
-    const [projectId, setProjectId] = useState(props.id || null);
-    const [projectTitle, setProjectTitle] = useState(props.project?.projectName || '');
-    const [projectDesc, setProjectDesc] = useState(props.project?.description || '');
+/**
+ * @typedef {import('@/types/project.js').ProjectDTO} ProjectDTO
+ * @param {object} props
+ * @param {string | number} props.projectId - 프로젝트 ID
+ * @param {ProjectDTO} props.project - 프로젝트 상세 정보
+ * @param {() => void} props.onClose - 모달 닫기 함수
+ * @param {string} [props.error] - 에러 메시지
+ */
 
-    const handleClose = () => {
-      if (props.onClose) {
-          props.onClose();
-      }
+/**
+ * 프로젝트 수정을 위한 모달 컴포넌트입니다.
+ * @param {object} props
+ * @returns {JSX.Element | null}
+ */
+export default function ProjectUpdateModal(props) {
+  const { projectId, project, onClose } = props;
+  const [projectTitle, setProjectTitle] = useState(project?.projectName || '');
+  const [projectDesc, setProjectDesc] = useState(project?.description || '');
+
+  const { mutate: updateProject } = useUpdateProject();
+
+  useBodyScrollLock(true);
+
+  if (!project) return null;
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
     }
+  };
 
-    const handleSubmit = (event) => {   
-      event.preventDefault();
-      props.onUpdate({
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    updateProject(
+      {
         projectId: projectId,
         projectName: projectTitle,
-        description: projectDesc
-      });
-    }
-
-    return (
-        <>
-          <div style={ { position: "fixed", inset: 0, zIndex: 9999, backgroundColor: "rgba(15, 23, 42, 0.45)", display: "flex", alignItems: "center", justifyContent: "center" } }>
-            <div style={ { position: "relative", padding: "48px 56px 40px", width: "440px", border: "1px solid #e5e7eb", borderRadius: "32px", backgroundColor: "#fff", boxShadow: "0 20px 45px rgba(15, 23, 42, 0.16)"} }>
-              <button style={ { position: "absolute", top: "18px", right: "22px", border: "None", background: "transparent", fontSize: "20px", color: "#9ca3af", cursor: "pointer"} }
-                type='button' onClick={handleClose}
-              >
-                ✕
-              </button>
-
-              <h1 style={ { marginBottom: "24px", fontSize: "24px", fontWeight: "bold", color: "#111827", textAlign: "center"} }>프로젝트 수정</h1>
-
-              <form onSubmit={handleSubmit} style={ { display: "flex", flexDirection: "column", gap: "20px" } }>
-                <input type="text" value={projectTitle} placeholder="프로젝트 이름" style={ { width: "100%", padding: "12px", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "16px" } }
-                onChange={(event) => setProjectTitle(event.target.value)} />
-                <textarea value={projectDesc} placeholder="프로젝트 설명" style={ { width: "100%", padding: "12px", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "16px", minHeight: "100px", resize: "none" } }
-                onChange={(event) => setProjectDesc(event.target.value)} />
-                {
-                  props.error && <div style={ { color: "red", fontSize: "14px" } }>{props.error}</div>
-                }
-                <button disabled={!projectTitle} type='submit' className={projectTitle ? 'login-button' : 'login-secondary-button'}>
-                  수정하기
-                </button>
-              </form>
-            </div>
-          </div>
-        </>
+        description: projectDesc,
+      },
+      {
+        onSuccess: () => {
+          onClose();
+        },
+      },
     );
-}
+  };
 
-export default ProjectUpdateModal;
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/45 backdrop-blur-sm">
+      <div className="animate-in fade-in zoom-in relative w-full max-w-[440px] rounded-[32px] bg-card p-12 text-card-foreground shadow-2xl ring-1 ring-black/5 duration-200 dark:ring-white/10">
+        <button
+          type="button"
+          className="absolute right-6 top-6 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          onClick={handleClose}
+        >
+          <IconClose size={24} />
+        </button>
+
+        <header className="mb-10 text-center">
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+            Edit Workspace
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">프로젝트 수정</h1>
+        </header>
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Project Title
+            </label>
+            <input
+              type="text"
+              value={projectTitle}
+              placeholder="프로젝트 이름"
+              className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none focus:ring-4 focus:ring-primary/15"
+              onChange={(event) => setProjectTitle(event.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Description
+            </label>
+            <textarea
+              value={projectDesc}
+              placeholder="프로젝트 설명"
+              className="min-h-[100px] w-full resize-none rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none focus:ring-4 focus:ring-primary/15"
+              onChange={(event) => setProjectDesc(event.target.value)}
+            />
+            {props.error && <p className="mt-1 text-xs font-medium text-red-500">{props.error}</p>}
+          </div>
+
+          <button
+            disabled={!projectTitle}
+            type="submit"
+            className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-blue-500/30 disabled:opacity-50 disabled:shadow-none"
+          >
+            수정하기
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
