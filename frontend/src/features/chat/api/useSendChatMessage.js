@@ -18,7 +18,7 @@ export function useSendChatMessage(taskId) {
 
   return useMutation({
     mutationFn: async (payload) => {
-      const response = await api.post(`/tasks/${taskId}/chat`, payload);
+      const response = await api.post(`/api/tasks/${taskId}/chat`, payload);
       return response;
     },
     onSuccess: () => {

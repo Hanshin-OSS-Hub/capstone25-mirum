@@ -1,5 +1,6 @@
 package backend.entity.taskcard;
 
+import backend.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import java.time.LocalDateTime;
@@ -38,7 +39,8 @@ public class Task {
     @Column(columnDefinition = "TEXT")
     private String notes; // 마크다운
 
-    private Long assigneeId; //담당자(Id)
+    private String assigneeId; //담당자(Id)
+    private String assigneeName;
 
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
@@ -47,8 +49,8 @@ public class Task {
     protected Task() {}
 
     public Task(Long projectId, String title, String description, TaskStatus status,
-                String tagsCsv, String notes, Long assigneeId, LocalDateTime dueDate,
-                LocalDateTime createdDate, LocalDateTime updatedDate) {
+                String tagsCsv, String notes, String assigneeId, LocalDateTime dueDate,
+                LocalDateTime createdDate, LocalDateTime updatedDate, String assigneeName) {
         this.projectId = projectId;
         this.title = title;
         this.description = description;
@@ -59,12 +61,13 @@ public class Task {
         this.dueDate = dueDate;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
+        this.assigneeName = assigneeName;
     }
 
 
     // ===== update methods =====
     public void updateBasic(String title, String description, TaskStatus status, String tagsCsv, String notes,
-                            Long assigneeId, LocalDateTime dueDate, LocalDateTime updatedAt) {
+                            String assigneeId, LocalDateTime dueDate, LocalDateTime updatedAt, String assigneeName) {
         if (title != null) this.title = title;
         if (description != null) this.description = description;
         if (status != null) this.status = status;
@@ -72,6 +75,7 @@ public class Task {
         if (notes != null) this.notes = notes;
         if (assigneeId != null) this.assigneeId = assigneeId;
         if (dueDate != null) this.dueDate = dueDate;
+        if (assigneeName != null) this.assigneeName = assigneeName;
 
         this.updatedDate = updatedAt;
     }
@@ -96,7 +100,7 @@ public class Task {
                 .filter(s -> !s.isEmpty())
                 .toList();
     }
-    public void changeAssignee(Long assigneeId, LocalDateTime updatedDate) {
+    public void changeAssignee(String assigneeId, LocalDateTime updatedDate) {
         this.assigneeId = assigneeId;
         this.updatedDate = updatedDate;
     }

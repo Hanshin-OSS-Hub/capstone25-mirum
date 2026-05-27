@@ -24,7 +24,11 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     @Modifying
     @Query("DELETE FROM Project p WHERE p.deletedDate < :beforeDate")
-    void deleteExpiredSoftDeletedDate(@Param("beforeDate") LocalDateTime beforeDate);
+    int deleteExpiredSoftDeletedDate(@Param("beforeDate") LocalDateTime beforeDate);
 
     Optional<Project> findByIdAndIsDeletedFalse(Long id);
+
+    @Modifying
+    @Query("UPDATE Project p SET p.updatedDate = :updatedDate WHERE p.id = :projectId")
+    void updateDate(@Param("projectId") Long projectId, @Param("updatedDate") LocalDateTime updatedDate);
 }

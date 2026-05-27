@@ -12,7 +12,7 @@ export const useGetDeletedFiles = (projectId) => {
   return useQuery({
     queryKey: ['files', 'deleted', projectId],
     queryFn: async () => {
-      return api.get(`/files/deleted?projectId=${projectId}`);
+      return api.get(`/api/files/deleted?projectId=${projectId}`);
     },
     enabled: !!projectId && isTokenAvailable, // projectId와 토큰이 준비되었을 때만 실행
   });

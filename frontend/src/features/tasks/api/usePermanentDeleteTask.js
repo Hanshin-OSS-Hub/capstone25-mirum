@@ -23,7 +23,7 @@ export const usePermanentDeleteTask = () => {
      */
     mutationFn: ({ projectId, taskId }) => {
       /** @type {{ void }} */
-      return api.delete(`project/${projectId}/task/${taskId}/permanent`, {});
+      return api.delete(`/api/project/${projectId}/task/${taskId}/permanent`, {});
     },
     onSuccess: async (_data, variables) => {
       // 특정 프로젝트의 작업 목록과 상세 정보 캐시 무효화

@@ -13,26 +13,26 @@ applyDomTheme(readThemePreference());
  * 프로덕션 환경(import.meta.env.PROD)에서는 실행되지 않습니다.
  * @returns {Promise<ServiceWorkerRegistration | undefined>}
  */
-async function enableMocking() {
-  if (import.meta.env.PROD) {
-    return;
-  }
-
-  const { worker } = await import('./mocks/browser');
-  return worker.start({
-    onUnhandledRequest(request, print) {
-      const { pathname } = new URL(request.url);
-
-      // API 요청만 모킹 대상으로 간주하고, 나머지(라우팅/정적 자산)는 완전히 우회합니다.
-      if (pathname.startsWith('/api/')) {
-        print.warning();
-      }
-    },
-  });
-}
+// async function enableMocking() {
+//   if (import.meta.env.PROD) {
+//     return;
+//   }
+//
+//   const { worker } = await import('./mocks/browser');
+//   return worker.start({
+//     onUnhandledRequest(request, print) {
+//       const { pathname } = new URL(request.url);
+//
+//       // API 요청만 모킹 대상으로 간주하고, 나머지(라우팅/정적 자산)는 완전히 우회합니다.
+//       if (pathname.startsWith('/api/')) {
+//         print.warning();
+//       }
+//     },
+//   });
+// }
 
 // 서비스 워커 시작 후 애플리케이션 렌더링
-enableMocking().then(() => {
+// enableMocking().then(() => {
   const rootElement = document.getElementById('root');
   if (!rootElement) throw new Error('Root element not found');
 
@@ -46,4 +46,4 @@ enableMocking().then(() => {
     </AuthProvider>,
     // </StrictMode>
   );
-});
+// });

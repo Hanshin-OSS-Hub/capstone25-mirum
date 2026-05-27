@@ -1,77 +1,30 @@
-import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useGetChatMessages } from '@/features/chat/api/useGetChatMessages.js';
-import { useSendChatMessage } from '@/features/chat/api/useSendChatMessage.js';
-import { useMirumAI } from '@/features/ai/hooks/useMirumAI.js';
 import { IconCollapse, IconCrown, IconRobot, IconSend } from '@/shared/assets/icons.js';
 import { LoadingSpinner, UserProfileImg } from '@/shared/components/index.js';
+import { useTaskChat } from '@/features/chat/hooks/useTaskChat.js';
 
 /**
- * 작업 카드 내 통합 채팅 패널 컴포넌트 (TanStack Query + MSW 연동)
+ * 작업 카드 내 통합 채팅 패널 컴포넌트
  * @param {object} props
+ * @param {number} props.projectId - 현재 프로젝트 ID
  * @param {string | number} props.taskId - 현재 작업 ID
  * @param {Function} props.onChatClose - 패널 닫기 콜백
  * @param {string} props.currentUser - 현재 사용자 이름
  * @param {string} props.leaderName - 프로젝트 리더 이름
- * @param {object} props.taskContext - AI에게 전달할 작업 컨텍스트
  */
-export default function TaskChat({ taskId, onChatClose, currentUser, leaderName, taskContext }) {
-  const [newMessage, setNewMessage] = useState('');
-  const [isAiMode, setIsAiMode] = useState(false);
-  const chatBottomRef = useRef(null);
-
-  // 1. API 훅 및 AI 훅 사용
-  const { data: chatMessages = [], isLoading: isChatLoading } = useGetChatMessages(taskId);
-  const { mutate: sendMessage } = useSendChatMessage(taskId);
-  const { askTaskAI, isLoading: isAiGenerating } = useMirumAI();
-
-  const scrollChatToBottom = (behavior = 'smooth') => {
-    if (chatBottomRef.current) {
-      chatBottomRef.current.scrollIntoView({ behavior, block: 'end' });
-    }
-  };
-
-  useEffect(() => {
-    scrollChatToBottom('auto');
-  }, [isChatLoading]);
-
-  useEffect(() => {
-    scrollChatToBottom('smooth');
-  }, [chatMessages]);
-
-  const handleSendMessage = async () => {
-    const trimmed = newMessage.trim();
-    if (!trimmed || isAiGenerating) return;
-
-    // 사용자 메시지 서버에 저장
-    sendMessage({
-      author: currentUser || '나',
-      message: trimmed,
-      isAi: false,
-    });
-    setNewMessage('');
-
-    // AI 모드일 경우 AI 답변 생성 및 서버 저장
-    if (isAiMode) {
-      try {
-        const aiResponse = await askTaskAI(trimmed, taskContext);
-        sendMessage({
-          author: 'MIRUM AI',
-          message: aiResponse,
-          isAi: true,
-        });
-      } catch (err) {
-        console.error('AI 답변 생성 실패:', err);
-      }
-    }
-  };
-
-  const handleChatKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+export default function TaskChat({ projectId, taskId, onChatClose, currentUser, leaderName }) {
+  const {
+    newMessage,
+    setNewMessage,
+    isAiMode,
+    setIsAiMode,
+    chatBottomRef,
+    chatMessages,
+    isChatLoading,
+    isAiGenerating,
+    handleSendMessage,
+    handleChatKeyDown
+  } = useTaskChat({ projectId, taskId, currentUser });
 
   const getDateKey = (timestamp) => {
     if (!timestamp) return '';

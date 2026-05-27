@@ -53,7 +53,7 @@ export default function AuthProvider({ children }) {
 
     try {
       // 토큰 저장 후, 유저 정보 조회
-      const profile = await api.get('/user');
+      const profile = await api.get('/api/user');
 
       if (!profile) {
         throw new Error('유저 정보 없음');

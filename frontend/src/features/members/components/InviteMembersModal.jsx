@@ -72,6 +72,7 @@ function InviteMembersModal(props) {
     InviteMember({
       projectId: projectId,
       invitedName: userInput,
+      inviterName: myUsername,
     });
   };
 

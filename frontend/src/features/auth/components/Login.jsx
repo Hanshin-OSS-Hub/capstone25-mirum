@@ -87,7 +87,7 @@ function Login(props) {
       let nickname = null;
       let email = null;
       try {
-        const userProfile = await api.get('user');
+        const userProfile = await api.get('/api/user');
         // 백엔드 응답: { username, social, nickname, email }
         nickname = userProfile?.nickname || null;
         email = userProfile?.email || null;

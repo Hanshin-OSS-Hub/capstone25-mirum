@@ -16,7 +16,7 @@
  * @property {string} description               - 프로젝트 상세 설명
  * @property {number} taskProgress              - 프로젝트 전체 진행률 (0~100)
  * @property {number} memberCount               - 참여 중인 멤버 수
- * @property {string} createdDate               - 생성 일시 (ISO 문자열)
+ * @property {string} creationDate               - 생성 일시 (ISO 문자열)
  * @property {string} [updatedDate]             - 최종 수정 일시 (ISO 문자열)
  * @property {boolean} isDeleted                - 삭제 여부
  * @property {string | null} [deletedDate]      - 삭제 일시 (ISO 문자열)
@@ -32,7 +32,7 @@
  * @property {string} description
  * @property {number} memberCount
  * @property {number} taskProgress
- * @property {string} createdDate
+ * @property {string} creationDate
  * @property {string} updatedDate
  */
 

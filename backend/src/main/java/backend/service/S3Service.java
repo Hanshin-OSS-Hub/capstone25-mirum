@@ -94,9 +94,17 @@ public class S3Service {
                 .build();
     }
 
-    public List<DownloadUrlResponseDTO> getDownloadUrl(List<String> uuids) {
+    public List<DownloadUrlResponseDTO> getDownloadUrl(List<String> uuids, String username) {
         List<S3File> s3File = s3FileRepository.findAllByUuidInAndIsDeletedFalse(uuids);
         if (s3File.isEmpty() || uuids.size() != s3File.size()) throw  new EntityNotFoundException();
+
+        // 권한 체크: 모든 파일의 프로젝트에 대해 멤버인지 확인
+        s3File.forEach(f -> {
+            if (!projectMemberRepository.existsByProjectIdAndUserUsername(f.getProject().getId(), username)) {
+                throw new AccessDeniedException("파일에 대한 접근 권한이 없습니다: " + f.getOriginalFilename());
+            }
+        });
+
         List<DownloadUrlResponseDTO> urls = new ArrayList<>();
 
         s3File.forEach(f -> {
@@ -125,8 +133,16 @@ public class S3Service {
 
     // C
     @Transactional
-    public void uploadComplete(List<String> uuids) {
+    public void uploadComplete(List<String> uuids, String username) {
         List<S3File> s3files =  s3FileRepository.findAllByUuidInAndIsDeletedFalse(uuids);
+        
+        // 권한 체크
+        s3files.forEach(f -> {
+            if (!projectMemberRepository.existsByProjectIdAndUserUsername(f.getProject().getId(), username)) {
+                throw new AccessDeniedException("파일 업로드 권한이 없습니다.");
+            }
+        });
+
         s3files.forEach(f -> {
             try {
                 HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
@@ -145,7 +161,10 @@ public class S3Service {
 
     // R
     // 프로젝트에 속한 모든 파일 반환
-    public List<S3InfoResponseDTO> getAllFilesInProject(Long projectId) {
+    public List<S3InfoResponseDTO> getAllFilesInProject(Long projectId, String username) {
+        if (!projectMemberRepository.existsByProjectIdAndUserUsername(projectId, username)) {
+            throw new AccessDeniedException("해당 프로젝트에 접근 권한이 없습니다.");
+        }
         List<S3File> s3Files = s3FileRepository.findAllFilesInProject(projectId);
 
         return s3Files.stream().map(s -> S3InfoResponseDTO.builder()
@@ -157,6 +176,22 @@ public class S3Service {
                 .createdBy(s.getCreatedBy())
                 .isDeleted(s.isDeleted())
                         //task id 넣을 것
+                .build()).toList();
+    }
+
+    public List<DeletedFilesDTO> getDeletedFiles(Long projectId, String username) {
+        if (!projectMemberRepository.existsByProjectIdAndUserUsername(projectId, username)) {
+            throw new AccessDeniedException("해당 프로젝트에 접근 권한이 없습니다.");
+        }
+        List<S3File> s3Files = s3FileRepository.findAllByProjectIdAndIsDeletedTrue(projectId);
+
+        return s3Files.stream().map(s -> DeletedFilesDTO.builder()
+                .uuid(s.getUuid())
+                .originalFilename(s.getOriginalFilename())
+                .size(s.getSize())
+                .deletedDate(s.getDeletedDate())
+                .contentType(s.getContentType())
+                .createdBy(s.getCreatedBy())
                 .build()).toList();
     }
 
@@ -211,6 +246,34 @@ public class S3Service {
 
         if (files.getUuid().size() != s3Files.size()) {
             String a = (files.getUuid().size() - s3Files.size()) + "개의 파일";
+            response.put(a, "존재하지 않는 파일");
+        }
+
+        return response;
+    }
+
+    @Transactional
+    public Map<String, String> restoreFiles(List<String> uuids, String username) {
+        Map<String, String> response = new HashMap<>();
+
+        List<S3File> s3Files = s3FileRepository.findAllByUuidInAndIsDeletedTrue(uuids);
+        if (s3Files.isEmpty()) {
+            response.put("error", "존재하지 않는 파일");
+            return response;
+        }
+
+        Long projectId = s3Files.get(0).getProject().getId();
+        List<String> leaders = projectMemberRepository.findLeader(projectId, ProjectMemberRoleType.LEADER);
+
+        s3Files.forEach(f -> {
+            if (leaders.contains(username) || f.getCreatedBy().equals(username)) {
+                f.restoreFile();
+                response.put(f.getOriginalFilename(), "복구 성공");
+            } else response.put(f.getOriginalFilename(), "권한 없음");
+        });
+
+        if (uuids.size() != s3Files.size()) {
+            String a = (uuids.size() - s3Files.size()) + "개의 파일";
             response.put(a, "존재하지 않는 파일");
         }
 

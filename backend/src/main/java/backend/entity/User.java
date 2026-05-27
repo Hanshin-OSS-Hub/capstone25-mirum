@@ -2,6 +2,7 @@ package backend.entity;
 import backend.dto.user.UserRequestDTO;
 import backend.entity.Project.ProjectInvite;
 import backend.entity.Project.ProjectMember;
+import backend.entity.taskcard.Task;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -68,11 +69,11 @@ public class User {
     //최종 수정일
     private LocalDateTime updatedDate;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ProjectMember> projectsMembers =  new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ProjectInvite> projectInvites =  new ArrayList<>();
 

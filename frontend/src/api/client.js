@@ -140,7 +140,7 @@ export async function client(endpoint, options = {}) {
         if (!refreshPromise) {
           refreshPromise = (async () => {
             const refreshResponse = await axios.post(
-              `${BASE_URL}/jwt/refresh`,
+              `${BASE_URL}/api/jwt/refresh`,
               { refreshToken },
               { headers: { 'Content-Type': 'application/json' } },
             );

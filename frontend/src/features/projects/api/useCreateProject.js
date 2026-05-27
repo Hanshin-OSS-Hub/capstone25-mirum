@@ -33,7 +33,7 @@ export const useCreateProject = () => {
      * @returns {Promise<CreateProjectResponse>}
      */
     mutationFn: async (variables) => {
-      return await api.post('/projects', variables);
+      return await api.post('/api/project', variables);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });

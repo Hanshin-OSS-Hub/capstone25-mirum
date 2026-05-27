@@ -44,7 +44,7 @@ export const useGetProjectFiles = (projectId) => {
     /** @returns {Promise<NormalizedFileItem[]>} */
     queryFn: async () => {
       /** @type {ResponseGetFilesListDTOArray} */
-      const data = await api.get(`/files/project?projectId=${projectId}`);
+      const data = await api.get(`/api/files/project?projectId=${projectId}`);
       if (!Array.isArray(data)) return [];
       return data.map(normalizeFileItem);
     },

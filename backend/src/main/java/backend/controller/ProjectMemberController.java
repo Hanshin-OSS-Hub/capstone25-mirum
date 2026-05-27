@@ -19,8 +19,8 @@ public class ProjectMemberController {
 
     // 소속 맴버 리스트
     @GetMapping("/{projectId}")
-    public ResponseEntity<ApiResponse<List<ProjectMemberDTO>>> getProjectMembers(@PathVariable Long projectId) {
-        List<ProjectMemberDTO> members = projectMemberService.getMembers(projectId);
+    public ResponseEntity<ApiResponse<List<ProjectMemberDTO>>> getProjectMembers(@PathVariable Long projectId, @AuthenticationPrincipal String username) {
+        List<ProjectMemberDTO> members = projectMemberService.getMembers(projectId, username);
         return ResponseEntity.ok()
                 .body(ApiResponse.response(members));
     }

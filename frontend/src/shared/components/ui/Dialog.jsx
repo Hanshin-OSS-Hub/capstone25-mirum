@@ -3,7 +3,9 @@ import { cn } from '@/shared/lib/cn.js';
 export function Dialog({ open, children }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">{children}</div>
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {children}
+    </div>
   );
 }
 
@@ -17,9 +19,10 @@ export function DialogOverlay({ onClick, className = '' }) {
   );
 }
 
-export function DialogContent({ className = '', children }) {
+export function DialogContent({ className = '', children, ...props }) {
   return (
     <div
+      {...props}
       className={cn(
         'animate-in zoom-in-95 relative w-full overflow-hidden rounded-[40px] bg-card shadow-2xl ring-1 ring-black/5 duration-200',
         className,

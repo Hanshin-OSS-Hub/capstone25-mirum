@@ -16,7 +16,7 @@ export const useGetTaskDetails = ({ projectId, taskId }) => {
     queryKey: ['task', projectId, taskId],
     /** @type {TaskData} */
     queryFn: async () => {
-      return await api.get(`/project/${projectId}/task/${taskId}`);
+      return await api.get(`/api/project/${projectId}/task/${taskId}`);
     },
     // 초기값을 배열로 설정하면 상세 조회(객체) 결과와 타입이 맞지 않으므로 undefined 사용 권장
     initialData: undefined,

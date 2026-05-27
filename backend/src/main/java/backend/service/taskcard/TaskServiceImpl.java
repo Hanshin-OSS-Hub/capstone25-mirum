@@ -15,6 +15,7 @@ import backend.repository.ProjectMemberRepository;
 import backend.repository.ProjectRepository;
 import backend.repository.UserRepository;
 import backend.repository.taskcard.TaskRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,12 +35,22 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final ProjectRepository projectRepository;
+
+    private void validateMembership(Long projectId, String username) {
+        if (!projectMemberRepository.existsByProjectIdAndUserUsername(projectId, username)) {
+            throw new org.springframework.security.access.AccessDeniedException("해당 프로젝트에 접근 권한이 없습니다.");
+        }
+    }
 
     @Override
     @Transactional
-    public Long createTask(TaskRequestDTO req, Long ProjectId) {
-
+    public Long createTask(TaskRequestDTO req, Long projectId, String username) {
+        validateMembership(projectId, username);
         validateCreateRequest(req);
+        User user = userRepository.findByUsername(req.getAssigneeId()).orElse(null);
+        String nickname = null;
+        if (user != null) nickname = user.getNickname();
 
         TaskStatus status =
                 (req.getStatus() == null)
@@ -58,16 +69,19 @@ public class TaskServiceImpl implements TaskService {
                 req.getAssigneeId(),
                 req.getDueDate(),
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                nickname
         );
 
         Task saved = taskRepository.save(task);
+        projectRepository.updateDate(req.getProjectId(), LocalDateTime.now());
         return saved.getTaskId();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public TaskDetailDTO getTask(Long projectId, Long taskId) {
+    public TaskDetailDTO getTask(Long projectId, Long taskId, String username) {
+        validateMembership(projectId, username);
         Task task = taskRepository.findByProjectIdAndTaskIdAndStatusNot(projectId, taskId, TaskStatus.DELETED)
                 .filter(t -> t.getProjectId().equals(projectId))
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
@@ -79,8 +93,8 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     //DELETED 제외 모든 task조회
-    public List<TaskSummaryDTO> listTasks(Long projectId) {
-
+    public List<TaskSummaryDTO> listTasks(Long projectId, String username) {
+        validateMembership(projectId, username);
         return taskRepository.findAllByProjectIdAndStatusNot(projectId, TaskStatus.DELETED)
                 .stream()
                 .map(this::toSummaryDTO)
@@ -90,8 +104,8 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     //특정 status 기준 조회(DELETED 포함)
-    public List<TaskSummaryDTO> listTasksByStatus(Long projectId, TaskStatus status) {
-
+    public List<TaskSummaryDTO> listTasksByStatus(Long projectId, TaskStatus status, String username) {
+        validateMembership(projectId, username);
         return taskRepository.findByProjectIdAndStatus(projectId, status)
                 .stream()
                 .map(this::toSummaryDTO)
@@ -100,11 +114,15 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public TaskDetailDTO updateTask(Long projectId, Long taskId, TaskUpdateRequestDTO req) {
-
+    public TaskDetailDTO updateTask(Long projectId, Long taskId, TaskUpdateRequestDTO req, String username) {
+        validateMembership(projectId, username);
         Task task = taskRepository.findByProjectIdAndTaskIdAndStatusNot(
                 projectId, taskId, TaskStatus.DELETED
         ).orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
+
+        User user = userRepository.findByUsername(req.getAssigneeId()).orElse(null);
+        String nickname = null;
+        if (user != null) nickname = user.getNickname();
 
         String tagsCsv = (req.getTags() == null) ? null : Task.toCsv(req.getTags());
 
@@ -116,15 +134,18 @@ public class TaskServiceImpl implements TaskService {
                 req.getNotes(),
                 req.getAssigneeId(),
                 req.getDueDate(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                nickname
         );
 
+        projectRepository.updateDate(projectId, LocalDateTime.now());
         return toDetailDTO(task);
     }
 
     @Override
     @Transactional
-    public void deleteTask(Long projectId, Long taskId) {
+    public void deleteTask(Long projectId, Long taskId, String username) {
+        validateMembership(projectId, username);
         Task task = taskRepository.findByProjectIdAndTaskIdAndStatusNot(
                         projectId, taskId, TaskStatus.DELETED)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
@@ -137,24 +158,40 @@ public class TaskServiceImpl implements TaskService {
                 null,
                 null,
                 null,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null
         );
+        projectRepository.updateDate(projectId, LocalDateTime.now());
     }
 
     @Override
-    public void restoreTask(Long projectId, Long taskId) {
+    @Transactional
+    public void restoreTask(Long projectId, Long taskId, String username) {
+        validateMembership(projectId, username);
         Task task = taskRepository.findByProjectIdAndTaskIdAndStatus(
                 projectId, taskId, TaskStatus.DELETED)
                 .orElseThrow(() -> new IllegalArgumentException("Deleted task not found: " + taskId));
 
         task.restoreTask(TaskStatus.TODO, LocalDateTime.now());
-
+        projectRepository.updateDate(projectId, LocalDateTime.now());
 
     }
 
     @Override
     @Transactional
-    public void changeAssigneeToNULL(Long projectId, Long taskId) {
+    public void permanentDeleteTask(Long projectId, Long taskId, String username) {
+        validateMembership(projectId, username);
+        Task task = taskRepository.findByProjectIdAndTaskIdAndStatus(
+                projectId, taskId, TaskStatus.DELETED)
+                .orElseThrow(() -> new IllegalArgumentException("Deleted task not found: " + taskId));
+
+        taskRepository.delete(task);
+        projectRepository.updateDate(projectId, LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public void changeAssigneeToNULL(Long projectId, String assigneeId) {
 
         ProjectMember leader = projectMemberRepository
                 .findByProjectIdAndRole(projectId, ProjectMemberRoleType.LEADER)
@@ -164,7 +201,7 @@ public class TaskServiceImpl implements TaskService {
 
         // 2. 해당 멤버가 담당자인 task 조회
         List<Task> tasks = taskRepository.findAllByProjectIdAndAssigneeIdAndStatusNot(
-                projectId, taskId, TaskStatus.DELETED
+                projectId, assigneeId, TaskStatus.DELETED
         );
 
         // 3. 담당자 null로 변경
@@ -182,7 +219,7 @@ public class TaskServiceImpl implements TaskService {
         task.updateBasic(
                 null, null, TaskStatus.DELETED,
                 null, null, null, null,
-                LocalDateTime.now()
+                LocalDateTime.now(), null
         );
     }
 
@@ -205,7 +242,7 @@ public class TaskServiceImpl implements TaskService {
         dto.setDueDate(task.getDueDate());
         dto.setAssigneeId(task.getAssigneeId());
         if (task.getAssigneeId() != null) {
-            User user = userRepository.findById(task.getAssigneeId())
+            User user = userRepository.findByUsername(task.getAssigneeId())
                     .orElse(null);
 
             if (user != null) {
@@ -234,14 +271,15 @@ public class TaskServiceImpl implements TaskService {
         dto.setDueDate(task.getDueDate());
 
         dto.setAssigneeId(task.getAssigneeId());
-        dto.setAssigneeName(task.getAssigneeId()); // TODO: User 조회해서 채우기
 
         if (task.getAssigneeId() != null) {
-            Long assigneeName = Long.valueOf(userRepository.findById(task.getAssigneeId())
+            String assigneeName = userRepository.findByUsername(task.getAssigneeId())
                     .map(User::getNickname)
-                    .orElse("알 수 없음"));
+                    .orElse("알 수 없음");
             dto.setAssigneeName(assigneeName);
-        } else dto.setAssigneeName(Long.valueOf("미배정"));
+        } else {
+            dto.setAssigneeName("미배정");
+        }
         return dto;
     }
 }

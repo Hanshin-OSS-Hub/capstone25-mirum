@@ -14,7 +14,7 @@ export const useDeleteProject = () => {
 
   return useMutation({
     mutationFn: async (projectId) => {
-      return await api.delete(`projects/${projectId}`);
+      return await api.delete(`/api/project/${projectId}`);
     },
     onSuccess: async (_data, projectId) => {
       await queryClient.invalidateQueries({ queryKey: ['project', projectId] });

@@ -6,6 +6,7 @@ import { useGetProjectList } from '@/features/projects/api/useGetProjectList.js'
 import { usePermanentDeleteProject } from '@/features/projects/api/usePermanentDeleteProject.js';
 import { useRestoreProject } from '@/features/projects/api/useRestoreProject.js';
 import { useAuth } from '@/features/auth/hooks/useAuth.js';
+import { formatLocalDateTime } from '@/features/tasks/utils/task-format.js';
 import CreateProjectModal from '@/features/projects/components/CreateProject.jsx';
 import {
   IconFolder,
@@ -214,7 +215,7 @@ export default function Home() {
                                 <IconGroup size={14} />
                                 <span>{p.memberCount || 0}명 참여 중</span>
                               </div>
-                              <span>{p.createdDate?.slice(0, 10)}</span>
+                              <span>{formatLocalDateTime(p.creationDate)}</span>
                             </div>
                           </div>
                         </div>

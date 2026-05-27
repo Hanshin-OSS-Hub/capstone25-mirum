@@ -112,7 +112,10 @@ public class ProjectInviteService {
     }
 
     // 발송한 초대 확인
-    public List<InviteResponseDTO> getSentInvites(Long projectId) {
+    public List<InviteResponseDTO> getSentInvites(Long projectId, String username) {
+        if (!projectMemberRepository.existsByProjectIdAndUserUsername(projectId, username)) {
+            throw new org.springframework.security.access.AccessDeniedException("해당 프로젝트에 접근 권한이 없습니다.");
+        }
         List<ProjectInvite> invite = projectInviteRepository.findAllByProjectId(projectId);
 
         return invite.stream().map(i -> InviteResponseDTO.builder()
@@ -129,6 +132,6 @@ public class ProjectInviteService {
     //본인 확인
     private boolean isNotMyInvitation(Long id, String username) {
         ProjectInvite invite = projectInviteRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        return !invite.getUser().getNickname().equals(username);
+        return !invite.getUser().getUsername().equals(username);
     }
 }

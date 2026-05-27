@@ -23,7 +23,7 @@ export const useGetProjectDetails = (projectId) => {
     queryKey: ['project', projectId],
     /** @returns {Promise<ProjectDetailDTO>} */
     queryFn: async () => {
-      return await api.get(`/project/${projectId}`);
+      return await api.get(`/api/project/${projectId}`);
     },
     enabled: !!projectId && isTokenAvailable,
     initialData: undefined,

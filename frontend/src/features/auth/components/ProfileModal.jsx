@@ -160,7 +160,7 @@ function ProfileModal({ onClose }) {
 
   const handleProfileSaveApi = (updatedData) => {
     api
-      .put('/user', updatedData)
+      .put('/api/user', updatedData)
       .then(() => {
         updateUser(updatedData);
         notify.success('회원정보가 성공적으로 업데이트되었습니다.');
@@ -180,7 +180,7 @@ function ProfileModal({ onClose }) {
   const handleDeleteUserApi = async () => {
     if (window.confirm('정말 탈퇴하시겠습니까? 모든 프로젝트 데이터가 소실됩니다.')) {
       try {
-        await client('/user', {
+        await client('/api/user', {
           method: 'DELETE',
           body: JSON.stringify({ username: user.username }),
         });

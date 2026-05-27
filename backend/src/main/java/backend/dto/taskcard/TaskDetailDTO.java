@@ -26,7 +26,7 @@ public class TaskDetailDTO {
     private LocalDateTime dueDate;    // 마감일
 
     // 담당자 정보
-    private Long assigneeId;
+    private String assigneeId;
     private String assigneeName;
     private String assigneeProfileImage;
 }

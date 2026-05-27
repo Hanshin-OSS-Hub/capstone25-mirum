@@ -101,19 +101,21 @@ export default function TaskEditor(props) {
                     담당자 변경
                   </label>
                   <select
-                    value={editedTask.assigneeId}
+                    value={editedTask.assigneeId || ''}
                     onChange={(e) => {
+                      const val = e.target.value || null;
                       const selectedMember = teamMembers.find(
-                        (member) => member.username === e.target.value,
+                        (member) => member.username === val,
                       );
                       setEditedTask({
                         ...editedTask,
-                        assigneeId: e.target.value,
-                        assigneeName: selectedMember?.nickname || selectedMember?.username || '',
+                        assigneeId: val,
+                        assigneeName: selectedMember?.nickname || selectedMember?.username || (val ? '' : '미지정'),
                       });
                     }}
                     className={inputBase}
                   >
+                    <option value="">미지정 (나중에 배정)</option>
                     {teamMembers.map((member) => (
                       <option key={member.username} value={member.username}>
                         {member.nickname} (@{member.username})

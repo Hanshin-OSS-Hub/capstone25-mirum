@@ -23,7 +23,7 @@ public class TaskSummaryDTO {
     private LocalDateTime dueDate;    // 마감일
 
     // 담당자 정보
-    private Long assigneeId; //담당자 id
-    private Long assigneeName; //담당자 name
+    private String assigneeId; //담당자 id
+    private String assigneeName; //담당자 name
 }
 

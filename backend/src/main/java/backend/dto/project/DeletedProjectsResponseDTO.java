@@ -11,6 +11,5 @@ public class DeletedProjectsResponseDTO {
     private String projectName;
     private String description;
     private Long memberCount;
-    private int taskProgress;
     private LocalDateTime deletedDate;
 }

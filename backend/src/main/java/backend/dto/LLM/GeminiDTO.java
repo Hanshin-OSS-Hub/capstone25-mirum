@@ -9,7 +9,13 @@ import java.util.List;
 @Builder
 @Getter
 public class GeminiDTO {
-    public record Request(List<Content> contents) {}
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record Request(
+            Content system_instruction,
+            List<Content> contents,
+            GenerationConfig generationConfig
+    ) {}
+
     public record Content(List<Part> parts) {}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -23,6 +29,12 @@ public class GeminiDTO {
     }
 
     public record InlineData(String mimeType, String data) {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record GenerationConfig(
+            Double temperature,
+            Integer maxOutputTokens
+    ) {}
 
     public record Response(List<Candidate> candidates) {}
     public record Candidate(Content content) {}

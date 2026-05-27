@@ -27,14 +27,17 @@ public class ProjectMemberService {
     private final TaskService taskService;
 
     // 소속 맴버 리스트
-    public List<ProjectMemberDTO> getMembers(Long projectId) {
+    public List<ProjectMemberDTO> getMembers(Long projectId, String username) {
+        if (!projectMemberRepository.existsByProjectIdAndUserUsername(projectId, username)) {
+            throw new AccessDeniedException("해당 프로젝트에 접근 권한이 없습니다.");
+        }
         Project p = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
         if (p.isDeleted()) throw new EntityNotFoundException();
 
         List<ProjectMember> members = projectMemberRepository.findAllByProjectId(projectId);
 
         return members.stream().map(m -> ProjectMemberDTO.builder()
-                .username(m.getUser().getNickname())
+                .username(m.getUser().getUsername())
                 .nickname(m.getUser().getNickname())
                 .role(m.getRole())
                 .build()

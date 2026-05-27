@@ -13,15 +13,20 @@ export const usePermanentDeleteFiles = () => {
 
   return useMutation({
     // params: { selectedFiles: NormalizedFileItem[], projectId: number }
-    mutationFn: ({ selectedFiles }) => {
+    mutationFn: ({ selectedFiles, projectId }) => {
       if (!selectedFiles || selectedFiles.length <= 0) return;
 
       const uuids = selectedFiles.map((file) => file.uuid);
 
-      return api.post(`/files/realDelete`, uuids);
+      return api.delete(`/api/files/realDelete`, {
+        body: {
+          uuid: uuids,
+          projectId: projectId,
+        },
+      });
     },
     onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['files', variables.projectId] });
+      await queryClient.invalidateQueries({ queryKey: ['files', 'deleted', variables.projectId] });
       notify.success('삭제가 완료되었습니다.');
     },
     onError: (error) => {

@@ -26,10 +26,17 @@ export function formatFileSize(size = 0, contentType = '') {
   return `${value.toFixed(1)} ${units[unitIndex]}`;
 }
 
-export function formatDisplayDate(dateString = '') {
-  if (!dateString) return '-';
+export function formatDisplayDate(dateValue = '') {
+  if (!dateValue) return '-';
 
-  const date = new Date(dateString);
+  let date;
+  if (Array.isArray(dateValue)) {
+    const [year, month, day, hour = 0, minute = 0, second = 0] = dateValue;
+    date = new Date(year, month - 1, day, hour, minute, second);
+  } else {
+    date = new Date(dateValue);
+  }
+
   if (Number.isNaN(date.getTime())) return '-';
 
   const year = date.getFullYear();

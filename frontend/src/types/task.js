@@ -44,7 +44,7 @@
  * @property {TASK_STATUS[keyof TASK_STATUS]} status - 작업 상태
  * @property {string[]} tags                        - 태그 목록
  * @property {string} [createdDate]                 - 생성일 (ISO 문자열)
- * @property {string} [updatedAt]                   - 수정일 (ISO 문자열)
+ * @property {string} [updatedDate]                 - 수정일 (ISO 문자열)
  * @property {string} [dueDate]                     - 마감일 (ISO 문자열)
  * @property {string} [assigneeId]                  - 담당자 아이디
  * @property {string} [assigneeName]                - 담당자 이름

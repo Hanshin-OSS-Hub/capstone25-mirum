@@ -63,9 +63,10 @@ public class ProjectInviteController {
     // 발신한 초대 확인
     @GetMapping("/sent/{projectId}")
     public ResponseEntity<ApiResponse<List<InviteResponseDTO>>> getSentInvites(
-            @PathVariable Long projectId
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal String username
     ) {
-        List<InviteResponseDTO> invites = projectInviteService.getSentInvites(projectId);
+        List<InviteResponseDTO> invites = projectInviteService.getSentInvites(projectId, username);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.response(invites));
     }

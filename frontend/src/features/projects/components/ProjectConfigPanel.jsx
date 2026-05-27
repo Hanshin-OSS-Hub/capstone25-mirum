@@ -10,6 +10,7 @@ import { useDeleteProject } from '@/features/projects/api/useDeleteProject.js';
 import { useGetTasksByStatus } from '@/features/tasks/api/useGetTasksByStatus.js';
 import { usePermanentDeleteTask } from '@/features/tasks/api/usePermanentDeleteTask.js';
 import { useRestoreTask } from '@/features/tasks/api/useRestoreTask.js';
+import { formatLocalDateTime } from '@/features/tasks/utils/task-format.js';
 import {
   IconArrowLeft,
   IconRefresh,
@@ -61,7 +62,7 @@ export default function ProjectConfigPanel(props) {
 
   const projectName = project?.projectName || project?.name || '프로젝트 이름';
   const projectDescription = project?.description || '프로젝트 설명이 없습니다.';
-  const createdDate = project?.createdDate ? String(project.createdDate).slice(0, 10) : '-';
+  const createdDate = formatLocalDateTime(project?.creationDate);
   const INVITE_GRID_COLS = 'grid-cols-[minmax(0,1fr)_120px]';
   const TRASH_GRID_COLS = 'grid-cols-[minmax(0,1.4fr)_160px_220px]';
 

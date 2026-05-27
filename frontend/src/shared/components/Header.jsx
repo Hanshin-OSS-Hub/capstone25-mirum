@@ -48,6 +48,12 @@ export default function Header() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       const target = event.target;
+
+      // 만약 클릭된 요소가 모달(Dialog) 내부에 있다면 헤더의 팝업을 닫지 않음
+      if (target.closest('[role="dialog"]')) {
+        return;
+      }
+
       const isInsideInvitation = invitationAreaRef.current?.contains(target);
       const isInsideProfile = profileAreaRef.current?.contains(target);
 

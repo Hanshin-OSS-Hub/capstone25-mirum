@@ -8,7 +8,6 @@ import org.hibernate.annotations.Formula;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +27,11 @@ public class Project {
     @CreatedDate
     private LocalDateTime createdDate;
 
+    private LocalDateTime updatedDate;
+
     // 삭제 관련
     private boolean isDeleted;
-    private LocalDate deletedDate;
+    private LocalDateTime deletedDate;
     private String deleteUsername;
 
 
@@ -53,7 +54,7 @@ public class Project {
 
     public void deleteProject(String username){
         this.isDeleted = true;
-        this.deletedDate = LocalDate.now();
+        this.deletedDate = LocalDateTime.now();
         this.deleteUsername = username;
     }
 

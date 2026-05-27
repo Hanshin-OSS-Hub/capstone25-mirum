@@ -28,6 +28,7 @@ public class S3File {
     private LocalDateTime createdDate;
     private String createdBy;
 
+    private LocalDateTime deletedDate;
     private boolean isDeleted;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,6 +42,7 @@ public class S3File {
 
     public void deleteFile() {
         this.isDeleted = true;
+        this.deletedDate = LocalDateTime.now();
     }
 
     public void restoreFile() {

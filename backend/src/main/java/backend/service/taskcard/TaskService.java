@@ -14,23 +14,25 @@ import java.util.Optional;
 
 public interface TaskService {
 
-    Long createTask(TaskRequestDTO req, Long projectId);
+    Long createTask(TaskRequestDTO req, Long projectId, String username);
 
-    TaskDetailDTO getTask(Long projectId, Long taskId);
+    TaskDetailDTO getTask(Long projectId, Long taskId, String username);
 
     //DELETED 제외 모든 task조회(단건 조회)
-    List<TaskSummaryDTO> listTasks(Long projectId);
+    List<TaskSummaryDTO> listTasks(Long projectId, String username);
 
     //특정 status 기준 조회(DELETED 포함)
-    List<TaskSummaryDTO> listTasksByStatus(Long projectId, TaskStatus status);
+    List<TaskSummaryDTO> listTasksByStatus(Long projectId, TaskStatus status, String username);
 
-    TaskDetailDTO updateTask(Long projectId, Long taskId, TaskUpdateRequestDTO req);
+    TaskDetailDTO updateTask(Long projectId, Long taskId, TaskUpdateRequestDTO req, String username);
 
-    void deleteTask(Long projectId, Long taskId);
+    void deleteTask(Long projectId, Long taskId, String username);
 
-    void restoreTask(Long projectId, Long taskId);
+    void restoreTask(Long projectId, Long taskId, String username);
+
+    void permanentDeleteTask(Long projectId, Long taskId, String username);
 
     //담당자가 삭제되었을 때 NULL로 교체
-    void changeAssigneeToNULL(Long projectId, Long taskId);
+    void changeAssigneeToNULL(Long projectId, String assigneeId);
 }
 

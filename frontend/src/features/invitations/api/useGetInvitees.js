@@ -16,7 +16,7 @@ export const useGetInvitees = (projectId) => {
     queryKey: ['project-invitations', projectId],
     queryFn: async () => {
       /** @type {Invitation[]} */
-      return await api.get(`/invitations/sent/${projectId}`);
+      return await api.get(`/api/invitations/sent/${projectId}`);
     },
     enabled: !!projectId && isTokenAvailable,
     initialData: [],

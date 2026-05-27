@@ -14,7 +14,7 @@ export const useAcceptInvitation = () => {
 
   return useMutation({
     mutationFn: async (inviteId) => {
-      return await api.post(`/invitations/${inviteId}/accept`, {});
+      return await api.post(`/api/invitations/${inviteId}/accept`, {});
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['invitations', 'received'] });

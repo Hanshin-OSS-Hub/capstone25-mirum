@@ -11,7 +11,7 @@ import { api } from '@/api/client.js';
  * @property {string} description
  * @property {number} memberCount
  * @property {number} taskProgress
- * @property {Date} createdDate
+ * @property {Date} creationDate
  * @property {Date} updatedDate
  */
 
@@ -28,7 +28,7 @@ export const useGetProjectList = () => {
     queryKey: ['projects'],
     /** @returns {Promise<ProjectListDTO[]>} */
     queryFn: async () => {
-      return await api.get('/projects');
+      return await api.get('/api/projects');
     },
     enabled: isTokenAvailable,
     select: (data) => {

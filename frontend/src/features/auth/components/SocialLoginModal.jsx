@@ -7,12 +7,9 @@ import { IconClose } from '@/shared/assets/icons.js';
 /**
  * OAuth 제공자 선택 모달
  *
- * [DEV]  버튼 클릭 → navigate('/cookie?code=mock-...&provider=...')
- *        MSW가 POST /jwt/exchange 를 가로채 mock 토큰 반환
- *
- * [PROD] 버튼 클릭 → window.location.href = 백엔드 OAuth 시작 URL
+ * [FLOW] 버튼 클릭 → window.location.href = 백엔드 OAuth 시작 URL
  *        백엔드가 소셜 로그인 후 refreshToken 쿠키를 내리고 /cookie 로 redirect
- *        /cookie 페이지에서 POST /jwt/exchange 호출 → accessToken/refreshToken 수신
+ *        /cookie 페이지에서 POST /api/jwt/exchange 호출 → accessToken/refreshToken 수신
  *
  * @param {object}   props
  * @param {boolean}  props.isOpen
@@ -21,8 +18,8 @@ import { IconClose } from '@/shared/assets/icons.js';
 
 /** @type {Record<SocialLoginProvider, string>} */
 const OAUTH_START_URL = {
-  kakao: '/oauth2/authorization/kakao',
-  google: '/oauth2/authorization/google',
+  kakao: '/api/oauth2/authorization/kakao',
+  google: '/api/oauth2/authorization/google',
 };
 
 export default function SocialLoginModal({ isOpen, onClose, onProviderClick }) {
@@ -39,14 +36,8 @@ export default function SocialLoginModal({ isOpen, onClose, onProviderClick }) {
     if (onProviderClick) {
       onProviderClick(provider);
     }
-    if (import.meta.env.DEV) {
-      // 개발(MSW): 풀 리로드 없이 /cookie 로 직접 이동
-      const mockCode = `mock-${provider}-${Date.now()}`;
-      navigate(`/cookie?code=${mockCode}&provider=${provider}`);
-    } else {
-      // 프로덕션: 브라우저를 백엔드 OAuth 시작 URL로 이동 (fetch 아님, 직접 이동)
-      window.location.href = OAUTH_START_URL[provider];
-    }
+    // 브라우저를 백엔드 OAuth 시작 URL로 이동 (fetch 아님, 직접 이동)
+    window.location.href = OAUTH_START_URL[provider];
   };
 
   const btnBase =

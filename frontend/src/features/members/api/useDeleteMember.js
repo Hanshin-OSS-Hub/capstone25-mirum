@@ -14,7 +14,7 @@ export const useDeleteMember = () => {
     /** @param {RequestDeleteMemberDTO} params */
     mutationFn: async ({ projectId, targetName }) => {
       /** @type { void }*/
-      return await api.delete(`/member/${projectId}?targetName=${targetName}`);
+      return await api.delete(`/api/member/${projectId}?targetName=${targetName}`);
     },
 
     onSuccess: async (_data, variables) => {

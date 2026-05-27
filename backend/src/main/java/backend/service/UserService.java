@@ -24,7 +24,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +37,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final ProjectService projectService;
 
     //자체 로그인 회원 가입 (존재 여부)
     @Transactional(readOnly = true)
@@ -51,7 +53,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         }
 
         User entity = User.builder()
-                .nickname(dto.getUsername())
+                .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .isLock(false)
                 .isSocial(false)
@@ -73,14 +75,15 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
                 .orElseThrow(() -> new UsernameNotFoundException(username));
 
         return org.springframework.security.core.userdetails.User.builder()
-                .username(entity.getNickname())
+                .username(entity.getUsername())
                 .password(entity.getPassword())
                 .roles(entity.getRoleType().name())
                 .accountLocked(entity.getIsLock())
                 .build();
     }
 
-    // 자체 로그인 회원 정보 수정
+    // 회원 정보 수정 (자체/소셜 모두 허용)
+    @Transactional
     public Long updateUser(UserRequestDTO dto) throws AccessDeniedException {
 
         //본인만 수정 가능 검증
@@ -90,7 +93,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         }
 
         //조회
-        User entity = userRepository.findByUsernameAndIsLockAndIsSocial(dto.getUsername(), false, false)
+        User entity = userRepository.findByUsernameAndIsLock(dto.getUsername(), false)
                 .orElseThrow(() -> new UsernameNotFoundException(dto.getUsername()));
 
         //회원 정보 수정
@@ -114,6 +117,9 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         if (!isOwner && !isAdmin) {
             throw new AccessDeniedException("본인 혹은 관리자만 삭제할 수 있습니다.");
         }
+
+        // 해당 유저가 리더인 프로젝트 삭제
+        projectService.deleteAllProjectsByLeader(dto.getUsername());
 
         // 유저 제거
         userRepository.deleteByUsername(dto.getUsername());

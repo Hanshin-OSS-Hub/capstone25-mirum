@@ -16,7 +16,7 @@ export const useGetTasksByStatus = ({ projectId, status }) => {
     queryKey: ['tasks', Number(projectId), status],
     queryFn: async () => {
       /** @type {ResponseTaskGetSummaryDTO[]} */
-      return await api.get(`/project/${projectId}/task/status?status=${status}`);
+      return await api.get(`/api/project/${projectId}/task/status?status=${status}`);
     },
     enabled: !!projectId && !!status && isTokenAvailable,
     select: (data) => {

@@ -28,7 +28,7 @@ export const useUpdateTask = () => {
     /** @param {{ requestData: RequestTaskUpdateDTO, projectId: number }} params */
     mutationFn: ({ requestData, projectId }) => {
       /** @type {TaskData} */
-      return api.patch(`/project/${projectId}/task/${requestData.taskId}`, requestData);
+      return api.patch(`/api/project/${projectId}/task/${requestData.taskId}`, requestData);
     },
     onSuccess: async (_data, variables) => {
       // 특정 프로젝트의 작업 목록과 상세 정보 캐시 무효화

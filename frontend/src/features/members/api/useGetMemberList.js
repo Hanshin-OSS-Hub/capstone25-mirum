@@ -17,7 +17,7 @@ export const useGetMemberList = (projectId, myUsername) => {
     queryKey: ['members', projectId],
     queryFn: async () => {
       /** @type {ProjectMemberDTO[]} */
-      return await api.get(`/member/${projectId}`);
+      return await api.get(`/api/member/${projectId}`);
     },
     enabled: !!projectId && isTokenAvailable,
     select: (data) => {

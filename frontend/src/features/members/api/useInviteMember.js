@@ -14,10 +14,11 @@ export const useInviteMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ projectId, invitedName }) => {
-      return await api.post(`/invitations`, {
+    mutationFn: async ({ projectId, invitedName, inviterName }) => {
+      return await api.post(`/api/invitations`, {
         projectId,
         invitedName,
+        inviterName,
       });
     },
     onSuccess: async (_data, { projectId, invitedName }) => {

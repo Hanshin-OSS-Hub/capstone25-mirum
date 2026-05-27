@@ -21,7 +21,7 @@ export const useDownloadFiles = () => {
       // 2. 백엔드에 다운로드할 URL들을 요청
       // (가정: 반환 데이터가 [{ uuid: '...', url: '...' }, ...] 형태의 배열이라고 예상)
       /** @type {{ uuid: string, url: string }[]} */
-      const downloadUrlsResponse = await api.post(`/files/downloadUrl`, uuids);
+      const downloadUrlsResponse = await api.post(`/api/files/downloadUrl`, uuids);
 
       // 3. 발급받은 URL들로 파일을 다운로드하기 위한 Promise 배열 생성
       const downloadPromises = downloadUrlsResponse.map(async (fileData) => {

@@ -16,7 +16,7 @@ export const useUpdateMemberRole = () => {
     /** @param {RequestUpdateMemberRole} params */
     mutationFn: async ({ projectId, username, role }) => {
       // client.js에서 응답 제네릭을 처리하므로 여기서는 반환값을 사용하지 않습니다.
-      await api.put(`/member/${projectId}/role`, { username, role });
+      await api.put(`/api/member/${projectId}/role`, { username, role });
     },
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['members', variables.projectId] });

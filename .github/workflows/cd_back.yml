@@ -35,6 +35,9 @@ jobs:
           echo "spring.jwt.secret=${{ secrets.JWT }}" >> src/main/resources/application.properties
           echo "gemini.api.url=${{ secrets.GEMINI_API_URL }}" >> src/main/resources/application.properties
           echo "gemini.api.key=${{ secrets.GEMINI_API_KEY }}" >> src/main/resources/application.properties
+          echo "spring.security.oauth2.client.registration.kakao.client-id=${{ secrets.KAKAO_CLIENT_ID }}" >> src/main/resources/application.properties
+          echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.GOOGLE_CLIENT_ID }}" >>src/main/resources/application.properties
+          echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" >>src/main/resources/application.properties
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

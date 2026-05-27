@@ -12,7 +12,7 @@ export const usePermanentDeleteProject = () => {
   return useMutation({
     mutationFn: async (projectId) => {
       // 영구 삭제를 위한 전용 엔드포인트 가정 (Spring Boot 스펙에 맞춤)
-      return await api.delete(`/project/${projectId}/permanent`);
+      return await api.delete(`/api/project/${projectId}/permanent`);
     },
     onSuccess: async () => {
       // 휴지통 목록 갱신

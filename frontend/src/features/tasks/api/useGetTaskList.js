@@ -22,7 +22,7 @@ export const useGetTaskList = ({ projectId }) => {
     queryKey: ['tasks', Number(projectId)],
     queryFn: async () => {
       /** @type {ResponseTaskGetSummaryDTO[]} */
-      return await api.get(`/project/${projectId}/task`);
+      return await api.get(`/api/project/${projectId}/task`);
     },
     enabled: !!projectId && isTokenAvailable,
     select: (data) => {

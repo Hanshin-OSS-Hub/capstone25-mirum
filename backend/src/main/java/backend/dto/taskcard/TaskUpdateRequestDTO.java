@@ -22,7 +22,7 @@ public class TaskUpdateRequestDTO {
     private List<String> tags;   // "tag1,tag2" -> ["tag1", "tag2"]
     private String notes;        // 마크다운 수정 내용
 
-    private Long assigneeId;     // 담당자 변경
+    private String assigneeId;     // 담당자 변경
     LocalDateTime createdDate;  //시작일 설정
     LocalDateTime updateDate;   //업데이트 시간
     LocalDateTime dueDate;   // 마감일 변경

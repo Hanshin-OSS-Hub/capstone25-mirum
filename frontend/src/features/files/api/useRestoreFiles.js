@@ -17,7 +17,7 @@ export const useRestoreFiles = () => {
       if (!selectedFiles || selectedFiles.length <= 0) return;
 
       const uuids = selectedFiles.map((file) => file.uuid);
-      return api.patch(`/files/restore`, uuids);
+      return api.patch(`/api/files/restore`, uuids);
     },
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['files', 'deleted', variables.projectId] });

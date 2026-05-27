@@ -17,7 +17,7 @@ export const useGetInviteList = (refetchInterval = false, enabled = true) => {
     queryKey: ['invitations', 'received'],
     queryFn: async () => {
       /** @type {Invitation[]} */
-      return await api.get('/invitations/received');
+      return await api.get('/api/invitations/received');
     },
     refetchInterval,
     refetchIntervalInBackground: false,

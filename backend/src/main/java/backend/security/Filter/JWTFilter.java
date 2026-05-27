@@ -31,17 +31,22 @@ public class JWTFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String authorization = request.getHeader("Authorization");
-        if (authorization == null) {
+        String accessToken = null;
+
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            accessToken = authorization.split(" ")[1];
+        } else {
+            // SSE 등 헤더를 추가할 수 없는 경우, 쿼리 파라미터에서 토큰 확인
+            String tokenParam = request.getParameter("token");
+            if (tokenParam != null && !tokenParam.isEmpty()) {
+                accessToken = tokenParam;
+            }
+        }
+
+        if (accessToken == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        if (!authorization.startsWith("Bearer ")) {
-            throw new ServletException("Invalid JWT token");
-        }
-
-        // 토큰 파싱
-        String accessToken = authorization.split(" ")[1];
 
         if (JWTUtil.isValid(accessToken, true)) {
 

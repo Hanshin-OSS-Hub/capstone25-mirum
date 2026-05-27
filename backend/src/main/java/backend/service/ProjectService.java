@@ -16,7 +16,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,10 +93,7 @@ public class ProjectService {
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
-                        //이거도 바꿔야함
-                        .updatedDate(null)
-                        // 이거 바꿔야 함
-                        .taskProgress(50)
+                        .updatedDate(p.getUpdatedDate())
                         .build()
                 ).toList();
     }
@@ -132,14 +129,41 @@ public class ProjectService {
         }
     }
 
+    // 영구 삭제
+    @Transactional
+    public void permanentDeleteProject(Long projectId, String username) {
+        if (isNotLeader(username, projectId)) throw new AccessDeniedException("권한 없음");
+        Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
+        if (!project.isDeleted()) throw new IllegalArgumentException("삭제된 프로젝트만 영구 삭제 가능합니다.");
+
+        // 관련 태스크 영구 삭제
+        taskRepository.deleteAllByProjectId(projectId);
+
+        // 프로젝트 영구 삭제 (CascadeType.ALL로 인해 멤버, 초대, 파일 등도 삭제됨)
+        projectRepository.delete(project);
+    }
+
     //D
     @Transactional
     public void deleteProject(Long projectId, String username){
         if (isNotLeader(username, projectId)) throw new AccessDeniedException("권한 없음");
         Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
         project.deleteProject(username);
-        taskRepository.softDeleteAllByProjectId(projectId, TaskStatus.DELETED, LocalDate.now());
+        taskRepository.softDeleteAllByProjectId(projectId, TaskStatus.DELETED, LocalDateTime.now());
         //projectRepository.deleteById(projectId);
+    }
+
+    // 해당 유저가 리더인 모든 프로젝트 삭제
+    @Transactional
+    public void deleteAllProjectsByLeader(String username) {
+        List<ProjectMember> leadMembers = projectMemberRepository.findAllByUserUsernameAndRole(username, ProjectMemberRoleType.LEADER);
+        for (ProjectMember member : leadMembers) {
+            Project project = member.getProject();
+            if (!project.isDeleted()) {
+                project.deleteProject(username);
+                taskRepository.softDeleteAllByProjectId(project.getId(), TaskStatus.DELETED, LocalDateTime.now());
+            }
+        }
     }
 
     // 소프트 삭제된 프로젝트 검색
@@ -152,9 +176,7 @@ public class ProjectService {
                         .projectName(p.getProjectName())
                         .description(p.getDescription())
                         .memberCount((long) p.getMemberCount())
-                        .deletedDate(p.getDeletedDate().atStartOfDay())
-                        // 이거 바꿔야 함
-                        .taskProgress(50)
+                        .deletedDate(p.getDeletedDate())
                         .build()
                 ).toList();
     }

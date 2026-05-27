@@ -23,7 +23,7 @@ public class TaskCleanScheduler {
     @Scheduled(cron = "0 0 3 * * *")
     public void cleanTasks() {
         LocalDate threeDaysAgo = LocalDate.now().minusDays(3);
-        taskRepository.deleteByStatusAndUpdatedAtBefore(TaskStatus.DELETED, threeDaysAgo.atStartOfDay());
+        taskRepository.deleteByStatusAndUpdatedDateBefore(TaskStatus.DELETED, threeDaysAgo.atStartOfDay());
         log.info("영구 삭제 작업 완료");
     }
 }

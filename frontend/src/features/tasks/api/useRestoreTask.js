@@ -20,7 +20,7 @@ export const useRestoreTask = () => {
     /** @param {RequestRestoreTask} params */
     mutationFn: async ({ projectId, taskId }) => {
       /** @type {void} */
-      return api.patch(`/project/${projectId}/task/${taskId}/restore`, {});
+      return api.patch(`/api/project/${projectId}/task/${taskId}/restore`, {});
     },
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({

@@ -74,8 +74,10 @@ export default function CreateTaskModal(props) {
       title: taskData.title.trim(),
       projectId: Number(projectId),
       assigneeId: selectedMember ? selectedMember.username : null,
-      assigneeName: selectedMember ? selectedMember.nickname : null,
+      dueDate: taskData.dueDate ? `${taskData.dueDate}T00:00:00` : null,
     };
+    delete requestData.startDate;
+    delete requestData.assigneeName;
 
     createTask(
       { requestBody: requestData, projectId: Number(projectId) },

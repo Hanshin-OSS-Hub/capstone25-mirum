@@ -8,6 +8,7 @@ import {
 import { useDeleteFiles } from '@/features/files/api/useDeleteFiles.js';
 import { useUploadFiles } from '@/features/files/api/useUploadFiles.js';
 import { useUpdateTask } from '@/features/tasks/api/useUpdateTask.js';
+import { useGetTaskDetails } from '@/features/tasks/api/useGetTaskDetails.js';
 import { useMirumAI } from '@/features/ai/hooks/useMirumAI.js';
 import TaskChat from '@/features/chat/components/TaskChat.jsx';
 import TaskNote from '@/features/note/components/TaskNote.jsx';
@@ -43,10 +44,29 @@ import { useDragScroll } from '@/shared/hooks/useDragScroll.js';
  * @param {() => void} props.onClose
  */
 export default function TaskModal(props) {
-  const { projectId, task, members, files, onClose, myUserName, leaderName } = props;
+  const { projectId, task: initialTask, members, files, onClose, myUserName, leaderName } = props;
+  const normalizedProjectId = Number(projectId);
+  const taskId = Number(initialTask.taskId);
+
+  // 상세 데이터 가져오기
+  const { data: detailTask, isLoading: isDetailLoading } = useGetTaskDetails({
+    projectId: normalizedProjectId,
+    taskId,
+  });
+
+  // 실제 화면에서 사용할 태스크 데이터 (상세 데이터가 오기 전까진 초기 요약 데이터 사용)
+  const currentTask = detailTask || initialTask;
+
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editedTask, setEditedTask] = useState({ ...task, notes: task.notes || '' });
-  const isEdited = JSON.stringify(editedTask) !== JSON.stringify(task);
+  const [editedTask, setEditedTask] = useState({ ...currentTask, notes: currentTask.notes || '' });
+  
+  // 데이터 동기화: 상세 정보가 로드되면 편집 상태 업데이트 (편집 모드가 아닐 때만)
+  useEffect(() => {
+    if (!isEditMode) {
+      setEditedTask({ ...currentTask, notes: currentTask.notes || '' });
+    }
+  }, [currentTask, isEditMode]);
+
   const { ref: scrollRef, onMouseDown, onMouseLeave, onMouseUp, onMouseMove, isDragging } = useDragScroll();
 
   // region AI 및 채팅 관련 상태
@@ -57,42 +77,27 @@ export default function TaskModal(props) {
   const { mutate: updateTask } = useUpdateTask();
   const { mutate: uploadFiles, isPending: isUploading } = useUploadFiles();
   const { mutate: deleteFiles, isPending: isDeleting } = useDeleteFiles();
-  const normalizedProjectId = Number(projectId);
-  const normalizedTaskProjectId = Number(task.projectId);
-
-  const taskContext = useMemo(
-    () => ({
-      taskId: task.taskId,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      assignee: task.assigneeName,
-      dueDate: task.dueDate,
-      notes: editedTask.notes,
-    }),
-    [task, editedTask.notes],
-  );
 
   const hasNoteChanged = useMemo(() => {
-    const previousNote = task.notes || '';
+    const previousNote = currentTask.notes || '';
     const nextNote = editedTask.notes || '';
     return previousNote !== nextNote;
-  }, [task.notes, editedTask.notes]);
+  }, [currentTask.notes, editedTask.notes]);
 
   useEffect(() => {
-    setEditedTask({ ...task, notes: task.notes || '' });
+    setEditedTask({ ...currentTask, notes: currentTask.notes || '' });
     setIsEditMode(false);
     setIsChatOpen(false);
-  }, [task]);
+  }, [currentTask.taskId]); // ID가 바뀔 때만 리셋
 
-  useBodyScrollLock(!!task);
+  useBodyScrollLock(!!currentTask);
 
   const handleFileUpload = (event) => {
     const selectedFiles = Array.from(event.target.files || []);
     if (selectedFiles.length === 0) return;
     uploadFiles({
       projectId: normalizedProjectId,
-      taskId: Number(task.taskId),
+      taskId: Number(currentTask.taskId),
       files: selectedFiles,
     });
     event.target.value = '';
@@ -106,10 +111,9 @@ export default function TaskModal(props) {
   };
 
   const handleSave = () => {
-    const normalizedStartDate = editedTask.startDate
-      ? String(editedTask.startDate).slice(0, 10)
+    const normalizedDueDate = editedTask.dueDate
+      ? `${String(editedTask.dueDate).slice(0, 10)}T00:00:00`
       : null;
-    const normalizedDueDate = editedTask.dueDate ? String(editedTask.dueDate).slice(0, 10) : null;
 
     updateTask(
       {
@@ -119,13 +123,11 @@ export default function TaskModal(props) {
           description: editedTask.description,
           status: editedTask.status,
           assigneeId: editedTask.assigneeId,
-          assigneeName: editedTask.assigneeName,
-          startDate: normalizedStartDate,
           dueDate: normalizedDueDate,
           tags: editedTask.tags,
           notes: editedTask.notes,
         },
-        projectId: normalizedTaskProjectId,
+        projectId: normalizedProjectId,
       },
       {
         onSuccess: () => setIsEditMode(false),
@@ -138,7 +140,7 @@ export default function TaskModal(props) {
       updateTask(
         {
           requestData: { taskId: editedTask.taskId, notes: editedTask.notes },
-          projectId: normalizedTaskProjectId,
+          projectId: normalizedProjectId,
         },
         {
           onSuccess: () => setIsEditMode(false),
@@ -165,7 +167,11 @@ export default function TaskModal(props) {
         className={`relative flex h-[92vh] w-full overflow-hidden rounded-[40px] bg-card shadow-2xl ring-1 ring-black/5 dark:ring-white/5 ${isChatOpen ? 'max-w-[1760px]' : 'max-w-5xl'}`}
       >
         <div className="flex min-w-0 flex-1 flex-col">
-          {isEditMode ? (
+          {isDetailLoading && !detailTask ? (
+            <div className="flex flex-1 items-center justify-center">
+              <span className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></span>
+            </div>
+          ) : isEditMode ? (
             <TaskEditor
               editedTask={editedTask}
               setEditedTask={setEditedTask}
@@ -181,12 +187,12 @@ export default function TaskModal(props) {
               <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-card/95 px-8 py-4 backdrop-blur-md">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`h-3 w-3 rounded-full ${getStatusDotColor(editedTask.status)} shadow-sm`}
+                    className={`h-3 w-3 rounded-full ${getStatusDotColor(currentTask.status)} shadow-sm`}
                   />
                   <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(editedTask.status)}`}
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(currentTask.status)}`}
                   >
-                    {getStatusText(editedTask.status)}
+                    {getStatusText(currentTask.status)}
                   </span>
                 </div>
 
@@ -230,10 +236,10 @@ export default function TaskModal(props) {
               >
                 <section className="mb-10">
                   <h1 className="text-3xl font-black leading-tight tracking-tight text-foreground">
-                    {editedTask.title}
+                    {currentTask.title}
                   </h1>
                   <p className="mt-4 max-w-3xl text-lg font-medium leading-relaxed text-muted-foreground">
-                    {editedTask.description || '작업 설명이 없습니다.'}
+                    {currentTask.description || '작업 설명이 없습니다.'}
                   </p>
                 </section>
 
@@ -244,9 +250,9 @@ export default function TaskModal(props) {
                         담당자
                       </p>
                       <div className="flex items-center gap-3">
-                        <UserProfileImg name={editedTask.assigneeName} size="md" />
+                        <UserProfileImg name={currentTask.assigneeName} size="md" />
                         <p className="text-base font-semibold text-foreground">
-                          {editedTask.assigneeName || '미지정'}
+                          {currentTask.assigneeName || '미지정'}
                         </p>
                       </div>
                     </div>
@@ -259,7 +265,7 @@ export default function TaskModal(props) {
                         <div className="rounded-xl bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                           <IconCalendar size={18} />
                         </div>
-                        {editedTask.dueDate ? formatDateDot(editedTask.dueDate) : '기한 없음'}
+                        {currentTask.dueDate ? formatDateDot(currentTask.dueDate) : '기한 없음'}
                       </div>
                     </div>
 
@@ -269,9 +275,9 @@ export default function TaskModal(props) {
                       </p>
                       <div className="flex items-center gap-2.5 font-semibold text-foreground">
                         <div
-                          className={`h-2.5 w-2.5 rounded-full ${getStatusDotColor(editedTask.status)} shadow-sm`}
+                          className={`h-2.5 w-2.5 rounded-full ${getStatusDotColor(currentTask.status)} shadow-sm`}
                         />
-                        {getStatusText(editedTask.status)}
+                        {getStatusText(currentTask.status)}
                       </div>
                     </div>
                   </div>
@@ -283,7 +289,7 @@ export default function TaskModal(props) {
                     <p className="text-sm font-medium text-foreground">태그</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {editedTask.tags?.map((tag, idx) => (
+                    {currentTask.tags?.map((tag, idx) => (
                       <span
                         key={idx}
                         className="inline-flex items-center rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-2 text-sm font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
@@ -291,7 +297,7 @@ export default function TaskModal(props) {
                         #{tag}
                       </span>
                     ))}
-                    {(!editedTask.tags || editedTask.tags.length === 0) && (
+                    {(!currentTask.tags || currentTask.tags.length === 0) && (
                       <p className="py-1 text-sm text-muted-foreground">등록된 태그가 없습니다.</p>
                     )}
                   </div>
@@ -391,11 +397,11 @@ export default function TaskModal(props) {
 
         {isChatOpen && (
           <TaskChat
-            taskId={task.taskId}
+            projectId={normalizedProjectId}
+            taskId={currentTask.taskId}
             onChatClose={() => setIsChatOpen(false)}
             currentUser={myUserName}
             leaderName={leaderName}
-            taskContext={taskContext}
           />
         )}
       </div>

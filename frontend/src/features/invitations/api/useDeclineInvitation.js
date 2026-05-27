@@ -13,7 +13,7 @@ export const useDeclineInvitation = () => {
 
   return useMutation({
     mutationFn: async (inviteId) => {
-      return await api.put(`/invitations/${inviteId}/decline`, {});
+      return await api.put(`/api/invitations/${inviteId}/decline`, {});
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['invitations', 'received'] });

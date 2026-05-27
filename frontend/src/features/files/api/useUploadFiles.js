@@ -43,7 +43,7 @@ export const useUploadFiles = () => {
       // 1. 백엔드에 여러 파일의 임시 주소(Pre-signed URL)를 한 번에 요청
       const fileNames = files.map((file) => file.name);
       /** @type {ResponseFileUploadUrlDTO} */
-      const presignedResponse = await api.post(`/files/uploadUrl`, {
+      const presignedResponse = await api.post(`/api/files/uploadUrl`, {
         projectId,
         taskId,
         filenames: fileNames,
@@ -74,7 +74,7 @@ export const useUploadFiles = () => {
 
       // 3. 모든 파일이 S3에 저장되었으므로, 백엔드에 식별표(uuids) 전체를 보고
       /** @param {RequestFileUploadCompleteDTO} */
-      return await api.post('/files/upload/complete', uuids);
+      return await api.post('/api/files/upload/complete', uuids);
     },
 
     // onSuccess (전체 파일 업로드 성공 시)

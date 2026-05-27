@@ -23,7 +23,7 @@ export const useCreateTask = () => {
     /** @param {{ requestBody: RequestTaskCreateDTO, projectId: number }} params */
     mutationFn: async ({ requestBody, projectId }) => {
       /** @type {ResponseTaskCreate} */
-      return await api.post(`project/${projectId}/task`, requestBody);
+      return await api.post(`/api/project/${projectId}/task`, requestBody);
     },
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['tasks', Number(variables.projectId)] });

@@ -8,16 +8,17 @@ export const useGetDeletedProject = () => {
   return useQuery({
     queryKey: ['deleted_projects'],
     queryFn: async () => {
-      return await api.get('/projects?deleted=true');
+      return await api.get('/api/project/deleted');
     },
     enabled: isTokenAvailable,
     select: (data) => {
       if (!Array.isArray(data)) {
         return [];
       }
+      // 날짜 최신순 정렬
       return [...data].sort((a, b) => {
-        const dateA = new Date(a.updatedDate);
-        const dateB = new Date(b.updatedDate);
+        const dateA = new Date(a.deletedDate);
+        const dateB = new Date(b.deletedDate);
         return dateB - dateA;
       });
     },

@@ -8,6 +8,7 @@ import { useGetProjectDetails } from '@/features/projects/api/useGetProjectDetai
 import { useGetTaskList } from '@/features/tasks/api/useGetTaskList.js';
 import { useMirumAI } from '@/features/ai/hooks/useMirumAI.js';
 import { useAuth } from '@/features/auth/hooks/useAuth.js';
+import { formatLocalDateTime } from '@/features/tasks/utils/task-format.js';
 import TaskCard from '@/features/tasks/components/TaskCard.jsx';
 import TaskSummaryCard from '@/features/tasks/components/TaskSummaryCard.jsx';
 import {
@@ -162,7 +163,7 @@ export default function Task() {
 
   const title = project?.projectName || '프로젝트 이름';
   const desc = project?.description || '프로젝트 설명';
-  const day = project?.createdDate ? project.createdDate.slice(0, 10) : '-';
+  const day = formatLocalDateTime(project?.creationDate);
 
   const getTaskColor = (taskId) => {
     if (!taskId) return TASK_COLOR_PALETTE[0];
@@ -305,7 +306,7 @@ export default function Task() {
 
   const handleGenerateReport = async () => {
     try {
-      const report = await generateProjectReport(aiContext);
+      const report = await generateProjectReport(projectId);
       const now = new Date();
       const reportId = `${now.getTime()}`;
       const entry = {

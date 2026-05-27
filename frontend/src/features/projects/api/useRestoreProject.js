@@ -7,7 +7,7 @@ export const useRestoreProject = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (projectId) => {
-      return await api.post(`project/restore/${projectId}`, {});
+      return await api.post(`/api/project/restore/${projectId}`, {});
     },
     onSuccess: async () => {
       // 휴지통 목록 갱신

@@ -33,7 +33,7 @@ export const useUpdateProject = () => {
      * @returns {null}
      */
     mutationFn: async (variables) => {
-      return await api.put(`project`, variables);
+      return await api.put(`/api/project`, variables);
     },
     onSuccess: async (_data, { projectId }) => {
       await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
