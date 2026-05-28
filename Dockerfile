@@ -7,11 +7,11 @@ COPY backend/gradle gradle
 
 RUN chmod +x ./gradlew
 
-RUN ./gradlew dependencies
+RUN ./gradlew dependencies --no-daemon
 
 COPY backend/src src
 
-RUN ./gradlew bootjar -x test
+RUN ./gradlew bootjar -x test --no-daemon
 
 FROM amazoncorretto:17-alpine-jdk
 
