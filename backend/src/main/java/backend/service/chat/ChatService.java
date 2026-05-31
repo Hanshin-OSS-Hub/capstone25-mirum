@@ -41,7 +41,7 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<ChatMessageResponseDTO> getChatHistory(Long taskId, String username) {
         validateTaskAccess(taskId, username);
-        return chatMessageRepository.findByTask_TaskIdOrderByTimestampAsc(taskId).stream()
+        return chatMessageRepository.findByTaskTaskIdOrderByTimestampAsc(taskId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

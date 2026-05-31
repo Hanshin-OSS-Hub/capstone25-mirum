@@ -21,7 +21,7 @@ public class ChatMessage {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id", nullable = false)
+    @JoinColumn(name = "taskId", nullable = false)
     private backend.entity.taskcard.Task task;
 
     @ManyToOne(fetch = FetchType.LAZY)
