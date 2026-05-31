@@ -28,7 +28,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     Optional<Project> findByIdAndIsDeletedFalse(Long id);
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Project p SET p.updatedDate = :updatedDate WHERE p.id = :projectId")
     void updateDate(@Param("projectId") Long projectId, @Param("updatedDate") LocalDateTime updatedDate);
 }

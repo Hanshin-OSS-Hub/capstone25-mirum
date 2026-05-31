@@ -138,6 +138,7 @@ public class TaskServiceImpl implements TaskService {
                 nickname
         );
 
+        taskRepository.save(task);
         projectRepository.updateDate(projectId, LocalDateTime.now());
         return toDetailDTO(task);
     }
