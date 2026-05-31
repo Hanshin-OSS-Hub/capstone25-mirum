@@ -170,7 +170,7 @@ export default function ProjectConfigPanel(props) {
                         ? 'bg-red-500/15 text-red-600 dark:text-red-400'
                         : 'bg-primary/15 text-primary'
                       : item.key === 'danger'
-                        ? 'hover:bg-red-500/150/12 text-red-600 dark:text-red-400'
+                        ? 'hover:bg-red-500/15 text-red-600 dark:text-red-400'
                         : 'text-foreground hover:bg-muted/50'
                   }`}
                 >
