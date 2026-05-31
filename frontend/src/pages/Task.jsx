@@ -761,7 +761,7 @@ export default function Task() {
             onClose={closeTask}
             files={files.filter((f) => f.taskId === selectedTask.taskId)}
             members={members}
-            myUserName={myUsername}
+            myUserName={user?.nickname || myUsername}
             projectId={projectId}
             leaderName={members.find((m) => m.role === 'LEADER')?.nickname}
           />

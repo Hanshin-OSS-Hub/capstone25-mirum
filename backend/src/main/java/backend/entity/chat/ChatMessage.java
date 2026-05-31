@@ -23,8 +23,12 @@ public class ChatMessage {
     @Column(nullable = false)
     private Long taskId; // We are attaching chat to tasks based on frontend investigation
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = true)
+    private backend.entity.User user;
+
     @Column(nullable = false)
-    private String author;
+    private String author; // Fallback or display name for non-user entities (like AI)
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String message;

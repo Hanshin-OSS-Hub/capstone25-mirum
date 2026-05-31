@@ -25,6 +25,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final backend.repository.taskcard.TaskRepository taskRepository;
     private final backend.repository.ProjectMemberRepository projectMemberRepository;
+    private final backend.repository.UserRepository userRepository;
     
     // taskId -> List of SseEmitters
     private final Map<Long, List<SseEmitter>> taskEmitters = new ConcurrentHashMap<>();
@@ -48,9 +49,20 @@ public class ChatService {
     @Transactional
     public ChatMessageResponseDTO saveAndSendMessage(Long taskId, SendChatMessageDTO dto, String username) {
         validateTaskAccess(taskId, username);
+        
+        backend.entity.User user = null;
+        String authorName = dto.getAuthor();
+        
+        if (!dto.isAi()) {
+            user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
+            authorName = (user.getNickname() != null && !user.getNickname().isEmpty()) ? user.getNickname() : user.getUsername();
+        }
+
         ChatMessage message = ChatMessage.builder()
                 .taskId(taskId)
-                .author(dto.getAuthor())
+                .user(user)
+                .author(authorName)
                 .message(dto.getMessage())
                 .isAi(dto.isAi())
                 .build();
@@ -109,9 +121,16 @@ public class ChatService {
     }
 
     private ChatMessageResponseDTO convertToDTO(ChatMessage message) {
+        String nickname = message.getAuthor();
+        if (message.getUser() != null) {
+            nickname = (message.getUser().getNickname() != null && !message.getUser().getNickname().isEmpty()) 
+                    ? message.getUser().getNickname() 
+                    : message.getUser().getUsername();
+        }
+
         return ChatMessageResponseDTO.builder()
                 .id(message.getId())
-                .author(message.getAuthor())
+                .author(nickname)
                 .message(message.getMessage())
                 .timestamp(message.getTimestamp())
                 .isAi(message.isAi())

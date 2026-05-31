@@ -21,7 +21,11 @@ public class ChatController {
 
     // SSE Subscription Endpoint
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribeToChat(@PathVariable Long taskId, @org.springframework.security.core.annotation.AuthenticationPrincipal String username) {
+    public SseEmitter subscribeToChat(
+            @PathVariable Long taskId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal String username,
+            jakarta.servlet.http.HttpServletResponse response) {
+        response.setHeader("X-Accel-Buffering", "no");
         return chatService.subscribe(taskId, username);
     }
 

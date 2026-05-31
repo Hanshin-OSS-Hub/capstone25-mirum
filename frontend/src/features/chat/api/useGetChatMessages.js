@@ -41,33 +41,39 @@ export function useGetChatMessages(taskId) {
 
     const connectSSE = () => {
       const token = localStorage.getItem('accessToken');
-      const url = `${import.meta.env.VITE_API_URL || ''}/api/tasks/${taskId}/chat/subscribe${token ? `?token=${token}` : ''}`;
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      // Ensure url doesn't have double slashes if baseUrl ends with /
+      const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      const url = `${cleanBaseUrl}/api/tasks/${taskId}/chat/subscribe${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+      
+      console.log('Attempting SSE connection to:', url.split('?')[0]); // Log without token for security
       eventSource = new EventSource(url);
 
       eventSource.onmessage = (event) => {
         try {
           const newMessage = JSON.parse(event.data);
+          console.log('SSE Message received:', newMessage);
           
           // Update the React Query cache directly with the new message
           queryClient.setQueryData(queryKey, (oldData) => {
             if (!oldData) return [newMessage];
-            // Check if message already exists to prevent duplicates (e.g. from our own POST request cache invalidation)
+            // Check if message already exists to prevent duplicates
             const exists = oldData.find(msg => msg.id === newMessage.id);
             if (exists) return oldData;
             return [...oldData, newMessage];
           });
         } catch (error) {
-          console.error('SSE Message parsing error:', error);
+          console.error('SSE Message parsing error:', error, event.data);
         }
       };
 
       eventSource.addEventListener('init', (event) => {
-          console.log('SSE Connected:', event.data);
+          console.log('SSE Connected successfully:', event.data);
           reconnectAttempts = 0; // Reset attempts on successful connection
       });
 
       eventSource.onerror = (error) => {
-        console.error('SSE Connection Error:', error);
+        console.error('SSE Connection Error. State:', eventSource.readyState, error);
         eventSource.close();
 
         if (reconnectAttempts < maxReconnectAttempts) {
