@@ -20,8 +20,9 @@ export const useRestoreFiles = () => {
       return api.patch(`/api/files/restore`, uuids);
     },
     onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['files', 'deleted', variables.projectId] });
-      await queryClient.invalidateQueries({ queryKey: ['files', variables.projectId] });
+      const pId = Number(variables.projectId);
+      await queryClient.invalidateQueries({ queryKey: ['files', 'deleted', pId] });
+      await queryClient.invalidateQueries({ queryKey: ['files', pId] });
       notify.success('복구가 완료되었습니다.');
     },
     onError: (error) => {

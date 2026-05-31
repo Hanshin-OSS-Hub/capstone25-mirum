@@ -9,16 +9,19 @@ import { api } from '@/api/client.js';
  */
 
 export const useGetTasksByStatus = ({ projectId, status }) => {
+  const normalizedProjectId = Number(projectId);
   const isTokenAvailable =
     typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
 
   return useQuery({
-    queryKey: ['tasks', Number(projectId), status],
+    queryKey: ['tasks', normalizedProjectId, status],
     queryFn: async () => {
       /** @type {ResponseTaskGetSummaryDTO[]} */
-      return await api.get(`/api/project/${projectId}/task/status?status=${status}`);
+      return await api.get(`/api/project/${normalizedProjectId}/task/status?status=${status}`);
     },
-    enabled: !!projectId && !!status && isTokenAvailable,
+    staleTime: 0,
+    gcTime: 0,
+    enabled: !!normalizedProjectId && !!status && isTokenAvailable,
     select: (data) => {
       if (!Array.isArray(data)) {
         return [];

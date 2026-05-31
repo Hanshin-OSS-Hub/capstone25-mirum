@@ -9,5 +9,9 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user"})
-    List<ChatMessage> findByTaskIdOrderByTimestampAsc(Long taskId);
+    List<ChatMessage> findByTask_TaskIdOrderByTimestampAsc(Long taskId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM ChatMessage c WHERE c.task.taskId IN (SELECT t.taskId FROM Task t WHERE t.projectId = :projectId)")
+    void deleteAllByProjectId(@org.springframework.data.repository.query.Param("projectId") Long projectId);
 }

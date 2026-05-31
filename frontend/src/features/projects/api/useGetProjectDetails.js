@@ -16,16 +16,19 @@ import { api } from '@/api/client.js';
  */
 
 export const useGetProjectDetails = (projectId) => {
+  const normalizedProjectId = Number(projectId);
   const isTokenAvailable =
     typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
 
   return useQuery({
-    queryKey: ['project', projectId],
+    queryKey: ['project', normalizedProjectId],
     /** @returns {Promise<ProjectDetailDTO>} */
     queryFn: async () => {
-      return await api.get(`/api/project/${projectId}`);
+      return await api.get(`/api/project/${normalizedProjectId}`);
     },
-    enabled: !!projectId && isTokenAvailable,
+    staleTime: 0,
+    gcTime: 0,
+    enabled: !!normalizedProjectId && isTokenAvailable,
     initialData: undefined,
   });
 };

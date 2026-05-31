@@ -6,14 +6,17 @@ import { api } from '@/api/client.js';
  * @param projectId
  */
 export const useGetDeletedFiles = (projectId) => {
+  const normalizedProjectId = Number(projectId);
   const isTokenAvailable =
     typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
 
   return useQuery({
-    queryKey: ['files', 'deleted', projectId],
+    queryKey: ['files', 'deleted', normalizedProjectId],
     queryFn: async () => {
-      return api.get(`/api/files/deleted?projectId=${projectId}`);
+      return api.get(`/api/files/deleted?projectId=${normalizedProjectId}`);
     },
-    enabled: !!projectId && isTokenAvailable, // projectId와 토큰이 준비되었을 때만 실행
+    staleTime: 0,
+    gcTime: 0,
+    enabled: !!normalizedProjectId && isTokenAvailable,
   });
 };

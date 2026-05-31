@@ -10,16 +10,19 @@ import { api } from '@/api/client.js';
  * @returns {import('@tanstack/react-query').DefinedUseQueryResult<ProjectMemberDTO[], import('@tanstack/react-query').DefaultError> }
  */
 export const useGetMemberList = (projectId, myUsername) => {
+  const normalizedProjectId = Number(projectId);
   const isTokenAvailable =
     typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
 
   return useQuery({
-    queryKey: ['members', projectId],
+    queryKey: ['members', normalizedProjectId],
     queryFn: async () => {
       /** @type {ProjectMemberDTO[]} */
-      return await api.get(`/api/member/${projectId}`);
+      return await api.get(`/api/member/${normalizedProjectId}`);
     },
-    enabled: !!projectId && isTokenAvailable,
+    staleTime: 0,
+    gcTime: 0,
+    enabled: !!normalizedProjectId && isTokenAvailable,
     select: (data) => {
       if (!Array.isArray(data)) {
         return [];

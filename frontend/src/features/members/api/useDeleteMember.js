@@ -18,7 +18,7 @@ export const useDeleteMember = () => {
     },
 
     onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['members', variables.projectId] });
+      await queryClient.invalidateQueries({ queryKey: ['members', Number(variables.projectId)] });
       notify.success('프로젝트 멤버가 삭제되었습니다.');
     },
 

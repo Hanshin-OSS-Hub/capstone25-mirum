@@ -9,16 +9,19 @@ import { api } from '@/api/client.js';
  * @returns {import('@tanstack/react-query').DefinedUseQueryResult<Invitation[], import('@tanstack/react-query').DefaultError>}
  */
 export const useGetInvitees = (projectId) => {
+  const normalizedProjectId = Number(projectId);
   const isTokenAvailable =
     typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
 
   return useQuery({
-    queryKey: ['project-invitations', projectId],
+    queryKey: ['project-invitations', normalizedProjectId],
     queryFn: async () => {
       /** @type {Invitation[]} */
-      return await api.get(`/api/invitations/sent/${projectId}`);
+      return await api.get(`/api/invitations/sent/${normalizedProjectId}`);
     },
-    enabled: !!projectId && isTokenAvailable,
+    staleTime: 0,
+    gcTime: 0,
+    enabled: !!normalizedProjectId && isTokenAvailable,
     initialData: [],
     select: (data) => {
       if (!Array.isArray(data)) {

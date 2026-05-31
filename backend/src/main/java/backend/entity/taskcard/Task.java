@@ -46,6 +46,9 @@ public class Task {
     private LocalDateTime updatedDate;
     private LocalDateTime dueDate;
 
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<backend.entity.chat.ChatMessage> chatMessages = new ArrayList<>();
+
     protected Task() {}
 
     public Task(Long projectId, String title, String description, TaskStatus status,

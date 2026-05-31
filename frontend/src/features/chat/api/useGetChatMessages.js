@@ -18,16 +18,19 @@ import { api } from '@/api/client.js';
  */
 export function useGetChatMessages(taskId) {
   const queryClient = useQueryClient();
-  const queryKey = ['chat', taskId];
+  const normalizedTaskId = Number(taskId);
+  const queryKey = ['chat', normalizedTaskId];
 
   // 1. Initial Fetch
   const queryResult = useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await api.get(`/api/tasks/${taskId}/chat`);
+      const response = await api.get(`/api/tasks/${normalizedTaskId}/chat`);
       return response || [];
     },
-    enabled: !!taskId,
+    staleTime: 0,
+    gcTime: 0,
+    enabled: !!normalizedTaskId,
   });
 
   // 2. SSE Subscription

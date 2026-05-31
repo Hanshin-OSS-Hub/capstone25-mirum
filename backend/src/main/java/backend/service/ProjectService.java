@@ -9,6 +9,7 @@ import backend.entity.taskcard.TaskStatus;
 import backend.repository.ProjectMemberRepository;
 import backend.repository.ProjectRepository;
 import backend.repository.UserRepository;
+import backend.repository.chat.ChatMessageRepository;
 import backend.repository.taskcard.TaskRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class ProjectService {
     private final ProjectMemberRepository projectMemberRepository;
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     //C
     @Transactional
@@ -135,6 +137,9 @@ public class ProjectService {
         if (isNotLeader(username, projectId)) throw new AccessDeniedException("권한 없음");
         Project project = projectRepository.findById(projectId).orElseThrow(EntityNotFoundException::new);
         if (!project.isDeleted()) throw new IllegalArgumentException("삭제된 프로젝트만 영구 삭제 가능합니다.");
+
+        // 관련 채팅 영구 삭제
+        chatMessageRepository.deleteAllByProjectId(projectId);
 
         // 관련 태스크 영구 삭제
         taskRepository.deleteAllByProjectId(projectId);

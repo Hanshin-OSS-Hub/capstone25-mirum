@@ -36,20 +36,22 @@ import { normalizeFileItem } from '@/features/files/utils/normalizeFileItem.js';
 
 /** @param {number} projectId - 조회할 프로젝트 ID */
 export const useGetProjectFiles = (projectId) => {
+  const normalizedProjectId = Number(projectId);
   const isTokenAvailable =
     typeof window !== 'undefined' && Boolean(window.localStorage.getItem('accessToken'));
 
   return useQuery({
-    queryKey: ['files', projectId],
+    queryKey: ['files', normalizedProjectId],
     /** @returns {Promise<NormalizedFileItem[]>} */
     queryFn: async () => {
       /** @type {ResponseGetFilesListDTOArray} */
-      const data = await api.get(`/api/files/project?projectId=${projectId}`);
+      const data = await api.get(`/api/files/project?projectId=${normalizedProjectId}`);
       if (!Array.isArray(data)) return [];
       return data.map(normalizeFileItem);
     },
-    enabled: !!projectId && isTokenAvailable,
-    staleTime: 15000,
+    enabled: !!normalizedProjectId && isTokenAvailable,
+    staleTime: 0, // 갱신 지연 방지
+    gcTime: 0,    // 캐시 즉시 만료 (확실한 갱신)
     refetchOnMount: 'always',
   });
 };

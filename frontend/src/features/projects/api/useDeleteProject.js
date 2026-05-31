@@ -17,7 +17,8 @@ export const useDeleteProject = () => {
       return await api.delete(`/api/project/${projectId}`);
     },
     onSuccess: async (_data, projectId) => {
-      await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      const pId = Number(projectId);
+      await queryClient.invalidateQueries({ queryKey: ['project', pId] });
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
       notify.success('프로젝트를 제거했습니다.');
     },

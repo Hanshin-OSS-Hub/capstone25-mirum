@@ -22,7 +22,7 @@ export const useInviteMember = () => {
       });
     },
     onSuccess: async (_data, { projectId, invitedName }) => {
-      await queryClient.invalidateQueries({ queryKey: ['project-invitations', projectId] });
+      await queryClient.invalidateQueries({ queryKey: ['project-invitations', Number(projectId)] });
       notify.success(`${invitedName} 님을 초대했습니다`);
     },
     onError: (error) => {

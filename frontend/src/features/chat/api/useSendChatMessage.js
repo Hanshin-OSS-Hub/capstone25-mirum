@@ -23,7 +23,7 @@ export function useSendChatMessage(taskId) {
     },
     onSuccess: () => {
       // 메시지 전송 성공 시 해당 작업의 채팅 캐시 무효화 -> 목록 자동 갱신
-      queryClient.invalidateQueries({ queryKey: ['chat', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['chat', Number(taskId)] });
     },
   });
 }

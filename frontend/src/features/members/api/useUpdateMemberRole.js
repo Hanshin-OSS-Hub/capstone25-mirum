@@ -19,7 +19,7 @@ export const useUpdateMemberRole = () => {
       await api.put(`/api/member/${projectId}/role`, { username, role });
     },
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['members', variables.projectId] });
+      await queryClient.invalidateQueries({ queryKey: ['members', Number(variables.projectId)] });
       notify.success('멤버 권한이 변경되었습니다.');
     },
     onError: (error) => {

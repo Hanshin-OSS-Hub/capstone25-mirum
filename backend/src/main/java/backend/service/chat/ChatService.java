@@ -41,7 +41,7 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<ChatMessageResponseDTO> getChatHistory(Long taskId, String username) {
         validateTaskAccess(taskId, username);
-        return chatMessageRepository.findByTaskIdOrderByTimestampAsc(taskId).stream()
+        return chatMessageRepository.findByTask_TaskIdOrderByTimestampAsc(taskId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -49,6 +49,9 @@ public class ChatService {
     @Transactional
     public ChatMessageResponseDTO saveAndSendMessage(Long taskId, SendChatMessageDTO dto, String username) {
         validateTaskAccess(taskId, username);
+
+        backend.entity.taskcard.Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Task not found"));
         
         backend.entity.User user = null;
         String authorName = dto.getAuthor();
@@ -60,7 +63,7 @@ public class ChatService {
         }
 
         ChatMessage message = ChatMessage.builder()
-                .taskId(taskId)
+                .task(task)
                 .user(user)
                 .author(authorName)
                 .message(dto.getMessage())
