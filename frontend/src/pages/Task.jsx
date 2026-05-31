@@ -153,6 +153,13 @@ export default function Task() {
     error: tasksError,
     refetch: refetchTasks,
   } = useGetTaskList({ projectId: Number(projectId) });
+
+  const { refetch: refetchDeletedCards } = useGetTasksByStatus({
+    projectId: Number(projectId),
+    status: 'DELETED',
+  });
+  const { refetch: refetchDeletedFiles } = useGetDeletedFiles(Number(projectId));
+
   const isBoardBootstrapping =
     isMembersLoading ||
     isTasksLoading ||
@@ -340,6 +347,8 @@ export default function Task() {
         refetchInvitees(),
         refetchTasks(),
         refetchFiles(),
+        refetchDeletedCards(),
+        refetchDeletedFiles(),
       ]);
     } finally {
       setIsRefreshing(false);
@@ -735,6 +744,8 @@ export default function Task() {
               members={sortedMembers}
               pendingInvites={pendingInvites}
               onBack={() => setTopTab('project')}
+              refetchDeletedCards={refetchDeletedCards}
+              refetchDeletedFiles={refetchDeletedFiles}
             />
           )}
         </Suspense>

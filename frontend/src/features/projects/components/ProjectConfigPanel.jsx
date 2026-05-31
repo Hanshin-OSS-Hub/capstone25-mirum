@@ -36,7 +36,17 @@ import { UserProfileImg } from '@/shared/components/index.js';
  * @param {() => void} props.onBack
  */
 export default function ProjectConfigPanel(props) {
-  const { projectId, project, members, pendingInvites, myUsername, isLeader, onBack } = props;
+  const {
+    isLeader,
+    myUsername,
+    project,
+    projectId,
+    members,
+    pendingInvites,
+    onBack,
+    refetchDeletedCards,
+    refetchDeletedFiles,
+  } = props;
   const navigate = useNavigate();
   const [tab, setTab] = useState('general');
   const [userInput, setUserInput] = useState('');
