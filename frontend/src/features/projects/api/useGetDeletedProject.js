@@ -8,7 +8,7 @@ export const useGetDeletedProject = () => {
   return useQuery({
     queryKey: ['deleted_projects'],
     queryFn: async () => {
-      return await api.get('/api/project/deleted');
+      return await api.get('/api/projects/deleted');
     },
     enabled: isTokenAvailable,
     select: (data) => {
