@@ -27,6 +27,7 @@ public class S3File {
     @CreatedDate
     private LocalDateTime createdDate;
     private String createdBy;
+    private String nickname;
 
     private LocalDateTime deletedDate;
     private boolean isDeleted;

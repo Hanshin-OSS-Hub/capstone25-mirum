@@ -8,6 +8,7 @@ import backend.entity.S3File;
 import backend.repository.ProjectMemberRepository;
 import backend.repository.ProjectRepository;
 import backend.repository.S3FileRepository;
+import backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class S3Service {
     private final S3FileRepository s3FileRepository;
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final UserRepository userRepository;
 
     @Value("${aws.s3.bucket}")
     private String bucketName;
@@ -46,6 +48,7 @@ public class S3Service {
         List<String> uuids = new ArrayList<>();
         List<S3File> files = new ArrayList<>();
         Project project = projectRepository.findByIdAndIsDeletedFalse(request.getProjectId()).orElseThrow(EntityNotFoundException::new);
+        String nickname = userRepository.findByUsername(username).get().getNickname();
 
         request.getFilenames().forEach(f -> {
             // 1. 원본 파일명에서 확장자 추출 (.png, .jpg 등)
@@ -77,6 +80,7 @@ public class S3Service {
                     .uuid(uuid)
                     .originalFilename(f)
                     .createdBy(username)
+                    .nickname(nickname)
                     .isDeleted(false)
                     .build();
 
@@ -173,7 +177,7 @@ public class S3Service {
                 .size(s.getSize())
                 .contentType(s.getContentType())
                 .createdDate(s.getCreatedDate())
-                .createdBy(s.getCreatedBy())
+                .uploadedBy(s.getNickname())
                 .isDeleted(s.isDeleted())
                         //task id 넣을 것
                 .build()).toList();
@@ -191,7 +195,7 @@ public class S3Service {
                 .size(s.getSize())
                 .deletedDate(s.getDeletedDate())
                 .contentType(s.getContentType())
-                .createdBy(s.getCreatedBy())
+                .uploadedBy(s.getNickname())
                 .build()).toList();
     }
 

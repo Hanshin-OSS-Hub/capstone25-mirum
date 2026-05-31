@@ -13,6 +13,6 @@ public class S3InfoResponseDTO {
     private Long size;
     private String contentType;
     private LocalDateTime createdDate;
-    private String createdBy;
+    private String uploadedBy;
     private Boolean isDeleted;
 }

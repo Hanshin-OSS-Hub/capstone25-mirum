@@ -11,7 +11,7 @@ public class DeletedFilesDTO {
     String uuid;
     String originalFilename;
     LocalDateTime deletedDate;
-    String createdBy;
+    String uploadedBy;
 
     Long size;
     String contentType;
