@@ -12,13 +12,17 @@ import { api } from '@/api/client.js';
  */
 
 export const useGetTaskDetails = ({ projectId, taskId }) => {
+  const normalizedProjectId = Number(projectId);
+  const normalizedTaskId = Number(taskId);
+
   return useQuery({
-    queryKey: ['task', projectId, taskId],
+    queryKey: ['task', normalizedProjectId, normalizedTaskId],
     /** @type {TaskData} */
     queryFn: async () => {
-      return await api.get(`/api/project/${projectId}/task/${taskId}`);
+      return await api.get(`/api/project/${normalizedProjectId}/task/${normalizedTaskId}`);
     },
-    // 초기값을 배열로 설정하면 상세 조회(객체) 결과와 타입이 맞지 않으므로 undefined 사용 권장
-    initialData: undefined,
+    staleTime: 0, // 항상 상한 데이터로 간주
+    gcTime: 0,    // 캐시 보관 안함 (즉시 요청 강제)
+    enabled: !!normalizedProjectId && !!normalizedTaskId,
   });
 };

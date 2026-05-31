@@ -31,10 +31,13 @@ export const useUpdateTask = () => {
       return api.patch(`/api/project/${projectId}/task/${requestData.taskId}`, requestData);
     },
     onSuccess: async (_data, variables) => {
+      const pId = Number(variables.projectId);
+      const tId = Number(variables.requestData.taskId);
+
       // 특정 프로젝트의 작업 목록과 상세 정보 캐시 무효화
-      await queryClient.invalidateQueries({ queryKey: ['tasks', variables.projectId] });
+      await queryClient.invalidateQueries({ queryKey: ['tasks', pId] });
       await queryClient.invalidateQueries({
-        queryKey: ['task', variables.projectId, variables.requestData.taskId],
+        queryKey: ['task', pId, tId],
       });
       notify.success('작업 카드가 수정되었습니다.');
     },
